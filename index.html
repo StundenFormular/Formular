@@ -912,47 +912,84 @@ function openTimeSheet({ title, list, currentValue, targetInput, targetRow, mode
     div.className = "timeOpt" + (active ? " active" : "") + (danger ? " dangerOpt" : "");
     div.innerHTML = `<span class="radio"></span><span>${label}</span>`;
     div.addEventListener("click", ()=>{
-      if(value === "__OTHER__"){
-        const ua = navigator.userAgent || "";
-        const isIOS = /iPad|iPhone|iPod/.test(ua) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+     if(value === "__OTHER__"){
+  closeTimeSheet();
 
-        if(isIOS){
-          const manual = prompt("Uhrzeit (HH:MM)", "");
-          const v = (manual || "").trim();
-          if(v){
-            const m = v.match(/^([01]\d|2[0-3]):([0-5]\d)$/);
-            if(m){
-              sheetTargetInput.value = m[0];
-              autoHours(sheetTargetRow);
-              markDirty();
-              saveState();
-            }
-          }
-          closeTimeSheet();
-          return;
-        }
+  dlgTitleEl.textContent = "Uhrzeit (HH:MM)";
+  dlgBtnsEl.classList.remove("one");
+  dlgCancelBtn.style.display = "";
+  dlgOkBtn.textContent = "OK";
+  dlgCancelBtn.textContent = "Abbrechen";
 
-        nativeTime.value = "";
-        nativeTime.onchange = null;
-        nativeTime.onchange = ()=>{
-          const v = (nativeTime.value || "").trim();
-          if(v){
-            sheetTargetInput.value = v;
-            autoHours(sheetTargetRow);
-            markDirty();
-            saveState();
-          }
-          closeTimeSheet();
-        };
-        nativeTime.focus();
+  dlgMsgEl.innerHTML = `<input id="manualTimeInput" placeholder="HH:MM">`;
+  dlgBack.style.display = "block";
 
-        if(nativeTime.showPicker){
-          nativeTime.showPicker();
-        }else{
-          nativeTime.click();
-        }
-        return;
-      }
+  const manualInput = document.getElementById("manualTimeInput");
+  setTimeout(()=>{ try{ manualInput.focus(); }catch(e){} }, 30);
+
+  function normalizeTime(s){
+    s = (s || "").trim();
+    if(!s) return "";
+
+    let m = s.match(/^(\d{1,2})$/);
+    if(m){
+      let hh = parseInt(m[1],10);
+      if(isNaN(hh) || hh < 0 || hh > 23) return "";
+      return String(hh).padStart(2,"0") + ":00";
+    }
+
+    m = s.match(/^(\d{1,2})\s*:\s*(\d{1,2})$/);
+    if(m){
+      let hh = parseInt(m[1],10);
+      let mm = parseInt(m[2],10);
+      if(isNaN(hh) || isNaN(mm)) return "";
+      if(hh < 0 || hh > 23) return "";
+      if(mm < 0 || mm > 59) return "";
+      return String(hh).padStart(2,"0") + ":" + String(mm).padStart(2,"0");
+    }
+
+    m = s.match(/^([01]\d|2[0-3]):([0-5]\d)$/);
+    if(m) return m[0];
+
+    return "";
+  }
+
+  function cleanup(){
+    dlgBack.style.display = "none";
+    dlgOkBtn.onclick = null;
+    dlgCancelBtn.onclick = null;
+    dlgBack.onclick = null;
+    document.removeEventListener("keydown", onKey);
+    dlgMsgEl.textContent = "";
+  }
+
+  function apply(){
+    const v = normalizeTime(manualInput.value);
+    if(v){
+      sheetTargetInput.value = v;
+      autoHours(sheetTargetRow);
+      markDirty();
+      saveState();
+    }
+    cleanup();
+  }
+
+  function onKey(e){
+    if(e.key === "Escape"){
+      cleanup();
+    }
+    if(e.key === "Enter"){
+      apply();
+    }
+  }
+
+  dlgOkBtn.onclick = apply;
+  dlgCancelBtn.onclick = cleanup;
+  dlgBack.onclick = (e)=>{ if(e.target === dlgBack) cleanup(); };
+  document.addEventListener("keydown", onKey);
+
+  return;
+}
 
       if(value === "__CLEAR__"){
         sheetTargetInput.value = "";
@@ -1432,3 +1469,4 @@ timeSheetBack.addEventListener("click",(e)=>{ if(e.target===timeSheetBack) close
 </script>
 </body>
 </html>
+
