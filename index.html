@@ -913,6 +913,25 @@ function openTimeSheet({ title, list, currentValue, targetInput, targetRow, mode
     div.innerHTML = `<span class="radio"></span><span>${label}</span>`;
     div.addEventListener("click", ()=>{
       if(value === "__OTHER__"){
+        const ua = navigator.userAgent || "";
+        const isIOS = /iPad|iPhone|iPod/.test(ua) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+
+        if(isIOS){
+          const manual = prompt("Uhrzeit (HH:MM)", "");
+          const v = (manual || "").trim();
+          if(v){
+            const m = v.match(/^([01]\d|2[0-3]):([0-5]\d)$/);
+            if(m){
+              sheetTargetInput.value = m[0];
+              autoHours(sheetTargetRow);
+              markDirty();
+              saveState();
+            }
+          }
+          closeTimeSheet();
+          return;
+        }
+
         nativeTime.value = "";
         nativeTime.onchange = null;
         nativeTime.onchange = ()=>{
