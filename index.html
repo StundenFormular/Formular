@@ -612,7 +612,7 @@ input, select{
   </div>
 
   <div class="card">
-    <label>Kleiner Hinweis / Notiz:</label>
+    <label>Bemerkung:</label>
     <input id="note" placeholder="Optionaler Hinweis eingeben">
   </div>
 
@@ -877,7 +877,13 @@ function fillMonthYear(){
 
 function buildOrtOptions(){
   return ORTE.map(o =>
-    `<option value="${o.value}" data-short="${o.short}" data-start="${o.start}" data-end="${o.end}">${o.value}</option>`
+    `<option 
+      value="${o.value}" 
+      data-short="${o.short}" 
+      data-start="${o.start}" 
+      data-end="${o.end}">
+      ${o.value}
+    </option>`
   ).join("");
 }
 
@@ -1098,6 +1104,7 @@ function build(){
       applyShortLabel(ort);
 
       const opt = ort.selectedOptions[0];
+
       const autoStart = opt.getAttribute("data-start");
       const autoEnd = opt.getAttribute("data-end");
 
@@ -1309,11 +1316,11 @@ function buildPrintTable(){
   });
 
   printTotalEl.textContent = formatHoursWithStd(sum);
-  const noteText = (noteEl.value || "").trim();
+  const printNoteText = (noteEl.value || "").trim();
 
-  printMetaBottomEl.textContent =
-    `Gesamtstunden: ${formatHoursWithStd(sum)}` +
-    (noteText ? ` | Hinweis: ${noteText}` : "");
+  printMetaBottomEl.innerHTML =
+    `<div><b>Gesamtstunden:</b> ${formatHoursWithStd(sum)}</div>` +
+    (printNoteText ? `<div style="margin-top:4px;"><b>Bemerkung:</b> ${printNoteText}</div>` : "");
 }
 
 function exportPDF(){
@@ -1383,9 +1390,9 @@ function openPreview(){
   previewTable.innerHTML=parts.join("");
   const noteText = (noteEl.value || "").trim();
 
-  previewTotal.textContent =
-    `Gesamtstunden: ${formatHoursWithStd(sum)}` +
-    (noteText ? ` | Hinweis: ${noteText}` : "");
+  previewTotal.innerHTML =
+    `<div style="margin-top:10px;"><b>Gesamtstunden:</b> ${formatHoursWithStd(sum)}</div>` +
+    (noteText ? `<div style="margin-top:6px;"><b>Bemerkung:</b> ${noteText}</div>` : "");
   modalBack.style.display="block";
 }
 function closePreview(){ modalBack.style.display="none"; }
