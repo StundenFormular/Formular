@@ -611,6 +611,11 @@ input, select{
     Gesamtstunden: <span id="sum">0 Std</span>
   </div>
 
+  <div class="card">
+    <label>Kleiner Hinweis / Notiz:</label>
+    <input id="note" placeholder="Optionaler Hinweis eingeben">
+  </div>
+
   <div class="modalBack" id="modalBack">
     <div class="modal">
       <div class="modalTop">
@@ -664,10 +669,11 @@ const PIN_BG_FILE = "nr3.jpg";
 const STORAGE_PREFIX = "sad_stundenformular_v10:";
 
 const ORTE = [
-  { value: "Niendorf Nord",         short: "Nindorf Nord" },
-  { value: "Hagenbecks Tierpark",   short: "Hagensbeck Tierpark" },
-  { value: "Farmsen",               short: "Farmsen" },
-  { value: "Ochsenzoll",            short: "Ochsenzoll" }
+  { value: "Niendorf Nord", short: "Niendorf Nord", start: "21:00", end: "06:00" },
+  { value: "Hagenbecks Tierpark", short: "Hagenbecks Tierpark", start: "23:00", end: "08:00" },
+  { value: "Farmsen", short: "Farmsen", start: "22:00", end: "08:00" },
+  { value: "Ochsenzoll", short: "Ochsenzoll", start: "22:00", end: "07:00" },
+  { value: "Volksdorf", short: "Volksdorf", start: "22:00", end: "07:00" }
 ];
 
 const START_CHOICES = ["21:00","22:00","23:00"];
@@ -678,6 +684,7 @@ const monthEl = document.getElementById("month");
 const yearEl  = document.getElementById("year");
 const rowsEl  = document.getElementById("rows");
 const sumEl   = document.getElementById("sum");
+const noteEl = document.getElementById("note");
 
 const nameErrorEl = document.getElementById("nameError");
 
@@ -869,7 +876,9 @@ function fillMonthYear(){
 }
 
 function buildOrtOptions(){
-  return ORTE.map(o => `<option value="${o.value}" data-short="${o.short}">${o.value}</option>`).join("");
+  return ORTE.map(o =>
+    `<option value="${o.value}" data-short="${o.short}" data-start="${o.start}" data-end="${o.end}">${o.value}</option>`
+  ).join("");
 }
 
 function applyShortLabel(selectEl){
@@ -1076,12 +1085,27 @@ function build(){
 
       if(ort.value === "__CLEAR_ORT__"){
         ort.selectedIndex = 0;
+
+        start.value = "";
+        end.value = "";
+        hours.value = "";
+
         markDirty();
         saveState();
         return;
       }
 
       applyShortLabel(ort);
+
+      const opt = ort.selectedOptions[0];
+      const autoStart = opt.getAttribute("data-start");
+      const autoEnd = opt.getAttribute("data-end");
+
+      if(autoStart) start.value = autoStart;
+      if(autoEnd) end.value = autoEnd;
+
+      autoHours(tr);
+
       markDirty();
       saveState();
     });
@@ -1209,6 +1233,7 @@ function getState(){
     year: String(current.getFullYear()),
     rows,
     total: sumEl.textContent || "",
+    note: noteEl.value || "",
     dirty,
     exported
   };
@@ -1238,6 +1263,8 @@ function loadState(){
       rowEls[idx].querySelector(".end").value=r.end||"";
       rowEls[idx].querySelector(".hours").value=r.hours||"";
     });
+
+    if(noteEl) noteEl.value = st.note || "";
 
     dirty=!!st.dirty;
     exported=!!st.exported;
@@ -1282,7 +1309,11 @@ function buildPrintTable(){
   });
 
   printTotalEl.textContent = formatHoursWithStd(sum);
-  printMetaBottomEl.textContent = `Gesamtstunden: ${formatHoursWithStd(sum)}`;
+  const noteText = (noteEl.value || "").trim();
+
+  printMetaBottomEl.textContent =
+    `Gesamtstunden: ${formatHoursWithStd(sum)}` +
+    (noteText ? ` | Hinweis: ${noteText}` : "");
 }
 
 function exportPDF(){
@@ -1350,7 +1381,11 @@ function openPreview(){
 
   parts.push(`</tbody></table>`);
   previewTable.innerHTML=parts.join("");
-  previewTotal.textContent = `Gesamtstunden: ${formatHoursWithStd(sum)}`;
+  const noteText = (noteEl.value || "").trim();
+
+  previewTotal.textContent =
+    `Gesamtstunden: ${formatHoursWithStd(sum)}` +
+    (noteText ? ` | Hinweis: ${noteText}` : "");
   modalBack.style.display="block";
 }
 function closePreview(){ modalBack.style.display="none"; }
@@ -1453,6 +1488,11 @@ nameEl.addEventListener("input", ()=>{
   saveState();
 });
 
+noteEl.addEventListener("input", ()=>{
+  markDirty();
+  saveState();
+});
+
 timeSheetClose.addEventListener("click", closeTimeSheet);
 timeSheetBack.addEventListener("click",(e)=>{ if(e.target===timeSheetBack) closeTimeSheet(); });
 
@@ -1470,4 +1510,3 @@ timeSheetBack.addEventListener("click",(e)=>{ if(e.target===timeSheetBack) close
 </script>
 </body>
 </html>
-
