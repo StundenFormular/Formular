@@ -51,8 +51,7 @@ body{
   backdrop-filter: blur(6px);
 }
 .btnrow{
-  display:grid;
-  grid-template-columns: 1fr 1fr 1fr 1fr;
+  grid-template-columns:repeat(3,1fr);
   gap:8px;
 }
 button{
@@ -467,8 +466,7 @@ input, select{
   overflow:auto;
 }
 .modalBtns{
-  display:grid;
-  grid-template-columns:1fr 1fr;
+  grid-template-columns:1fr 1fr 1fr;
   gap:8px;
   padding:12px;
   border-top:1px solid var(--border);
@@ -938,7 +936,7 @@ input, select{
   box-shadow:0 10px 22px rgba(15,23,42,.06);
 }
 button.primary::before{ content:"📄 "; }
-button.send::before{ content:"✈ "; }
+button.send::before{ content:"👁 "; }
 button.danger::before{ content:"🗑 "; }
 #prevBtn::before{ content:"📊 "; }
 
@@ -1992,6 +1990,46 @@ button.danger::before{ content:"🗑 "; }
 }
 /* =================================== */
 
+
+/* ===== SENDEN AUS ÜBERSICHT ===== */
+#sendFromPreview{
+  background:linear-gradient(135deg,#16a34a,#15803d) !important;
+  color:#fff !important;
+  border:none !important;
+  border-radius:18px !important;
+  font-weight:1000 !important;
+  box-shadow:0 12px 24px rgba(22,163,74,.20) !important;
+}
+
+#sendFromPreview::before{
+  content:"✈ ";
+}
+/* =============================== */
+
+
+/* ===== DREI BUTTONS CLEAN ===== */
+.btnrow{
+  gap:10px !important;
+}
+
+.btnrow button{
+  min-height:74px !important;
+  font-size:15px !important;
+}
+
+@media(max-width:520px){
+  .btnrow{
+    grid-template-columns:1fr !important;
+  }
+
+  .btnrow button{
+    min-height:60px !important;
+    border-radius:18px !important;
+    font-size:15px !important;
+  }
+}
+/* ============================== */
+
 </style>
 </head>
 
@@ -2038,9 +2076,8 @@ button.danger::before{ content:"🗑 "; }
 
   <div class="topbar">
     <div class="btnrow">
+      <button class="send" id="sendBtn" type="button">Übersicht prüfen</button>
       <button class="primary" id="pdfBtn" type="button">PDF Export</button>
-      <button id="prevBtn" type="button">Übersicht</button>
-      <button class="send" id="sendBtn" type="button">Senden</button>
       <button class="danger" id="delBtn" type="button">Alles löschen</button>
     </div>
   </div>
@@ -2082,7 +2119,7 @@ button.danger::before{ content:"🗑 "; }
       </div>
     </div>
 
-    <div class="userFooter">Digitale Zeiterfassung · Entwickelt von Sadak</div>
+    <div class="userFooter">Digitale Zeiterfassung · entwickelt für das Team von Abu-Hafez</div>
   </div>
 
   <div class="tableCard">
@@ -3176,7 +3213,7 @@ function showPdfDownloadPrompt(){
 }
 
 
-async function senden(){
+async function sendenDirekt(){
   const nm = (nameEl.value || "").trim();
 
   if(!/^\d{2}$/.test(nm)){
@@ -3252,8 +3289,19 @@ function requirePin(){
 }
 
 pdfBtn.addEventListener("click", exportPDF);
+
+const sendFromPreviewBtn = document.getElementById("sendFromPreview");
+
+sendFromPreviewBtn?.addEventListener("click", async ()=>{
+  closePreview();
+  await sendenDirekt();
+});
+
+
 prevBtn.addEventListener("click", openPreview);
-sendBtn.addEventListener("click", senden);
+sendBtn.addEventListener("click", ()=>{
+  openPreview();
+});
 delBtn.addEventListener("click", allesLoeschen);
 
 closePrevTop.addEventListener("click", closePreview);
