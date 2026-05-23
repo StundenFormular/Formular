@@ -1157,6 +1157,206 @@ button.danger::before{ content:"🗑 "; }
 }
 /* =================================== */
 
+
+/* ===== KOMPAKTE ÜBERSICHT - EIN SEITEN LOOK ===== */
+.modal{
+  width:min(94vw,900px) !important;
+  max-width:900px !important;
+  margin:18px auto !important;
+  border-radius:24px !important;
+}
+
+.modalTop{
+  padding:14px 18px !important;
+}
+
+.previewIcon{
+  width:46px !important;
+  height:46px !important;
+  font-size:22px !important;
+}
+
+.previewMainTitle{
+  font-size:22px !important;
+}
+
+.previewSubTitle{
+  font-size:13px !important;
+}
+
+.previewCloseBtn{
+  min-width:108px !important;
+  padding:11px 14px !important;
+}
+
+.modalBody{
+  padding:12px 14px !important;
+  max-height:64vh !important;
+  overflow:auto !important;
+}
+
+.previewStats{
+  display:grid !important;
+  grid-template-columns:repeat(3,1fr) !important;
+  gap:8px !important;
+  margin-bottom:10px !important;
+}
+
+.previewStat{
+  border-radius:16px !important;
+  padding:9px 10px !important;
+  gap:8px !important;
+}
+
+.previewStatIcon{
+  width:34px !important;
+  height:34px !important;
+  font-size:16px !important;
+}
+
+.previewStatLabel{
+  font-size:11px !important;
+}
+
+.previewStatValue{
+  font-size:20px !important;
+}
+
+.previewTableWrap{
+  border-radius:18px !important;
+}
+
+.previewModernTable{
+  font-size:13px !important;
+  min-width:620px !important;
+}
+
+.previewModernTable th{
+  padding:9px 8px !important;
+}
+
+.previewModernTable td{
+  padding:8px 8px !important;
+}
+
+.previewBadge{
+  min-width:46px !important;
+  padding:4px 8px !important;
+}
+
+.previewLegend{
+  padding:8px !important;
+  gap:6px !important;
+  border-radius:0 0 18px 18px !important;
+}
+
+.previewLegend span{
+  padding:6px 8px !important;
+  font-size:11px !important;
+}
+
+.previewTotalModern{
+  margin-top:10px !important;
+  padding:10px 12px !important;
+  border-radius:16px !important;
+  font-size:13px !important;
+}
+
+.modalBtns{
+  padding:12px 14px !important;
+  gap:10px !important;
+}
+
+#exportFromPreview,
+#closePrevBottom{
+  padding:13px !important;
+  border-radius:16px !important;
+  font-size:15px !important;
+}
+
+@media(max-width:520px){
+  .modal{
+    width:94vw !important;
+    margin:14px auto !important;
+    border-radius:22px !important;
+  }
+
+  .modalTop{
+    padding:12px !important;
+  }
+
+  .previewIcon{
+    width:42px !important;
+    height:42px !important;
+    font-size:20px !important;
+  }
+
+  .previewMainTitle{
+    font-size:20px !important;
+  }
+
+  .previewSubTitle{
+    font-size:12px !important;
+  }
+
+  .previewCloseBtn{
+    padding:10px 12px !important;
+    font-size:14px !important;
+  }
+
+  .modalBody{
+    max-height:66vh !important;
+    padding:10px !important;
+  }
+
+  .previewStats{
+    grid-template-columns:repeat(3,1fr) !important;
+    gap:6px !important;
+  }
+
+  .previewStat{
+    display:block !important;
+    text-align:center !important;
+    padding:8px 5px !important;
+    border-radius:14px !important;
+  }
+
+  .previewStatIcon{
+    width:30px !important;
+    height:30px !important;
+    font-size:14px !important;
+    margin:0 auto 4px !important;
+  }
+
+  .previewStatLabel{
+    font-size:9px !important;
+    line-height:1.15 !important;
+  }
+
+  .previewStatValue{
+    font-size:18px !important;
+  }
+
+  .previewModernTable{
+    font-size:12px !important;
+    min-width:600px !important;
+  }
+
+  .previewModernTable th,
+  .previewModernTable td{
+    padding:7px 7px !important;
+  }
+
+  .previewLegend{
+    display:none !important;
+  }
+
+  .modalBtns{
+    padding:10px !important;
+  }
+}
+/* ========================================= */
+
 </style>
 </head>
 
