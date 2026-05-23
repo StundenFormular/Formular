@@ -395,92 +395,175 @@ input, select{
   z-index:300;
   padding:14px;
 }
-
 .dlg{
-  width:min(92vw,460px);
-  margin:18vh auto 0;
+  max-width:520px;
+  margin:20vh auto 0;
   background:#fff;
-  border-radius:28px;
-  border:none;
-  box-shadow:
-    0 20px 60px rgba(0,0,0,.25),
-    0 4px 14px rgba(0,0,0,.12);
+  border-radius:18px;
+  border:1px solid var(--border);
+  box-shadow:var(--shadow);
   overflow:hidden;
-  transform:scale(.92);
-  opacity:0;
-  animation:dialogPop .28s ease forwards;
-  text-align:center;
 }
-
-@keyframes dialogPop{
-  to{
-    transform:scale(1);
-    opacity:1;
-  }
-}
-
 .dlgTop{
-  background:#fff !important;
-  border-bottom:none !important;
-  padding-top:34px;
-  padding-bottom:6px;
-  font-size:52px;
-  text-align:center;
+  padding:12px 14px;
+  background:linear-gradient(135deg, rgba(79,70,229,.10), rgba(6,182,212,.08));
+  border-bottom:1px solid var(--border);
   font-weight:1000;
 }
-
 .dlgBody{
-  padding:0 28px 10px;
-  font-size:18px;
-  line-height:1.6;
-  color:#374151;
-  font-weight:700;
-  white-space:pre-line;
+  padding:14px;
+  color:#0f172a;
+  font-weight:800;
+  line-height:1.3;
 }
-
 .dlgBtns{
   display:grid;
   grid-template-columns:1fr 1fr;
   gap:8px;
-  padding:22px;
-  border-top:none;
+  padding:12px;
+  border-top:1px solid var(--border);
 }
-
 .dlgBtns.one{
   grid-template-columns:1fr;
 }
-
 .dlgBtn{
   width:100%;
-  padding:16px;
-  border-radius:16px;
+  padding:12px;
+  border-radius:14px;
   border:1px solid var(--border);
   font-weight:1000;
-  font-size:18px;
+  font-size:15px;
   cursor:pointer;
   background:#fff;
-}
-
-.dlgBtn.primary{
-  background:#16a34a;
-  border:none;
-  border-radius:16px;
-  color:#fff;
-  font-size:18px;
-  font-weight:800;
-  padding:16px;
-  transition:.18s;
-}
-
-.dlgBtn.primary:hover{
-  background:#15803d;
-  transform:translateY(-1px);
 }
 .dlgBtn.primary{
   background:linear-gradient(135deg, rgba(79,70,229,.95), rgba(6,182,212,.90));
   color:#fff;
   border-color:rgba(79,70,229,.35);
 }
+
+
+/* ===== PREMIUM SUCCESS POPUP ===== */
+.successPremium{
+  text-align:center;
+  padding:34px 28px 26px;
+}
+
+.successSparkles{
+  position:relative;
+  width:118px;
+  height:96px;
+  margin:0 auto 4px;
+}
+
+.successCircle{
+  position:absolute;
+  left:50%;
+  top:18px;
+  transform:translateX(-50%);
+  width:82px;
+  height:82px;
+  border-radius:999px;
+  background:rgba(34,197,94,.12);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
+
+.successCircle::before{
+  content:"";
+  width:58px;
+  height:58px;
+  border-radius:999px;
+  background:rgba(34,197,94,.16);
+  position:absolute;
+}
+
+.successCheck{
+  position:relative;
+  z-index:2;
+  color:#16a34a;
+  font-size:48px;
+  font-weight:1000;
+  line-height:1;
+}
+
+.sparkle{
+  position:absolute;
+  color:#86efac;
+  font-size:18px;
+  font-weight:1000;
+  opacity:.95;
+}
+
+.sparkle.s1{ left:12px; top:34px; }
+.sparkle.s2{ left:34px; top:10px; font-size:14px; }
+.sparkle.s3{ right:18px; top:20px; }
+.sparkle.s4{ right:38px; top:56px; font-size:12px; }
+.sparkle.s5{ left:44px; top:62px; font-size:11px; }
+
+.successTitle{
+  margin-top:14px;
+  font-size:30px;
+  line-height:1.15;
+  font-weight:1000;
+  color:#111827;
+}
+
+.successText{
+  margin-top:12px;
+  font-size:17px;
+  line-height:1.45;
+  color:#374151;
+  font-weight:700;
+}
+
+.successDivider{
+  height:1px;
+  background:linear-gradient(90deg, transparent, rgba(34,197,94,.35), transparent);
+  margin:22px 0 18px;
+}
+
+.successNote{
+  display:flex;
+  gap:12px;
+  align-items:flex-start;
+  text-align:left;
+  color:#4b5563;
+  font-weight:700;
+  font-size:15px;
+  line-height:1.45;
+}
+
+.successShield{
+  flex:0 0 auto;
+  width:28px;
+  height:28px;
+  border-radius:999px;
+  border:2px solid rgba(34,197,94,.55);
+  color:#16a34a;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-weight:1000;
+  font-size:15px;
+  margin-top:1px;
+}
+
+.successPremiumBtn{
+  margin-top:26px;
+  width:100%;
+  padding:16px;
+  border:none;
+  border-radius:18px;
+  background:linear-gradient(135deg, #16a34a, #15803d);
+  color:#fff;
+  font-size:18px;
+  font-weight:1000;
+  cursor:pointer;
+  box-shadow:0 12px 24px rgba(22,163,74,.25);
+}
+/* =============================== */
 
 /* ===== BOTTOM SHEET (A) ===== */
 .timeSheetBack{
@@ -1446,6 +1529,67 @@ function openPreview(){
 }
 function closePreview(){ modalBack.style.display="none"; }
 
+
+function showSuccessPremium(){
+  return new Promise((resolve)=>{
+    dlgBack.style.display = "block";
+    dlgTitleEl.style.display = "none";
+    dlgBtnsEl.style.display = "none";
+
+    dlgMsgEl.innerHTML = `
+      <div class="successPremium">
+        <div class="successSparkles">
+          <div class="successCircle">
+            <div class="successCheck">✓</div>
+          </div>
+          <div class="sparkle s1">✦</div>
+          <div class="sparkle s2">✦</div>
+          <div class="sparkle s3">✦</div>
+          <div class="sparkle s4">•</div>
+          <div class="sparkle s5">•</div>
+        </div>
+
+        <div class="successTitle">Gesendet ✅</div>
+
+        <div class="successText">
+          Dein Stundenformular wurde<br>
+          erfolgreich gesendet.
+        </div>
+
+        <div class="successDivider"></div>
+
+        <div class="successNote">
+          <div class="successShield">✓</div>
+          <div>Bitte nicht erneut senden, außer du hast Änderungen vorgenommen.</div>
+        </div>
+
+        <button class="successPremiumBtn" type="button" id="successPremiumOk">
+          Verstanden
+        </button>
+      </div>
+    `;
+
+    function cleanup(){
+      dlgBack.style.display = "none";
+      dlgTitleEl.style.display = "";
+      dlgBtnsEl.style.display = "";
+      dlgMsgEl.innerHTML = "";
+      dlgBack.onclick = null;
+      document.removeEventListener("keydown", onKey);
+      resolve();
+    }
+
+    function onKey(e){
+      if(e.key === "Escape" || e.key === "Enter") cleanup();
+    }
+
+    document.getElementById("successPremiumOk").onclick = cleanup;
+    dlgBack.onclick = (e)=>{ if(e.target === dlgBack) cleanup(); };
+    document.addEventListener("keydown", onKey);
+  });
+}
+
+
 async function senden(){
   const nm = (nameEl.value || "").trim();
 
@@ -1487,15 +1631,7 @@ async function senden(){
 
     if(!res.ok) throw new Error("HTTP " + res.status);
 
-await openDialog({
-  title: "✅",
-  message:
-    "Gesendet\n\n" +
-    "Dein Stundenformular wurde erfolgreich gesendet.\n\n" +
-    "Bitte nicht erneut senden, außer du hast Änderungen vorgenommen.",
-  mode: "alert",
-  okText: "Verstanden"
-});
+ await showSuccessPremium();
   }catch(err){
     console.error(err);
     await dlgAlert("Fehler: Failed to fetch", "Fehler");
