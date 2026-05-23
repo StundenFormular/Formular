@@ -1754,6 +1754,282 @@ button.danger::before{ content:"🗑 "; }
 }
 /* ================================ */
 
+
+/* ===== PIN ICON NEUTRAL ===== */
+.pinOkIcon{
+  border:none !important;
+  color:#64748b !important;
+  background:rgba(100,116,139,.10) !important;
+  font-size:18px !important;
+}
+/* =========================== */
+
+
+/* ===== ÜBERSICHT KOMPAKT LANG - BIS CA. TAG 16 SICHTBAR ===== */
+.modal{
+  width:min(94vw,920px) !important;
+  max-width:920px !important;
+  margin:12px auto !important;
+  border-radius:24px !important;
+}
+
+.modalTop{
+  padding:14px 18px !important;
+}
+
+.previewHeader{
+  align-items:center !important;
+}
+
+.previewIcon{
+  width:46px !important;
+  height:46px !important;
+  font-size:22px !important;
+}
+
+.previewMainTitle{
+  font-size:22px !important;
+}
+
+.previewSubTitle{
+  font-size:14px !important;
+  color:#4f46e5 !important;
+  font-weight:1000 !important;
+}
+
+.previewCloseBtn{
+  min-width:108px !important;
+  padding:11px 14px !important;
+  border-radius:18px !important;
+}
+
+.modalBody{
+  padding:12px 14px 0 !important;
+  max-height:72vh !important;
+  overflow:auto !important;
+}
+
+.previewMetaLine{
+  display:flex;
+  justify-content:space-between;
+  gap:12px;
+  color:#475569;
+  font-size:12px;
+  font-weight:900;
+  margin:2px 0 10px;
+  border-top:2px solid #6d28d9;
+  padding-top:9px;
+}
+
+.previewMetaLine b{
+  color:#4f46e5;
+}
+
+.previewStats{
+  display:grid !important;
+  grid-template-columns:repeat(3,1fr) !important;
+  gap:8px !important;
+  margin-bottom:10px !important;
+}
+
+.previewStat{
+  min-height:56px !important;
+  border-radius:14px !important;
+  padding:8px 10px !important;
+  gap:8px !important;
+  background:#fff !important;
+}
+
+.previewStatIcon{
+  width:34px !important;
+  height:34px !important;
+  font-size:16px !important;
+}
+
+.previewStatLabel{
+  font-size:11px !important;
+  line-height:1.1 !important;
+}
+
+.previewStatValue{
+  font-size:20px !important;
+  line-height:1.05 !important;
+}
+
+.previewTableWrap{
+  border-radius:16px !important;
+  overflow:hidden !important;
+}
+
+.previewModernTable{
+  width:100% !important;
+  min-width:0 !important;
+  table-layout:fixed !important;
+  font-size:12px !important;
+}
+
+.previewModernTable th{
+  padding:8px 7px !important;
+}
+
+.previewModernTable td{
+  padding:7px 7px !important;
+}
+
+.previewModernTable th:nth-child(1),
+.previewModernTable td:nth-child(1){ width:12% !important; }
+
+.previewModernTable th:nth-child(2),
+.previewModernTable td:nth-child(2){ width:37% !important; }
+
+.previewModernTable th:nth-child(3),
+.previewModernTable td:nth-child(3){ width:17% !important; }
+
+.previewModernTable th:nth-child(4),
+.previewModernTable td:nth-child(4){ width:17% !important; }
+
+.previewModernTable th:nth-child(5),
+.previewModernTable td:nth-child(5){ width:17% !important; }
+
+.previewBadge{
+  min-width:42px !important;
+  padding:3px 7px !important;
+  font-size:12px !important;
+}
+
+.previewModernTable tr.emptyPreview td{
+  background:linear-gradient(180deg,#f8fafc,#f1f5f9) !important;
+  color:#94a3b8 !important;
+}
+
+.previewModernTable tr.emptyPreview td:first-child{
+  font-weight:1000 !important;
+  color:#64748b !important;
+}
+
+.previewModernTable tr.emptyPreview .previewBadge{
+  background:#f8fafc !important;
+  color:#94a3b8 !important;
+  border:1px dashed #cbd5e1 !important;
+  box-shadow:none !important;
+}
+
+.previewLegend,
+.previewTotalModern{
+  display:none !important;
+}
+
+.modalBtns{
+  padding:12px 14px !important;
+  gap:12px !important;
+  background:#fff !important;
+}
+
+#exportFromPreview,
+#closePrevBottom{
+  padding:14px !important;
+  border-radius:18px !important;
+  font-size:16px !important;
+}
+
+@media(max-width:520px){
+  .modal{
+    width:94vw !important;
+    margin:12px auto !important;
+    border-radius:22px !important;
+  }
+
+  .modalTop{
+    padding:12px !important;
+  }
+
+  .previewIcon{
+    width:42px !important;
+    height:42px !important;
+    font-size:20px !important;
+  }
+
+  .previewMainTitle{
+    font-size:20px !important;
+  }
+
+  .previewSubTitle{
+    font-size:12px !important;
+  }
+
+  .previewCloseBtn{
+    min-width:96px !important;
+    padding:10px 12px !important;
+    font-size:13px !important;
+  }
+
+  .modalBody{
+    max-height:72vh !important;
+    padding:10px 10px 0 !important;
+  }
+
+  .previewMetaLine{
+    font-size:10px !important;
+    margin-bottom:8px !important;
+    padding-top:7px !important;
+  }
+
+  .previewStats{
+    grid-template-columns:repeat(3,1fr) !important;
+    gap:6px !important;
+  }
+
+  .previewStat{
+    display:block !important;
+    text-align:center !important;
+    padding:7px 4px !important;
+    min-height:58px !important;
+  }
+
+  .previewStatIcon{
+    display:none !important;
+  }
+
+  .previewStatLabel{
+    font-size:9px !important;
+  }
+
+  .previewStatValue{
+    font-size:17px !important;
+  }
+
+  .previewModernTable{
+    font-size:11px !important;
+  }
+
+  .previewModernTable th,
+  .previewModernTable td{
+    padding:7px 5px !important;
+  }
+
+  .previewBadge{
+    min-width:36px !important;
+    padding:3px 5px !important;
+    font-size:11px !important;
+  }
+
+  .modalBtns{
+    padding:10px !important;
+  }
+}
+/* =========================================================== */
+
+
+/* ===== ÜBERSICHT GESAMTZEILE ===== */
+.previewModernTable tfoot th{
+  background:#f3e8ff !important;
+  color:#4f46e5 !important;
+  font-weight:1000 !important;
+  padding:9px 7px !important;
+  border-top:1px solid #ddd6fe !important;
+}
+/* =============================== */
+
 </style>
 </head>
 
@@ -1821,7 +2097,7 @@ button.danger::before{ content:"🗑 "; }
       <div class="pinWrap">
         <span class="pinIcon">🔒</span>
         <input id="name" placeholder="Bitte deinen personal PIN eingeben">
-        <span class="pinOkIcon">✓</span>
+        <span class="pinOkIcon">👁</span>
       </div>
       <div class="small" id="nameError" style="display:none; color:var(--danger); font-weight:900;">
         Bitte gültige PIN (2 Ziffern) eingeben.
@@ -1844,7 +2120,7 @@ button.danger::before{ content:"🗑 "; }
       </div>
     </div>
 
-    <div class="userFooter">Digitale Zeiterfassung · Entwickelt von Sad</div>
+    <div class="userFooter">Digitale Zeiterfassung · entwickelt für das Team von Abu-Hafez</div>
   </div>
 
   <div class="tableCard">
@@ -2665,7 +2941,7 @@ function openPreview(){
   const mm=pad2(current.getMonth()+1);
   const yy=current.getFullYear();
 
-  previewTitle.textContent=`Stundenübersicht – ${mm}/${yy}`+(name?` – PIN ${name}`:"");
+  previewTitle.textContent=`${mm}/${yy}`+(name?` – PIN ${name}`:"");
 
   let sum=0;
   let workedDays=0;
@@ -2687,7 +2963,7 @@ function openPreview(){
 
     rowsHtml.push(`
       <tr class="${empty ? "emptyPreview" : ""}">
-        <td style="font-weight:1000;">${day}</td>
+        <td><b>${day}</b></td>
         <td>${empty ? "–" : (ort === "__CLEAR_ORT__" ? "" : ort)}</td>
         <td>${start || "–"}</td>
         <td>${end || "–"}</td>
@@ -2699,8 +2975,14 @@ function openPreview(){
   const days = daysInMonth(current.getMonth()+1, current.getFullYear());
   const avg = workedDays ? (sum / workedDays) : 0;
   const avgTxt = avg ? (Math.round(avg * 10) / 10).toString().replace(".", ",") + " h" : "0 h";
+  const today = new Date();
 
   previewTable.innerHTML = `
+    <div class="previewMetaLine">
+      <div>Erstellt von: <b>Sad</b></div>
+      <div>Datum: <b>${pad2(today.getDate())}.${pad2(today.getMonth()+1)}.${today.getFullYear()}</b></div>
+    </div>
+
     <div class="previewStats">
       <div class="previewStat">
         <div class="previewStatIcon purple">🕒</div>
@@ -2718,7 +3000,7 @@ function openPreview(){
         </div>
       </div>
       <div class="previewStat">
-        <div class="previewStatIcon green">☆</div>
+        <div class="previewStatIcon green">↗</div>
         <div>
           <div class="previewStatLabel">Ø pro Tag</div>
           <div class="previewStatValue">${avgTxt}</div>
@@ -2740,13 +3022,13 @@ function openPreview(){
         <tbody>
           ${rowsHtml.join("")}
         </tbody>
+        <tfoot>
+          <tr>
+            <th colspan="4" style="text-align:left;">Gesamt</th>
+            <th><span class="previewBadge">${formatHoursSmart(sum) || "0"}h</span></th>
+          </tr>
+        </tfoot>
       </table>
-    </div>
-
-    <div class="previewLegend">
-      <span><i class="previewDot"></i> Beginn</span>
-      <span><i class="previewDot end"></i> Ende</span>
-      <span><i class="previewDot empty"></i> Leere Tage sind grau markiert</span>
     </div>
   `;
 
