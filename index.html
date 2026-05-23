@@ -599,12 +599,12 @@ input, select{
   width:72px;
   height:72px;
   border-radius:999px;
-  background:rgba(34,197,94,.12);
+  background:rgba(37,99,235,.10);
   margin:0 auto;
   display:flex;
   align-items:center;
   justify-content:center;
-  color:#16a34a;
+  color:#2563eb;
   font-size:38px;
   font-weight:1000;
 }
@@ -627,14 +627,14 @@ input, select{
 
 .sendConfirmNote{
   margin:18px auto 18px;
-  background:rgba(34,197,94,.08);
+  background:rgba(37,99,235,.08);
   border-radius:16px;
   padding:14px;
   display:flex;
   gap:10px;
   align-items:center;
   text-align:left;
-  color:#374151;
+  color:#1e3a8a;
   font-size:14px;
   font-weight:800;
   line-height:1.4;
@@ -644,13 +644,14 @@ input, select{
   width:34px;
   height:34px;
   border-radius:999px;
-  border:2px solid rgba(34,197,94,.65);
-  color:#16a34a;
+  border:2px solid rgba(37,99,235,.65);
+  color:#2563eb;
   display:flex;
   align-items:center;
   justify-content:center;
   flex:0 0 auto;
   font-weight:1000;
+  font-size:18px;
 }
 
 .sendConfirmDivider{
@@ -667,11 +668,10 @@ input, select{
 
 .sendConfirmCancel,
 .sendConfirmSend{
-  padding:14px;
-  border-radius:16px;
-  font-size:16px;
-  font-weight:1000;
-  cursor:pointer;
+  background:linear-gradient(135deg,#3b82f6,#1d4ed8);
+  border:none;
+  color:#fff;
+  box-shadow:0 12px 24px rgba(37,99,235,.25);
 }
 
 .sendConfirmCancel{
@@ -681,10 +681,10 @@ input, select{
 }
 
 .sendConfirmSend{
-  background:linear-gradient(135deg,#16a34a,#15803d);
+  background:linear-gradient(135deg,#3b82f6,#1d4ed8);
   border:none;
   color:#fff;
-  box-shadow:0 12px 24px rgba(22,163,74,.25);
+  box-shadow:0 12px 24px rgba(37,99,235,.25);
 }
 /* ==================================== */
 
@@ -1725,7 +1725,7 @@ function showSendConfirmPremium(){
         <button class="sendConfirmClose" type="button" id="sendConfirmClose">×</button>
 
         <div class="sendConfirmIconWrap">
-          <div class="sendConfirmCircle">➤</div>
+          <div class="sendConfirmCircle">📝</div>
         </div>
 
         <div class="sendConfirmTitle">Formular senden?</div>
@@ -1736,7 +1736,7 @@ function showSendConfirmPremium(){
         </div>
 
         <div class="sendConfirmNote">
-          <div class="sendConfirmShield">✓</div>
+          <div class="sendConfirmShield">i</div>
           <div>Bitte sende nur EINMAL im Monat deine Stunden (nicht täglich).</div>
         </div>
 
@@ -1744,7 +1744,7 @@ function showSendConfirmPremium(){
 
         <div class="sendConfirmBtns">
           <button class="sendConfirmCancel" type="button" id="sendConfirmCancel">✕ Abbrechen</button>
-          <button class="sendConfirmSend" type="button" id="sendConfirmOk">➤ Jetzt senden</button>
+          <button class="sendConfirmSend" type="button" id="sendConfirmOk">✈ Jetzt senden</button>
         </div>
       </div>
     `;
