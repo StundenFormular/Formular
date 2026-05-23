@@ -2097,6 +2097,89 @@ button.danger::before{
 }
 /* ===================================== */
 
+
+/* ===== PDF LESBARER + FETTER, TROTZDEM 1 SEITE ===== */
+@media print{
+  @page{
+    size:A4 portrait;
+    margin:7mm;
+  }
+
+  #printTitle{
+    font-size:22pt !important;
+    font-weight:1000 !important;
+  }
+
+  #printSubTitle{
+    font-size:12pt !important;
+    font-weight:1000 !important;
+  }
+
+  #printMetaTop{
+    font-size:9pt !important;
+    font-weight:900 !important;
+  }
+
+  #printTable{
+    font-size:8.6pt !important;
+    line-height:1.02 !important;
+  }
+
+  #printTable th{
+    font-size:8.8pt !important;
+    font-weight:1000 !important;
+    padding:1.45mm 1.6mm !important;
+  }
+
+  #printTable td{
+    font-size:8.6pt !important;
+    font-weight:750 !important;
+    padding:0.78mm 1.6mm !important;
+  }
+
+  #printTable td:first-child{
+    font-weight:1000 !important;
+  }
+
+  #printTable tfoot th{
+    font-size:10pt !important;
+    font-weight:1000 !important;
+    padding:1.6mm 1.6mm !important;
+  }
+
+  .printHourBadge{
+    font-size:8.8pt !important;
+    font-weight:1000 !important;
+    min-width:10mm !important;
+    padding:.45mm 1.25mm !important;
+  }
+
+  .printEmptyBadge{
+    font-size:8.4pt !important;
+    font-weight:900 !important;
+    min-width:10mm !important;
+    padding:.45mm 1.25mm !important;
+  }
+
+  #printHeader{
+    margin-bottom:2.5mm !important;
+    padding-bottom:2mm !important;
+  }
+
+  #printIcon{
+    width:11mm !important;
+    height:11mm !important;
+    font-size:17pt !important;
+  }
+
+  #printSummaryCards,
+  #printMetaBottom,
+  #printThanks{
+    display:none !important;
+  }
+}
+/* =================================================== */
+
 </style>
 </head>
 
