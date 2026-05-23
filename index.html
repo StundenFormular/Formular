@@ -395,46 +395,86 @@ input, select{
   z-index:300;
   padding:14px;
 }
+
 .dlg{
-  max-width:520px;
-  margin:20vh auto 0;
+  width:min(92vw,460px);
+  margin:18vh auto 0;
   background:#fff;
-  border-radius:18px;
-  border:1px solid var(--border);
-  box-shadow:var(--shadow);
+  border-radius:28px;
+  border:none;
+  box-shadow:
+    0 20px 60px rgba(0,0,0,.25),
+    0 4px 14px rgba(0,0,0,.12);
   overflow:hidden;
+  transform:scale(.92);
+  opacity:0;
+  animation:dialogPop .28s ease forwards;
+  text-align:center;
 }
+
+@keyframes dialogPop{
+  to{
+    transform:scale(1);
+    opacity:1;
+  }
+}
+
 .dlgTop{
-  padding:12px 14px;
-  background:linear-gradient(135deg, rgba(79,70,229,.10), rgba(6,182,212,.08));
-  border-bottom:1px solid var(--border);
+  background:#fff !important;
+  border-bottom:none !important;
+  padding-top:34px;
+  padding-bottom:6px;
+  font-size:52px;
+  text-align:center;
   font-weight:1000;
 }
+
 .dlgBody{
-  padding:14px;
-  color:#0f172a;
-  font-weight:800;
-  line-height:1.3;
+  padding:0 28px 10px;
+  font-size:18px;
+  line-height:1.6;
+  color:#374151;
+  font-weight:700;
+  white-space:pre-line;
 }
+
 .dlgBtns{
   display:grid;
   grid-template-columns:1fr 1fr;
   gap:8px;
-  padding:12px;
-  border-top:1px solid var(--border);
+  padding:22px;
+  border-top:none;
 }
+
 .dlgBtns.one{
   grid-template-columns:1fr;
 }
+
 .dlgBtn{
   width:100%;
-  padding:12px;
-  border-radius:14px;
+  padding:16px;
+  border-radius:16px;
   border:1px solid var(--border);
   font-weight:1000;
-  font-size:15px;
+  font-size:18px;
   cursor:pointer;
   background:#fff;
+}
+
+.dlgBtn.primary{
+  background:#16a34a;
+  border:none;
+  border-radius:16px;
+  color:#fff;
+  font-size:18px;
+  font-weight:800;
+  padding:16px;
+  transition:.18s;
+}
+
+.dlgBtn.primary:hover{
+  background:#15803d;
+  transform:translateY(-1px);
 }
 .dlgBtn.primary{
   background:linear-gradient(135deg, rgba(79,70,229,.95), rgba(6,182,212,.90));
@@ -1447,9 +1487,10 @@ async function senden(){
 
     if(!res.ok) throw new Error("HTTP " + res.status);
 
- await openDialog({
-  title: "Gesendet ✅",
+await openDialog({
+  title: "✅",
   message:
+    "Gesendet\n\n" +
     "Dein Stundenformular wurde erfolgreich gesendet.\n\n" +
     "Bitte nicht erneut senden, außer du hast Änderungen vorgenommen.",
   mode: "alert",
