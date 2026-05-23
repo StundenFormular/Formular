@@ -1447,7 +1447,14 @@ async function senden(){
 
     if(!res.ok) throw new Error("HTTP " + res.status);
 
-    await dlgAlert("Gesendet ✅", "Erfolg");
+    await openDialog({
+  title: "Gesendet ✅",
+  message:
+    "Dein Stundenformular wurde erfolgreich gesendet.\n\n" +
+    "Bitte nicht erneut senden, außer du hast Änderungen vorgenommen.",
+  mode: "alert",
+  okText: "Verstanden"
+});
   }catch(err){
     console.error(err);
     await dlgAlert("Fehler: Failed to fetch", "Fehler");
