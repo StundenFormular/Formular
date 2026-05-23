@@ -237,48 +237,203 @@ input, select{
   box-shadow: inset 4px 0 0 rgba(79,70,229,.65);
 }
 
-@page{ size:A4 landscape; margin:3mm; }
+
+@page{ size:A4 portrait; margin:8mm; }
 #printArea{ display:none; }
 
 @media print{
   body{ background:#fff; }
   .topbar, .card, .total, .tableCard, .modalBack, .pinBack, .dlgBack, .timeSheetBack{ display:none !important; }
   .wrap{ max-width:100% !important; padding:0 !important; }
-  #printArea{ display:block !important; }
-
-  #printArea{
-    zoom: 0.92;
-    transform: scale(0.92);
-    transform-origin: top left;
-    width: 108.7%;
-  }
-
-  #printTitle{ font-size:11pt; font-weight:1000; margin:0 0 1.5mm 0; }
-  #printMetaTop{ font-size:8.5pt; margin:0 0 1.5mm 0; }
-  #printMetaBottom{ font-size:8.5pt; margin:1.5mm 0 0 0; }
-
-  table{
+  #printArea{ 
+    display:block !important;
     width:100%;
-    border-collapse:collapse;
-    table-layout:fixed;
+    color:#0f172a;
+    font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
+  }
+
+  #printHeader{
+    display:flex;
+    justify-content:space-between;
+    align-items:flex-start;
+    gap:12px;
+    margin:0 0 5mm 0;
+    padding-bottom:3mm;
+    border-bottom:2px solid #6d28d9;
+  }
+
+  #printTitle{
+    font-size:22pt;
+    font-weight:1000;
+    margin:0;
+    line-height:1.05;
+  }
+
+  #printSubTitle{
+    font-size:12pt;
+    color:#4f46e5;
+    font-weight:1000;
+    margin-top:2mm;
+  }
+
+  #printIcon{
+    width:14mm;
+    height:14mm;
+    border-radius:4mm;
+    background:#ede9fe;
+    color:#4f46e5;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-size:22pt;
+    font-weight:1000;
+  }
+
+  #printMetaTop{
+    display:flex;
+    justify-content:space-between;
+    gap:10mm;
     font-size:9pt;
-    line-height:1.02;
+    font-weight:800;
+    color:#475569;
+    margin:0 0 3mm 0;
   }
-  th, td{
-    border:1px solid #111;
-    padding:2px 4px;
-    vertical-align:middle;
+
+  #printMetaTop b{ color:#4f46e5; }
+
+  #printTable{
+    width:100%;
+    border-collapse:separate;
+    border-spacing:0;
+    table-layout:fixed;
+    font-size:8.2pt;
+    line-height:1.05;
+    border:1px solid #e5e7eb;
+    border-radius:3mm;
     overflow:hidden;
-    white-space:nowrap;
-    text-overflow:ellipsis;
   }
-  th{ background:#eaeaea; font-weight:900; }
-  thead{ display:table-header-group; }
-  tfoot{ display:table-footer-group; }
-  tr{ page-break-inside:avoid; }
+
+  #printTable th{
+    background:linear-gradient(135deg,#6d28d9,#2563eb);
+    color:#fff;
+    font-weight:1000;
+    padding:2.4mm 2mm;
+    border-right:1px solid rgba(255,255,255,.22);
+  }
+
+  #printTable th:last-child{ border-right:none; }
+
+  #printTable td{
+    padding:1.4mm 2mm;
+    border-right:1px solid #e5e7eb;
+    border-bottom:1px solid #e5e7eb;
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
+    vertical-align:middle;
+  }
+
+  #printTable td:last-child{ border-right:none; }
+
+  #printTable tr.empty td{
+    background:#f8fafc;
+    color:#94a3b8;
+  }
+
+  #printTable tr:not(.empty) td{
+    background:#fff;
+  }
+
+  #printTable tfoot th{
+    background:#f3e8ff;
+    color:#4f46e5;
+    font-size:10pt;
+    padding:2.5mm 2mm;
+    border-top:1px solid #ddd6fe;
+  }
+
+  .printHourBadge{
+    display:inline-block;
+    min-width:13mm;
+    text-align:center;
+    border-radius:999px;
+    padding:1mm 2mm;
+    background:#ede9fe;
+    color:#4f46e5;
+    font-weight:1000;
+  }
+
+  .printEmptyBadge{
+    display:inline-block;
+    min-width:13mm;
+    text-align:center;
+    border-radius:999px;
+    padding:1mm 2mm;
+    background:#f8fafc;
+    color:#94a3b8;
+    border:1px dashed #cbd5e1;
+    font-weight:900;
+  }
+
   .right{ text-align:right; }
-  .empty td{ background:#f3f4f6; }
+  .center{ text-align:center; }
+
+  #printSummaryCards{
+    margin-top:5mm;
+    display:grid;
+    grid-template-columns:1fr;
+    gap:3mm;
+  }
+
+  .printInfoCard{
+    border:1px solid #e5e7eb;
+    border-radius:4mm;
+    padding:3mm 4mm;
+    display:flex;
+    align-items:center;
+    gap:3mm;
+    min-height:14mm;
+  }
+
+  .printInfoIcon{
+    width:10mm;
+    height:10mm;
+    border-radius:999px;
+    background:linear-gradient(135deg,#8b5cf6,#4f46e5);
+    color:#fff;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-size:12pt;
+    flex:0 0 auto;
+  }
+
+  .printInfoLabel{
+    color:#475569;
+    font-size:9pt;
+    font-weight:900;
+  }
+
+  .printInfoValue{
+    color:#4f46e5;
+    font-size:16pt;
+    font-weight:1000;
+    line-height:1.05;
+  }
+
+  #printMetaBottom{
+    margin-top:5mm;
+  }
+
+  #printThanks{
+    text-align:center;
+    color:#64748b;
+    font-size:9pt;
+    font-weight:800;
+    margin-top:8mm;
+  }
 }
+
 
 .modalBack{
   display:none;
@@ -1623,29 +1778,55 @@ button.danger::before{ content:"🗑 "; }
   </div>
 
   <div id="printArea">
-    <div id="printTitle"></div>
+    <div id="printHeader">
+      <div>
+        <div id="printTitle"></div>
+        <div id="printSubTitle"></div>
+      </div>
+      <div id="printIcon">📅</div>
+    </div>
+
     <div id="printMetaTop"></div>
 
-    <table>
+    <table id="printTable">
       <thead>
         <tr>
-          <th style="width:8%;">Datum</th>
-          <th style="width:44%;">KEHRE</th>
-          <th style="width:16%;">Beginn</th>
-          <th style="width:16%;">Ende</th>
-          <th class="right" style="width:16%;">Stunden</th>
+          <th style="width:10%;">Tag</th>
+          <th style="width:38%;">Kehre</th>
+          <th style="width:18%;">Beginn</th>
+          <th style="width:18%;">Ende</th>
+          <th class="center" style="width:16%;">Stunden</th>
         </tr>
       </thead>
       <tbody id="printBody"></tbody>
       <tfoot>
         <tr>
           <th colspan="4" class="right">Gesamt</th>
-          <th class="right" id="printTotal"></th>
+          <th class="center" id="printTotal"></th>
         </tr>
       </tfoot>
     </table>
 
+    <div id="printSummaryCards">
+      <div class="printInfoCard">
+        <div class="printInfoIcon">🕒</div>
+        <div>
+          <div class="printInfoLabel">Gesamtstunden:</div>
+          <div class="printInfoValue" id="printSummaryTotal"></div>
+        </div>
+      </div>
+
+      <div class="printInfoCard" id="printNoteCard" style="display:none;">
+        <div class="printInfoIcon">💬</div>
+        <div>
+          <div class="printInfoLabel">Bemerkung:</div>
+          <div id="printNoteText"></div>
+        </div>
+      </div>
+    </div>
+
     <div id="printMetaBottom"></div>
+    <div id="printThanks">Vielen Dank für deine Arbeit!</div>
   </div>
 
 </div>
@@ -1691,10 +1872,14 @@ const closePrevBottom = document.getElementById("closePrevBottom");
 const exportFromPreview = document.getElementById("exportFromPreview");
 
 const printTitleEl = document.getElementById("printTitle");
+const printSubTitleEl = document.getElementById("printSubTitle");
 const printMetaTopEl  = document.getElementById("printMetaTop");
 const printMetaBottomEl  = document.getElementById("printMetaBottom");
 const printBodyEl  = document.getElementById("printBody");
 const printTotalEl = document.getElementById("printTotal");
+const printSummaryTotalEl = document.getElementById("printSummaryTotal");
+const printNoteCardEl = document.getElementById("printNoteCard");
+const printNoteTextEl = document.getElementById("printNoteText");
 
 const pinBack = document.getElementById("pinBack");
 const pinInput = document.getElementById("pinInput");
@@ -2274,8 +2459,13 @@ function buildPrintTable(){
   const mm=pad2(current.getMonth()+1);
   const yy=current.getFullYear();
 
-  printTitleEl.textContent=`Stundenformular – ${mm}/${yy}`+(name?` – ${name}`:"");
-  printMetaTopEl.textContent=`Erstellt von Sad`;
+  printTitleEl.textContent = "Stundenformular";
+  printSubTitleEl.textContent = `${mm}/${yy}` + (name ? ` – PIN ${name}` : "");
+
+  const today = new Date();
+  printMetaTopEl.innerHTML =
+    `<div>Erstellt von: <b>Sad</b></div>` +
+    `<div>Datum: <b>${pad2(today.getDate())}.${pad2(today.getMonth()+1)}.${today.getFullYear()}</b></div>`;
 
   printBodyEl.innerHTML="";
   let sum=0;
@@ -2295,21 +2485,35 @@ function buildPrintTable(){
     if(!isNaN(hrsNum)) sum+=hrsNum;
 
     tr.innerHTML=`
-      <td>${day}</td>
-      <td>${ort === "__CLEAR_ORT__" ? "" : ort}</td>
-      <td>${start}</td>
-      <td>${end}</td>
-      <td class="right">${hrsTxt}</td>
+      <td class="center"><b>${day}</b></td>
+      <td>${empty ? "–" : (ort === "__CLEAR_ORT__" ? "" : ort)}</td>
+      <td class="center">${start || "–"}</td>
+      <td class="center">${end || "–"}</td>
+      <td class="center">${
+        hrsTxt
+          ? `<span class="printHourBadge">${hrsTxt} h</span>`
+          : `<span class="printEmptyBadge">–</span>`
+      }</td>
     `;
     printBodyEl.appendChild(tr);
   });
 
-  printTotalEl.textContent = formatHoursWithStd(sum);
+  printTotalEl.innerHTML = `<span class="printHourBadge">${formatHoursSmart(sum) || "0"} h</span>`;
+  if(printSummaryTotalEl) printSummaryTotalEl.textContent = `${formatHoursSmart(sum) || "0"} h`;
+
   const printNoteText = (noteEl.value || "").trim();
 
-  printMetaBottomEl.innerHTML =
-    `<div><b>Gesamtstunden:</b> ${formatHoursWithStd(sum)}</div>` +
-    (printNoteText ? `<div style="margin-top:4px;"><b>Bemerkung:</b> ${printNoteText}</div>` : "");
+  if(printNoteCardEl && printNoteTextEl){
+    if(printNoteText){
+      printNoteCardEl.style.display = "flex";
+      printNoteTextEl.textContent = printNoteText;
+    }else{
+      printNoteCardEl.style.display = "none";
+      printNoteTextEl.textContent = "";
+    }
+  }
+
+  printMetaBottomEl.innerHTML = "";
 }
 
 function exportPDF(){
