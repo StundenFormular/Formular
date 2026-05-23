@@ -1691,68 +1691,6 @@ button.danger::before{ content:"🗑 "; }
 /* ================================= */
 
 
-/* ===== PDF NACH SENDEN PROMPT ===== */
-.pdfPromptPremium{
-  text-align:center;
-  padding:30px 24px 24px;
-}
-
-.pdfPromptIcon{
-  width:78px;
-  height:78px;
-  margin:0 auto 16px;
-  border-radius:999px;
-  background:rgba(79,70,229,.10);
-  color:#4f46e5;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  font-size:38px;
-}
-
-.pdfPromptTitle{
-  font-size:28px;
-  font-weight:1000;
-  color:#111827;
-}
-
-.pdfPromptText{
-  margin-top:10px;
-  color:#4b5563;
-  font-size:16px;
-  line-height:1.45;
-  font-weight:750;
-}
-
-.pdfPromptBtns{
-  margin-top:24px;
-  display:grid;
-  grid-template-columns:1fr 1fr;
-  gap:10px;
-}
-
-.pdfPromptClose,
-.pdfPromptDownload{
-  padding:15px;
-  border-radius:17px;
-  font-size:16px;
-  font-weight:1000;
-  cursor:pointer;
-}
-
-.pdfPromptClose{
-  background:#fff;
-  border:1px solid #d1d5db;
-  color:#111827;
-}
-
-.pdfPromptDownload{
-  background:linear-gradient(135deg,#4f46e5,#7c3aed);
-  border:none;
-  color:#fff;
-  box-shadow:0 12px 24px rgba(79,70,229,.22);
-}
-/* ================================ */
 
 
 /* ===== PIN ICON NEUTRAL ===== */
@@ -2029,6 +1967,30 @@ button.danger::before{ content:"🗑 "; }
   border-top:1px solid #ddd6fe !important;
 }
 /* =============================== */
+
+
+/* ===== PIN PLATZHALTER KLEINER ===== */
+.pinWrap input{
+  font-size:18px !important;
+}
+
+.pinWrap input::placeholder{
+  font-size:14px !important;
+  font-weight:750 !important;
+  color:#64748b !important;
+  opacity:.85 !important;
+}
+
+@media(max-width:520px){
+  .pinWrap input{
+    font-size:16px !important;
+  }
+
+  .pinWrap input::placeholder{
+    font-size:13px !important;
+  }
+}
+/* =================================== */
 
 </style>
 </head>
@@ -3253,11 +3215,6 @@ async function senden(){
     if(!res.ok) throw new Error("HTTP " + res.status);
 
  await showSuccessPremium();
-
-    const pdfWanted = await showPdfDownloadPrompt();
-    if(pdfWanted){
-      exportPDF();
-    }
   }catch(err){
     console.error(err);
     await dlgAlert("Fehler: Failed to fetch", "Fehler");
