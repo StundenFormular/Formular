@@ -766,6 +766,397 @@ input, select{
   box-shadow: inset 0 0 0 4px rgba(239,68,68,.9);
 }
 /* =========================== */
+
+/* ===== MODERN USER AREA ===== */
+.topbar{
+  background:rgba(255,255,255,.72);
+  border:1px solid rgba(255,255,255,.70);
+  border-radius:26px;
+  padding:10px;
+  box-shadow:0 18px 38px rgba(79,70,229,.12);
+}
+.btnrow{ gap:10px; }
+.btnrow button{
+  min-height:68px;
+  border-radius:22px;
+  font-size:15px;
+  box-shadow:0 10px 22px rgba(15,23,42,.06);
+}
+button.primary::before{ content:"📄 "; }
+button.send::before{ content:"✈ "; }
+button.danger::before{ content:"🗑 "; }
+#prevBtn::before{ content:"📊 "; }
+
+.card.userCard{
+  position:relative;
+  overflow:hidden;
+  margin-top:14px;
+  padding:22px;
+  border-radius:28px;
+  background:
+    radial-gradient(circle at 78% 18%, rgba(99,102,241,.22), transparent 32%),
+    radial-gradient(circle at 90% 35%, rgba(6,182,212,.18), transparent 30%),
+    linear-gradient(135deg, rgba(255,255,255,.78), rgba(219,234,254,.78));
+  border:1px solid rgba(255,255,255,.75);
+  box-shadow:0 18px 42px rgba(79,70,229,.14);
+}
+.userHeader{ display:flex; align-items:center; gap:14px; margin-bottom:18px; }
+.userAvatar{
+  width:62px; height:62px; border-radius:999px;
+  background:linear-gradient(135deg,#7c3aed,#0ea5e9);
+  color:#fff; display:flex; align-items:center; justify-content:center;
+  font-size:34px; box-shadow:0 12px 26px rgba(79,70,229,.24); flex:0 0 auto;
+}
+.userTitle{ font-size:26px; line-height:1.05; font-weight:1000; color:#0f172a; }
+.userSub{ margin-top:5px; font-size:15px; font-weight:750; color:#64748b; }
+.fieldTitle{
+  display:flex; align-items:center; gap:9px;
+  font-size:19px; font-weight:1000; margin:14px 0 8px; color:#0f172a;
+}
+.fieldTitle .ico{
+  width:30px; height:30px; border-radius:10px;
+  background:rgba(79,70,229,.12); display:inline-flex;
+  align-items:center; justify-content:center; color:#4f46e5; font-size:17px;
+}
+.pinWrap{ position:relative; }
+.pinWrap input{
+  padding-left:54px; padding-right:54px; min-height:58px;
+  font-size:24px; font-weight:900; border-radius:20px;
+  border:1px solid rgba(147,197,253,.85);
+  box-shadow:0 10px 24px rgba(15,23,42,.04);
+}
+.pinIcon,.pinOkIcon{
+  position:absolute; top:50%; transform:translateY(-50%);
+  width:30px; height:30px; border-radius:999px; display:flex;
+  align-items:center; justify-content:center; pointer-events:none;
+}
+.pinIcon{ left:16px; background:rgba(79,70,229,.12); color:#4f46e5; font-size:17px; }
+.pinOkIcon{ right:16px; border:2px solid rgba(34,197,94,.8); color:#16a34a; font-weight:1000; }
+.periodGrid{ display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+.periodBox{ position:relative; }
+.periodBox select{
+  min-height:58px; padding-left:54px; padding-top:22px;
+  font-size:22px; font-weight:900; border-radius:20px;
+  border:1px solid rgba(147,197,253,.85);
+  box-shadow:0 10px 24px rgba(15,23,42,.04);
+}
+.periodBox .miniLabel{
+  position:absolute; left:54px; top:8px; font-size:11px;
+  font-weight:900; color:#64748b; pointer-events:none;
+}
+.periodIcon{
+  position:absolute; left:16px; top:50%; transform:translateY(-50%);
+  width:30px; height:30px; border-radius:999px;
+  background:rgba(59,130,246,.12); color:#2563eb;
+  display:flex; align-items:center; justify-content:center;
+  font-size:16px; pointer-events:none;
+}
+.userFooter{
+  margin-top:18px; display:flex; align-items:center; gap:12px;
+  color:#64748b; font-size:13px; font-weight:800;
+}
+.userFooter::before,.userFooter::after{
+  content:""; height:2px; flex:1; border-radius:999px;
+  background:linear-gradient(90deg, rgba(124,58,237,.25), rgba(6,182,212,.35));
+}
+.tableCard{
+  border-radius:28px;
+  background:rgba(255,255,255,.62);
+  border:1px solid rgba(255,255,255,.72);
+  box-shadow:0 18px 42px rgba(79,70,229,.10);
+  padding:12px;
+}
+.tableHeadRow .title::before{ content:"☷ "; color:#4f46e5; }
+.tableHeadRow .hint{
+  background:rgba(79,70,229,.10); color:#4f46e5;
+  padding:7px 12px; border-radius:999px;
+}
+.tableScroll{ border-radius:22px; border:1px solid rgba(226,232,240,.9); }
+.entryTable select,.timeField input,.entryHours{ border-radius:18px; }
+/* ============================ */
+
+
+/* ===== MODERN PREVIEW / ÜBERSICHT ===== */
+.modalBack{
+  background:rgba(15,23,42,.56);
+  backdrop-filter:blur(4px);
+  -webkit-backdrop-filter:blur(4px);
+}
+
+.modal{
+  width:min(94vw,980px);
+  max-width:980px;
+  margin:18px auto;
+  border-radius:28px;
+  border:1px solid rgba(255,255,255,.72);
+  background:rgba(255,255,255,.94);
+  box-shadow:0 28px 70px rgba(15,23,42,.28);
+  overflow:hidden;
+}
+
+.modalTop{
+  padding:18px 20px;
+  background:
+    radial-gradient(circle at 8% 20%, rgba(124,58,237,.16), transparent 24%),
+    linear-gradient(135deg, rgba(255,255,255,.92), rgba(239,246,255,.92));
+  border-bottom:1px solid rgba(226,232,240,.82);
+}
+
+.previewHeader{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:14px;
+  width:100%;
+}
+
+.previewTitleWrap{
+  display:flex;
+  align-items:center;
+  gap:12px;
+  min-width:0;
+}
+
+.previewIcon{
+  width:54px;
+  height:54px;
+  border-radius:999px;
+  background:linear-gradient(135deg,#7c3aed,#2563eb);
+  color:#fff;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:26px;
+  box-shadow:0 12px 28px rgba(79,70,229,.25);
+  flex:0 0 auto;
+}
+
+.previewMainTitle{
+  font-size:24px;
+  font-weight:1000;
+  color:#0f172a;
+  line-height:1.1;
+}
+
+.previewSubTitle{
+  margin-top:4px;
+  color:#64748b;
+  font-size:14px;
+  font-weight:800;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+
+.previewCloseBtn{
+  width:auto !important;
+  min-width:118px;
+  padding:13px 16px !important;
+  border-radius:999px !important;
+  background:#fff !important;
+  color:#0f172a !important;
+  font-weight:1000 !important;
+  box-shadow:0 8px 18px rgba(15,23,42,.06);
+}
+
+.modalBody{
+  padding:16px;
+  max-height:74vh;
+}
+
+.previewStats{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:10px;
+  margin-bottom:14px;
+}
+
+.previewStat{
+  background:#fff;
+  border:1px solid rgba(226,232,240,.95);
+  border-radius:20px;
+  padding:12px;
+  box-shadow:0 10px 22px rgba(15,23,42,.04);
+  display:flex;
+  align-items:center;
+  gap:10px;
+  min-width:0;
+}
+
+.previewStatIcon{
+  width:42px;
+  height:42px;
+  border-radius:999px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  color:#fff;
+  font-size:20px;
+  flex:0 0 auto;
+}
+
+.previewStatIcon.purple{ background:linear-gradient(135deg,#7c3aed,#6366f1); }
+.previewStatIcon.blue{ background:linear-gradient(135deg,#2563eb,#06b6d4); }
+.previewStatIcon.green{ background:linear-gradient(135deg,#22c55e,#16a34a); }
+
+.previewStatLabel{
+  color:#475569;
+  font-size:12px;
+  font-weight:850;
+}
+
+.previewStatValue{
+  color:#0f172a;
+  font-size:22px;
+  line-height:1.1;
+  font-weight:1000;
+  white-space:nowrap;
+}
+
+.previewTableWrap{
+  border:1px solid rgba(226,232,240,.95);
+  border-radius:22px;
+  overflow:auto;
+  background:#fff;
+  -webkit-overflow-scrolling:touch;
+  box-shadow:0 10px 22px rgba(15,23,42,.04);
+}
+
+.previewModernTable{
+  width:100%;
+  border-collapse:collapse;
+  table-layout:fixed;
+  min-width:650px;
+  font-size:14px;
+}
+
+.previewModernTable th{
+  background:linear-gradient(135deg,#6d28d9,#2563eb);
+  color:#fff;
+  padding:12px 10px;
+  font-weight:1000;
+  border:none;
+  text-align:left;
+  white-space:nowrap;
+}
+
+.previewModernTable th:first-child{ border-top-left-radius:18px; }
+.previewModernTable th:last-child{ border-top-right-radius:18px; text-align:center; }
+
+.previewModernTable td{
+  padding:11px 10px;
+  border-bottom:1px solid rgba(226,232,240,.8);
+  border-right:1px solid rgba(226,232,240,.55);
+  color:#0f172a;
+  background:#fff;
+  vertical-align:middle;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+
+.previewModernTable td:last-child{ border-right:none; text-align:center; }
+
+.previewModernTable tr.emptyPreview td{
+  background:#f8fafc;
+  color:#94a3b8;
+}
+
+.previewBadge{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  min-width:54px;
+  padding:5px 10px;
+  border-radius:999px;
+  background:rgba(124,58,237,.10);
+  color:#4f46e5;
+  font-weight:1000;
+}
+
+.previewLegend{
+  display:flex;
+  flex-wrap:wrap;
+  gap:8px;
+  padding:10px;
+  background:#fff;
+  border:1px solid rgba(226,232,240,.95);
+  border-top:none;
+  border-radius:0 0 22px 22px;
+}
+
+.previewLegend span{
+  display:inline-flex;
+  align-items:center;
+  gap:6px;
+  padding:7px 10px;
+  border-radius:999px;
+  background:#f8fafc;
+  color:#475569;
+  font-size:12px;
+  font-weight:800;
+}
+
+.previewDot{
+  width:10px;
+  height:10px;
+  border-radius:999px;
+  display:inline-block;
+  background:#6366f1;
+}
+
+.previewDot.end{ background:#f43f5e; }
+.previewDot.empty{ background:#cbd5e1; }
+
+.previewTotalModern{
+  margin-top:14px;
+  background:linear-gradient(135deg, rgba(79,70,229,.10), rgba(6,182,212,.08));
+  border:1px solid rgba(226,232,240,.95);
+  border-radius:20px;
+  padding:13px 14px;
+  color:#0f172a;
+  font-weight:900;
+}
+
+.modalBtns{
+  grid-template-columns:1fr 1fr;
+  gap:12px;
+  padding:16px;
+  border-top:1px solid rgba(226,232,240,.85);
+  background:rgba(248,250,252,.78);
+}
+
+#exportFromPreview{
+  background:linear-gradient(135deg,#4f46e5,#7c3aed) !important;
+  color:#fff !important;
+  border:none !important;
+  border-radius:18px !important;
+  font-weight:1000 !important;
+}
+
+#exportFromPreview::before{ content:"📄 "; }
+
+#closePrevBottom{
+  border-radius:18px !important;
+  font-weight:1000 !important;
+}
+
+#closePrevBottom::before{ content:"← "; }
+
+@media(max-width:520px){
+  .modal{ width:94vw; margin:16px auto; border-radius:24px; }
+  .modalTop{ padding:14px; }
+  .previewIcon{ width:46px; height:46px; font-size:22px; }
+  .previewMainTitle{ font-size:21px; }
+  .previewSubTitle{ font-size:12px; }
+  .previewCloseBtn{ min-width:auto; padding:11px 13px !important; }
+  .previewStats{ grid-template-columns:1fr; }
+  .modalBody{ padding:12px; }
+  .previewModernTable{ font-size:13px; min-width:620px; }
+  .previewModernTable th,.previewModernTable td{ padding:10px 8px; }
+}
+/* =================================== */
+
 </style>
 </head>
 
@@ -819,25 +1210,44 @@ input, select{
     </div>
   </div>
 
-  <div class="card">
-    <div>
-      <label>Personal-PIN:</label>
-      <input id="name" placeholder="Bitte deinen personal PIN eingeben">
+  <div class="card userCard">
+    <div class="userHeader">
+      <div class="userAvatar">👤</div>
+      <div>
+        <div class="userTitle">Mitarbeiterbereich</div>
+        <div class="userSub">Bitte PIN und Monat auswählen</div>
+      </div>
+    </div>
+
+    <div class="modernPinSection">
+      <div class="fieldTitle"><span class="ico">👤</span>Personal-PIN</div>
+      <div class="pinWrap">
+        <span class="pinIcon">🔒</span>
+        <input id="name" placeholder="Bitte deinen personal PIN eingeben">
+        <span class="pinOkIcon">✓</span>
+      </div>
       <div class="small" id="nameError" style="display:none; color:var(--danger); font-weight:900;">
         Bitte gültige PIN (2 Ziffern) eingeben.
       </div>
     </div>
 
-    <div style="margin-top:10px;">
-      <label>Monat / Jahr</label>
-      <div class="grid2" style="margin-top:6px;">
-        <select id="month"></select>
-        <select id="year"></select>
+    <div class="modernPeriodSection">
+      <div class="fieldTitle"><span class="ico">📅</span>Zeitraum wählen</div>
+      <div class="periodGrid">
+        <div class="periodBox">
+          <span class="periodIcon">📅</span>
+          <span class="miniLabel">Monat</span>
+          <select id="month"></select>
+        </div>
+        <div class="periodBox">
+          <span class="periodIcon">📅</span>
+          <span class="miniLabel">Jahr</span>
+          <select id="year"></select>
+        </div>
       </div>
-      <div class="small">Entwickelt von Sad</div>
     </div>
 
-    <div class="cardDivider"></div>
+    <div class="userFooter">Digitale Zeiterfassung · entwickelt für das Team von Abu-Hafez</div>
   </div>
 
   <div class="tableCard">
@@ -874,8 +1284,16 @@ input, select{
   <div class="modalBack" id="modalBack">
     <div class="modal">
       <div class="modalTop">
-        <b id="previewTitle">PDF Vorschau</b>
-        <button type="button" id="closePrevTop" style="width:auto; padding:10px 12px;">Schließen</button>
+        <div class="previewHeader">
+          <div class="previewTitleWrap">
+            <div class="previewIcon">📅</div>
+            <div>
+              <div class="previewMainTitle">Übersicht</div>
+              <div class="previewSubTitle" id="previewTitle">Stundenübersicht</div>
+            </div>
+          </div>
+          <button type="button" id="closePrevTop" class="previewCloseBtn">Schließen</button>
+        </div>
       </div>
       <div class="modalBody">
         <div id="previewTable"></div>
@@ -1601,23 +2019,11 @@ function openPreview(){
   const mm=pad2(current.getMonth()+1);
   const yy=current.getFullYear();
 
-  previewTitle.textContent=`PDF Vorschau – ${mm}/${yy}`+(name?` – ${name}`:"");
+  previewTitle.textContent=`Stundenübersicht – ${mm}/${yy}`+(name?` – PIN ${name}`:"");
 
   let sum=0;
-  const parts=[];
-  parts.push(`
-    <table style="width:100%; border-collapse:collapse; table-layout:fixed; font-size:12px;">
-      <thead>
-        <tr style="background:linear-gradient(90deg, rgba(79,70,229,.12), rgba(6,182,212,.10));">
-          <th style="border:1px solid #ddd; padding:8px; width:10%;">Tag</th>
-          <th style="border:1px solid #ddd; padding:8px; width:42%;">KEHRE</th>
-          <th style="border:1px solid #ddd; padding:8px; width:16%;">Beginn</th>
-          <th style="border:1px solid #ddd; padding:8px; width:16%;">Ende</th>
-          <th style="border:1px solid #ddd; padding:8px; width:16%; text-align:right;">Stunden</th>
-        </tr>
-      </thead>
-      <tbody>
-  `);
+  let workedDays=0;
+  const rowsHtml=[];
 
   document.querySelectorAll("#rows tr").forEach(r=>{
     const day=pad2(r.dataset.day);
@@ -1628,26 +2034,83 @@ function openPreview(){
     const empty=!ort&&!start&&!end&&!hrs;
 
     const v = parseHoursFromField(hrs);
-    if(!isNaN(v)) sum+=v;
+    if(!isNaN(v)){
+      sum+=v;
+      workedDays++;
+    }
 
-    parts.push(`
-      <tr style="${empty ? "background:#f3f4f6;" : ""}">
-        <td style="border:1px solid #ddd; padding:8px; white-space:nowrap;">${day}</td>
-        <td style="border:1px solid #ddd; padding:8px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${ort === "__CLEAR_ORT__" ? "" : ort}</td>
-        <td style="border:1px solid #ddd; padding:8px; white-space:nowrap;">${start}</td>
-        <td style="border:1px solid #ddd; padding:8px; white-space:nowrap;">${end}</td>
-        <td style="border:1px solid #ddd; padding:8px; text-align:right; white-space:nowrap; font-weight:900;">${hrs}</td>
+    rowsHtml.push(`
+      <tr class="${empty ? "emptyPreview" : ""}">
+        <td style="width:12%; font-weight:1000;">${day}</td>
+        <td style="width:38%;">${empty ? "–" : "📍 " + (ort === "__CLEAR_ORT__" ? "" : ort)}</td>
+        <td style="width:17%;">${start ? "▶ " + start : "–"}</td>
+        <td style="width:17%;">${end ? "■ " + end : "–"}</td>
+        <td style="width:16%;">${hrs ? `<span class="previewBadge">${hrs} h</span>` : "–"}</td>
       </tr>
     `);
   });
 
-  parts.push(`</tbody></table>`);
-  previewTable.innerHTML=parts.join("");
+  const days = daysInMonth(current.getMonth()+1, current.getFullYear());
+  const avg = workedDays ? (sum / workedDays) : 0;
+  const avgTxt = avg ? (Math.round(avg * 10) / 10).toString().replace(".", ",") + " h" : "0 h";
+
+  previewTable.innerHTML = `
+    <div class="previewStats">
+      <div class="previewStat">
+        <div class="previewStatIcon purple">🕒</div>
+        <div>
+          <div class="previewStatLabel">Gesamtstunden</div>
+          <div class="previewStatValue">${formatHoursSmart(sum) || "0"} h</div>
+        </div>
+      </div>
+      <div class="previewStat">
+        <div class="previewStatIcon blue">📅</div>
+        <div>
+          <div class="previewStatLabel">Gearbeitete Tage</div>
+          <div class="previewStatValue">${workedDays}</div>
+          <div class="previewStatLabel">von ${days} Tagen</div>
+        </div>
+      </div>
+      <div class="previewStat">
+        <div class="previewStatIcon green">☆</div>
+        <div>
+          <div class="previewStatLabel">Ø pro Tag</div>
+          <div class="previewStatValue">${avgTxt}</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="previewTableWrap">
+      <table class="previewModernTable">
+        <thead>
+          <tr>
+            <th>📅 Tag</th>
+            <th>📍 Kehre</th>
+            <th>▶ Beginn</th>
+            <th>■ Ende</th>
+            <th>🕒 Stunden</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${rowsHtml.join("")}
+        </tbody>
+      </table>
+    </div>
+
+    <div class="previewLegend">
+      <span><i class="previewDot"></i> Beginn</span>
+      <span><i class="previewDot end"></i> Ende</span>
+      <span><i class="previewDot empty"></i> Leere Tage sind grau markiert</span>
+    </div>
+  `;
+
   const noteText = (noteEl.value || "").trim();
 
+  previewTotal.className = "previewTotalModern";
   previewTotal.innerHTML =
-    `<div style="margin-top:10px;"><b>Gesamtstunden:</b> ${formatHoursWithStd(sum)}</div>` +
+    `<div><b>Gesamtstunden:</b> ${formatHoursWithStd(sum) || "0 Std"}</div>` +
     (noteText ? `<div style="margin-top:6px;"><b>Bemerkung:</b> ${noteText}</div>` : "");
+
   modalBack.style.display="block";
 }
 function closePreview(){ modalBack.style.display="none"; }
