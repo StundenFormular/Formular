@@ -3014,7 +3014,7 @@ function buildPrintTable(){
 
   const today = new Date();
   printMetaTopEl.innerHTML =
-    `<div>Erstellt von: <b>Sad</b></div>` +
+    `<div>Personal-PIN: <b>${name || "–"}</b></div>` +
     `<div>Datum: <b>${pad2(today.getDate())}.${pad2(today.getMonth()+1)}.${today.getFullYear()}</b></div>`;
 
   printBodyEl.innerHTML="";
@@ -3121,8 +3121,15 @@ function openPreview(){
   });
 
   const days = daysInMonth(current.getMonth()+1, current.getFullYear());
-  const avg = workedDays ? (sum / workedDays) : 0;
-  const avgTxt = avg ? (Math.round(avg * 10) / 10).toString().replace(".", ",") + " h" : "0 h";
+
+  const routeSet = new Set();
+  document.querySelectorAll("#rows tr").forEach(r=>{
+    const ort = (r.querySelector(".ort")?.value || "").trim();
+    if(ort && ort !== "__CLEAR_ORT__") routeSet.add(ort);
+  });
+  const routeCount = routeSet.size;
+  const routeText = routeCount === 1 ? "1 Route" : routeCount + " Routen";
+
   const today = new Date();
 
   previewTable.innerHTML = `
@@ -3148,10 +3155,10 @@ function openPreview(){
         </div>
       </div>
       <div class="previewStat">
-        <div class="previewStatIcon green">↗</div>
+        <div class="previewStatIcon green">📍</div>
         <div>
-          <div class="previewStatLabel">Ø pro Tag</div>
-          <div class="previewStatValue">${avgTxt}</div>
+          <div class="previewStatLabel">Kehren</div>
+          <div class="previewStatValue">${routeText}</div>
         </div>
       </div>
     </div>
