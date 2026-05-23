@@ -51,7 +51,8 @@ body{
   backdrop-filter: blur(6px);
 }
 .btnrow{
-  grid-template-columns:repeat(3,1fr);
+  display:grid;
+  grid-template-columns: 1fr 1fr 1fr 1fr;
   gap:8px;
 }
 button{
@@ -466,7 +467,8 @@ input, select{
   overflow:auto;
 }
 .modalBtns{
-  grid-template-columns:1fr 1fr 1fr;
+  display:grid;
+  grid-template-columns:1fr 1fr;
   gap:8px;
   padding:12px;
   border-top:1px solid var(--border);
@@ -936,7 +938,7 @@ input, select{
   box-shadow:0 10px 22px rgba(15,23,42,.06);
 }
 button.primary::before{ content:"📄 "; }
-button.send::before{ content:"👁 "; }
+button.send::before{ content:"✈ "; }
 button.danger::before{ content:"🗑 "; }
 #prevBtn::before{ content:"📊 "; }
 
@@ -1991,44 +1993,95 @@ button.danger::before{ content:"🗑 "; }
 /* =================================== */
 
 
-/* ===== SENDEN AUS ÜBERSICHT ===== */
+/* ===== FIX: OBERE BUTTONS RICHTIG NEBENEINANDER ===== */
+.btnrow{
+  display:grid !important;
+  grid-template-columns:1fr 1fr 1fr !important;
+  gap:10px !important;
+}
+
+.btnrow button{
+  min-height:72px !important;
+  border-radius:22px !important;
+  font-size:14px !important;
+  padding:10px 8px !important;
+  line-height:1.15 !important;
+}
+
+button.send::before{
+  content:"👁 " !important;
+}
+
+button.primary::before{
+  content:"📄 " !important;
+}
+
+button.danger::before{
+  content:"🗑 " !important;
+}
+
+@media(max-width:520px){
+  .btnrow{
+    grid-template-columns:1fr 1fr 1fr !important;
+  }
+
+  .btnrow button{
+    min-height:64px !important;
+    border-radius:20px !important;
+    font-size:13px !important;
+    padding:9px 6px !important;
+  }
+}
+
+/* ===== FIX: PIN TEXT LESBAR ===== */
+.pinWrap input{
+  font-size:16px !important;
+}
+
+.pinWrap input::placeholder{
+  font-size:13px !important;
+  font-weight:750 !important;
+  color:#64748b !important;
+  opacity:.85 !important;
+}
+
+.pinOkIcon{
+  border:none !important;
+  background:rgba(100,116,139,.10) !important;
+  color:#64748b !important;
+}
+
+/* ===== FIX: ÜBERSICHT BUTTONS 3 SPALTEN ===== */
+.modalBtns{
+  grid-template-columns:1fr 1fr 1fr !important;
+}
+
 #sendFromPreview{
   background:linear-gradient(135deg,#16a34a,#15803d) !important;
   color:#fff !important;
   border:none !important;
   border-radius:18px !important;
   font-weight:1000 !important;
-  box-shadow:0 12px 24px rgba(22,163,74,.20) !important;
 }
 
 #sendFromPreview::before{
   content:"✈ ";
 }
-/* =============================== */
-
-
-/* ===== DREI BUTTONS CLEAN ===== */
-.btnrow{
-  gap:10px !important;
-}
-
-.btnrow button{
-  min-height:74px !important;
-  font-size:15px !important;
-}
 
 @media(max-width:520px){
-  .btnrow{
-    grid-template-columns:1fr !important;
+  .modalBtns{
+    grid-template-columns:1fr 1fr 1fr !important;
+    gap:8px !important;
   }
 
-  .btnrow button{
-    min-height:60px !important;
-    border-radius:18px !important;
-    font-size:15px !important;
+  #exportFromPreview,
+  #closePrevBottom,
+  #sendFromPreview{
+    font-size:12px !important;
+    padding:11px 6px !important;
   }
 }
-/* ============================== */
+/* ================================================== */
 
 </style>
 </head>
@@ -2095,7 +2148,7 @@ button.danger::before{ content:"🗑 "; }
       <div class="fieldTitle"><span class="ico">👤</span>Personal-PIN</div>
       <div class="pinWrap">
         <span class="pinIcon">🔒</span>
-        <input id="name" placeholder="Bitte deinen personal PIN eingeben">
+        <input id="name" placeholder="PIN eingeben">
         <span class="pinOkIcon">👁</span>
       </div>
       <div class="small" id="nameError" style="display:none; color:var(--danger); font-weight:900;">
@@ -2174,6 +2227,7 @@ button.danger::before{ content:"🗑 "; }
       <div class="modalBtns">
         <button class="primary" type="button" id="exportFromPreview">PDF Export</button>
         <button type="button" id="closePrevBottom">Zurück</button>
+        <button type="button" id="sendFromPreview">Jetzt absenden</button>
       </div>
     </div>
   </div>
@@ -2260,7 +2314,6 @@ const noteEl = document.getElementById("note");
 const nameErrorEl = document.getElementById("nameError");
 
 const pdfBtn  = document.getElementById("pdfBtn");
-const prevBtn = document.getElementById("prevBtn");
 const sendBtn = document.getElementById("sendBtn");
 const delBtn  = document.getElementById("delBtn");
 
@@ -3289,23 +3342,18 @@ function requirePin(){
 }
 
 pdfBtn.addEventListener("click", exportPDF);
+sendBtn.addEventListener("click", openPreview);
+delBtn.addEventListener("click", allesLoeschen);
+
+closePrevTop.addEventListener("click", closePreview);
+closePrevBottom.addEventListener("click", closePreview);
 
 const sendFromPreviewBtn = document.getElementById("sendFromPreview");
-
 sendFromPreviewBtn?.addEventListener("click", async ()=>{
   closePreview();
   await sendenDirekt();
 });
 
-
-prevBtn.addEventListener("click", openPreview);
-sendBtn.addEventListener("click", ()=>{
-  openPreview();
-});
-delBtn.addEventListener("click", allesLoeschen);
-
-closePrevTop.addEventListener("click", closePreview);
-closePrevBottom.addEventListener("click", closePreview);
 exportFromPreview.addEventListener("click", exportPDF);
 
 modalBack.addEventListener("click",(e)=>{ if(e.target===modalBack) closePreview(); });
