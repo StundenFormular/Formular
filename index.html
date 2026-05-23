@@ -1453,6 +1453,123 @@ button.danger::before{ content:"🗑 "; }
 }
 /* ================================================================ */
 
+
+/* ===== MODERNER KOMPAKTER MITARBEITERBEREICH ===== */
+.heroCard{
+  padding:22px 20px !important;
+  border-radius:34px !important;
+}
+
+.heroHeader{
+  display:flex !important;
+  align-items:center !important;
+  gap:16px !important;
+  margin-bottom:18px !important;
+}
+
+.heroAvatar{
+  width:74px !important;
+  height:74px !important;
+  border-radius:24px !important;
+  font-size:34px !important;
+  flex-shrink:0 !important;
+}
+
+.heroTitle{
+  font-size:28px !important;
+  line-height:1.05 !important;
+  margin:0 !important;
+}
+
+.heroSub{
+  font-size:14px !important;
+  opacity:.75 !important;
+  margin-top:4px !important;
+}
+
+.sectionLabel{
+  font-size:15px !important;
+  margin-bottom:8px !important;
+}
+
+.pinInput{
+  height:68px !important;
+  border-radius:22px !important;
+  font-size:18px !important;
+  padding:0 18px !important;
+}
+
+.periodGrid{
+  display:grid !important;
+  grid-template-columns:1fr 1fr !important;
+  gap:12px !important;
+}
+
+.periodCard{
+  padding:12px 16px !important;
+  border-radius:22px !important;
+  min-height:88px !important;
+}
+
+.periodValue{
+  font-size:24px !important;
+  font-weight:900 !important;
+}
+
+.heroFooter{
+  margin-top:16px !important;
+  font-size:14px !important;
+  opacity:.72 !important;
+}
+
+@media(max-width:520px){
+  .heroCard{
+    padding:18px 16px !important;
+    border-radius:28px !important;
+  }
+
+  .heroHeader{
+    gap:12px !important;
+    margin-bottom:14px !important;
+  }
+
+  .heroAvatar{
+    width:60px !important;
+    height:60px !important;
+    border-radius:20px !important;
+    font-size:28px !important;
+  }
+
+  .heroTitle{
+    font-size:22px !important;
+  }
+
+  .heroSub{
+    font-size:13px !important;
+  }
+
+  .pinInput{
+    height:60px !important;
+    font-size:16px !important;
+    border-radius:18px !important;
+  }
+
+  .periodCard{
+    min-height:74px !important;
+    border-radius:18px !important;
+    padding:10px 14px !important;
+  }
+
+  .periodValue{
+    font-size:20px !important;
+  }
+
+  .heroFooter{
+    font-size:12px !important;
+  }
+}
+/* ========================================== */
+
 </style>
 </head>
 
@@ -1519,7 +1636,7 @@ button.danger::before{ content:"🗑 "; }
       <div class="fieldTitle"><span class="ico">👤</span>Personal-PIN</div>
       <div class="pinWrap">
         <span class="pinIcon">🔒</span>
-        <input id="name" placeholder="Bitte deinen personal PIN eingeben">
+        <input id="name" placeholder="PIN eingeben">
         <span class="pinOkIcon">✓</span>
       </div>
       <div class="small" id="nameError" style="display:none; color:var(--danger); font-weight:900;">
