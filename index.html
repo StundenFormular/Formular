@@ -2239,6 +2239,133 @@ button.danger::before{
 }
 /* =================================================== */
 
+
+
+
+/* ===== ÜBERSICHT-KARTEN FINAL MODERN ===== */
+.previewStats{
+  display:grid !important;
+  grid-template-columns:repeat(3,1fr) !important;
+  gap:12px !important;
+  margin-bottom:14px !important;
+}
+
+.previewStat{
+  position:relative !important;
+  overflow:hidden !important;
+  border-radius:20px !important;
+  padding:14px 12px !important;
+  min-height:94px !important;
+  border:1px solid rgba(226,232,240,.95) !important;
+  box-shadow:0 12px 28px rgba(15,23,42,.07) !important;
+}
+
+.previewStat::after{
+  content:"";
+  position:absolute;
+  right:-20px;
+  top:-22px;
+  width:70px;
+  height:70px;
+  border-radius:999px;
+  opacity:.9;
+}
+
+.previewStat:nth-child(1){
+  background:linear-gradient(135deg,#ffffff,#faf5ff) !important;
+}
+
+.previewStat:nth-child(1)::after{
+  background:rgba(124,58,237,.12);
+}
+
+.previewStat:nth-child(2){
+  background:linear-gradient(135deg,#ffffff,#eff6ff) !important;
+}
+
+.previewStat:nth-child(2)::after{
+  background:rgba(37,99,235,.12);
+}
+
+.previewStat:nth-child(3){
+  background:linear-gradient(135deg,#ffffff,#ecfdf5) !important;
+}
+
+.previewStat:nth-child(3)::after{
+  background:rgba(22,163,74,.12);
+}
+
+.previewStatIcon{
+  width:36px !important;
+  height:36px !important;
+  border-radius:999px !important;
+  box-shadow:0 8px 18px rgba(79,70,229,.16) !important;
+  margin-bottom:8px !important;
+}
+
+.previewStatLabel{
+  color:#475569 !important;
+  font-size:12px !important;
+  font-weight:1000 !important;
+  line-height:1.1 !important;
+  letter-spacing:-.2px !important;
+}
+
+.previewStatValue{
+  color:#0f172a !important;
+  font-size:24px !important;
+  font-weight:1000 !important;
+  line-height:1.05 !important;
+  letter-spacing:-.8px !important;
+  margin-top:5px !important;
+}
+
+.previewStat:nth-child(1) .previewStatValue{
+  color:#6d28d9 !important;
+}
+
+.previewStat:nth-child(2) .previewStatValue{
+  color:#2563eb !important;
+}
+
+.previewStat:nth-child(3) .previewStatValue{
+  color:#16a34a !important;
+}
+
+@media(max-width:520px){
+  .previewStats{
+    gap:7px !important;
+    margin-bottom:10px !important;
+  }
+
+  .previewStat{
+    min-height:72px !important;
+    border-radius:16px !important;
+    padding:9px 5px !important;
+  }
+
+  .previewStat::after{
+    width:48px !important;
+    height:48px !important;
+    right:-14px !important;
+    top:-16px !important;
+  }
+
+  .previewStatIcon{
+    display:none !important;
+  }
+
+  .previewStatLabel{
+    font-size:9.5px !important;
+  }
+
+  .previewStatValue{
+    font-size:18px !important;
+    margin-top:3px !important;
+  }
+}
+/* ======================================= */
+
 </style>
 </head>
 
@@ -3428,119 +3555,6 @@ function showPdfDownloadPrompt(){
 }
 
 
-
-function buildModernEmailHtml(){
-  const pin = (nameEl.value || "").trim();
-  const mm = pad2(current.getMonth()+1);
-  const yy = current.getFullYear();
-  const days = daysInMonth(current.getMonth()+1, current.getFullYear());
-
-  let sum = 0;
-  let workedDays = 0;
-  const routeSet = new Set();
-  const rows = [];
-
-  document.querySelectorAll("#rows tr").forEach(r=>{
-    const day = pad2(r.dataset.day);
-    const ort = (r.querySelector(".ort")?.value || "").trim();
-    const start = (r.querySelector(".start")?.value || "").trim();
-    const end = (r.querySelector(".end")?.value || "").trim();
-    const hrsTxt = (r.querySelector(".hours")?.value || "").trim();
-
-    const hrsNum = parseHoursFromField(hrsTxt);
-    if(!isNaN(hrsNum)){
-      sum += hrsNum;
-      workedDays++;
-    }
-    if(ort && ort !== "__CLEAR_ORT__") routeSet.add(ort);
-
-    const filled = !!(ort || start || end || hrsTxt);
-    rows.push(`
-      <tr>
-        <td style="padding:9px 10px;border-bottom:1px solid #e5e7eb;text-align:center;font-weight:900;color:${filled ? "#111827" : "#94a3b8"};">${day}</td>
-        <td style="padding:9px 10px;border-bottom:1px solid #e5e7eb;color:${filled ? "#111827" : "#94a3b8"};">${filled ? (ort || "–") : "–"}</td>
-        <td style="padding:9px 10px;border-bottom:1px solid #e5e7eb;text-align:center;color:${filled ? "#111827" : "#94a3b8"};">${start || "–"}</td>
-        <td style="padding:9px 10px;border-bottom:1px solid #e5e7eb;text-align:center;color:${filled ? "#111827" : "#94a3b8"};">${end || "–"}</td>
-        <td style="padding:9px 10px;border-bottom:1px solid #e5e7eb;text-align:center;">
-          ${hrsTxt ? `<span style="display:inline-block;min-width:42px;padding:4px 10px;border-radius:999px;background:#ede9fe;color:#4f46e5;font-weight:1000;">${hrsTxt}h</span>` : `<span style="display:inline-block;min-width:42px;padding:4px 10px;border-radius:999px;border:1px dashed #cbd5e1;color:#94a3b8;font-weight:900;">–</span>`}
-        </td>
-      </tr>
-    `);
-  });
-
-  const routeCount = routeSet.size;
-  const routeText = routeCount === 1 ? "1 Route" : routeCount + " Routen";
-  const today = new Date();
-  const dateTxt = `${pad2(today.getDate())}.${pad2(today.getMonth()+1)}.${today.getFullYear()}`;
-
-  return `
-  <div style="margin:0;padding:20px;background:#f8fafc;font-family:Arial,Helvetica,sans-serif;color:#111827;">
-    <div style="max-width:760px;margin:0 auto;background:#ffffff;border:1px solid #e5e7eb;border-radius:22px;overflow:hidden;box-shadow:0 10px 30px rgba(15,23,42,.10);">
-      <div style="padding:24px 26px 18px;background:linear-gradient(135deg,#ffffff,#f5f3ff);">
-        <div style="display:flex;align-items:center;justify-content:space-between;gap:14px;">
-          <div>
-            <div style="font-size:30px;font-weight:1000;line-height:1.1;color:#0f172a;">Übersicht</div>
-            <div style="margin-top:6px;font-size:20px;font-weight:1000;color:#4f46e5;">${mm}/${yy}</div>
-          </div>
-          <div style="padding:12px 18px;border-radius:18px;background:#ffffff;border:1px solid #e5e7eb;color:#4f46e5;font-size:18px;font-weight:1000;">PIN: ${pin || "–"}</div>
-        </div>
-        <div style="height:3px;background:linear-gradient(90deg,#6d28d9,#2563eb);border-radius:999px;margin:20px 0 0;"></div>
-      </div>
-
-      <div style="padding:0 26px 18px;">
-        <div style="display:flex;justify-content:space-between;gap:12px;color:#475569;font-weight:900;font-size:14px;margin:0 0 16px;">
-          <div>Personal-PIN: <span style="color:#4f46e5;">${pin || "–"}</span></div>
-          <div>Datum: <span style="color:#4f46e5;">${dateTxt}</span></div>
-        </div>
-
-        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:18px;">
-          <div style="border:1px solid #e5e7eb;border-radius:18px;padding:16px;background:#faf5ff;">
-            <div style="font-size:13px;font-weight:900;color:#475569;">Gesamtstunden</div>
-            <div style="font-size:26px;font-weight:1000;color:#111827;margin-top:4px;">${formatHoursSmart(sum) || "0"} h</div>
-          </div>
-          <div style="border:1px solid #e5e7eb;border-radius:18px;padding:16px;background:#eff6ff;">
-            <div style="font-size:13px;font-weight:900;color:#475569;">Gearbeitete Tage</div>
-            <div style="font-size:26px;font-weight:1000;color:#111827;margin-top:4px;">${workedDays}</div>
-            <div style="font-size:13px;font-weight:800;color:#475569;">von ${days} Tagen</div>
-          </div>
-          <div style="border:1px solid #e5e7eb;border-radius:18px;padding:16px;background:#ecfdf5;">
-            <div style="font-size:13px;font-weight:900;color:#475569;">Kehren</div>
-            <div style="font-size:24px;font-weight:1000;color:#111827;margin-top:4px;">${routeText}</div>
-          </div>
-        </div>
-
-        <table style="width:100%;border-collapse:separate;border-spacing:0;border:1px solid #e5e7eb;border-radius:18px;overflow:hidden;font-size:14px;">
-          <thead>
-            <tr>
-              <th style="background:linear-gradient(135deg,#6d28d9,#2563eb);color:#fff;padding:11px 10px;text-align:center;">Tag</th>
-              <th style="background:linear-gradient(135deg,#6d28d9,#2563eb);color:#fff;padding:11px 10px;text-align:left;">Kehre</th>
-              <th style="background:linear-gradient(135deg,#6d28d9,#2563eb);color:#fff;padding:11px 10px;text-align:center;">Beginn</th>
-              <th style="background:linear-gradient(135deg,#6d28d9,#2563eb);color:#fff;padding:11px 10px;text-align:center;">Ende</th>
-              <th style="background:linear-gradient(135deg,#6d28d9,#2563eb);color:#fff;padding:11px 10px;text-align:center;">Std.</th>
-            </tr>
-          </thead>
-          <tbody>${rows.join("")}</tbody>
-          <tfoot>
-            <tr>
-              <th colspan="4" style="padding:14px 12px;background:#f3e8ff;color:#4f46e5;text-align:left;font-size:16px;">Gesamt</th>
-              <th style="padding:14px 12px;background:#f3e8ff;color:#4f46e5;text-align:center;font-size:16px;">${formatHoursSmart(sum) || "0"} h</th>
-            </tr>
-          </tfoot>
-        </table>
-
-        <div style="margin-top:18px;padding:16px 18px;border-radius:18px;background:#faf5ff;border:1px solid #e9d5ff;color:#4f46e5;font-weight:1000;font-size:18px;">
-          Gesamtstunden diesen Monat: ${formatHoursSmart(sum) || "0"} Stunden
-        </div>
-
-        <div style="text-align:center;margin-top:18px;color:#64748b;font-size:12px;font-weight:700;">
-          Diese E-Mail wurde automatisch generiert.
-        </div>
-      </div>
-    </div>
-  </div>`;
-}
-
-
 async function sendenDirekt(){
   const nm = (nameEl.value || "").trim();
 
@@ -3565,9 +3579,6 @@ async function sendenDirekt(){
   }
 
   const payload = getState();
-  const modernEmailHtml = buildModernEmailHtml();
-  payload.htmlBody = modernEmailHtml;
-  payload.html = modernEmailHtml;
 
   sendBtn.disabled = true;
   const oldText = sendBtn.textContent;
