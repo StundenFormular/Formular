@@ -2403,21 +2403,7 @@ button.danger::before{
 /* ============================================= */
 
 
-/* ===== MONATSNAME LESBAR IM FELD ===== */
-#month{
-  font-size:18px !important;
-  font-weight:900 !important;
-  letter-spacing:-.7px !important;
-  padding-right:30px !important;
-  min-width:0 !important;
-}
 
-@media(max-width:520px){
-  #month{
-    font-size:17px !important;
-  }
-}
-/* =================================== */
 
 
 /* ===== TABELLEN HEADER MODERNER ===== */
@@ -2443,20 +2429,43 @@ tbody tr:nth-child(odd){
   background:#f7f3ff;
 }
 
-/* ===== MONATSFELD FIX ===== */
-#month{
-  font-size:16px !important;
-  font-weight:800 !important;
-  letter-spacing:-0.3px !important;
-  padding-right:34px !important;
-  width:100% !important;
-  overflow:hidden !important;
-  text-overflow:ellipsis !important;
+
+/* ===== MONATSFELD FINAL LESBAR ===== */
+.periodGrid,
+.period-row,
+.monthYear,
+.month-year-row{
+  display:grid !important;
+  grid-template-columns:minmax(0, 1.15fr) minmax(0, .85fr) !important;
+  gap:14px !important;
 }
 
-.month-box{
-  min-width:165px !important;
+#month{
+  font-size:15px !important;
+  font-weight:900 !important;
+  letter-spacing:-0.5px !important;
+  padding-right:24px !important;
+  overflow:visible !important;
+  text-overflow:clip !important;
+  white-space:nowrap !important;
+  min-width:0 !important;
 }
+
+#year{
+  font-size:24px !important;
+}
+
+@media(max-width:520px){
+  #month{
+    font-size:14px !important;
+    letter-spacing:-0.7px !important;
+  }
+
+  #year{
+    font-size:22px !important;
+  }
+}
+/* ================================== */
 
 </style>
 </head>
