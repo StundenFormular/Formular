@@ -2598,7 +2598,7 @@ button.danger::before{
       </div>
     </div>
 
-    <div class="userFooter">Digitale Zeiterfassung · Entwickelt von Sedak</div>
+    <div class="userFooter">Digitale Zeiterfassung · entwickelt von Sedak</div>
   </div>
 
   <div class="tableCard">
@@ -3868,6 +3868,68 @@ monate.forEach((monat, index) => {
   monthSelect.appendChild(option);
 
 });
+
+
+/* ===== FIX MONATSNAMEN + DATUM SYNC ===== */
+const MONTH_NAMES_FIX = [
+  "Januar","Februar","März","April","Mai","Juni",
+  "Juli","August","September","Oktober","November","Dezember"
+];
+
+function monthNumberFix(){
+  const raw = String(monthSelect?.value || "").trim();
+  const byName = MONTH_NAMES_FIX.indexOf(raw);
+  if(byName >= 0) return byName + 1;
+
+  const n = parseInt(raw, 10);
+  if(!isNaN(n) && n >= 1 && n <= 12) return n;
+
+  return new Date().getMonth() + 1;
+}
+
+function normalizeMonthDropdownFix(){
+  if(!monthSelect) return;
+
+  const currentNumber = monthNumberFix();
+
+  monthSelect.innerHTML = "";
+  MONTH_NAMES_FIX.forEach((name, index)=>{
+    const opt = document.createElement("option");
+    opt.value = String(index + 1).padStart(2, "0");
+    opt.textContent = name;
+    monthSelect.appendChild(opt);
+  });
+
+  monthSelect.value = String(currentNumber).padStart(2, "0");
+}
+
+function updateMonthLabelsFix(){
+  const monthNum = monthNumberFix();
+  const mm = String(monthNum).padStart(2, "0");
+
+  document.querySelectorAll("#rows tr").forEach(tr=>{
+    const d = String(tr.dataset.day || tr.querySelector("td:first-child")?.textContent?.slice(0,2) || "").padStart(2, "0");
+    const first = tr.querySelector("td:first-child");
+    if(first && d && d !== "NaN"){
+      first.textContent = `${d}.${mm}.${String(yearSelect?.value || new Date().getFullYear()).slice(-2)}`;
+    }
+  });
+}
+
+function afterMonthChangeFix(){
+  normalizeMonthDropdownFix();
+  updateMonthLabelsFix();
+}
+
+normalizeMonthDropdownFix();
+setTimeout(updateMonthLabelsFix, 0);
+monthSelect?.addEventListener("change", ()=>{
+  setTimeout(afterMonthChangeFix, 0);
+});
+yearSelect?.addEventListener("change", ()=>{
+  setTimeout(updateMonthLabelsFix, 0);
+});
+/* ===================================== */
 
 </script>
 
