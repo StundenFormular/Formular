@@ -2518,7 +2518,9 @@ tbody tr:nth-child(odd){
 /* ================================================ */
 
 
-/* ===== EINTRAGEN: HINWEIS ENTFERNEN + TABELLE SCROLLBAR ===== */
+/* ===== EINTRAGEN KOMPAKT WIE VORSCHAU-BILD ===== */
+
+/* Hinweis rechts entfernen */
 .swipeHint,
 .swipe-hint,
 .scrollHint,
@@ -2528,25 +2530,148 @@ tbody tr:nth-child(odd){
   display:none !important;
 }
 
-.entryHead{
+.entryHead,
+.entry-head,
+.sectionHead,
+.section-head{
   justify-content:flex-start !important;
 }
 
+/* Tabelle auf Handybreite passend machen */
 .tableWrap,
 .table-wrap,
 .entriesTableWrap,
 .entries-table-wrap{
-  overflow-x:auto !important;
-  -webkit-overflow-scrolling:touch !important;
+  overflow-x:hidden !important;
+  width:100% !important;
 }
 
 .tableWrap table,
 .table-wrap table,
 .entriesTableWrap table,
-.entries-table-wrap table{
-  min-width:760px !important;
+.entries-table-wrap table,
+table.entries,
+.entries table{
+  width:100% !important;
+  min-width:0 !important;
+  table-layout:fixed !important;
+  border-collapse:collapse !important;
 }
-/* =========================================================== */
+
+/* Spaltenbreiten damit alles sichtbar bleibt */
+table.entries th:nth-child(1),
+table.entries td:nth-child(1){
+  width:19% !important;
+}
+
+table.entries th:nth-child(2),
+table.entries td:nth-child(2){
+  width:26% !important;
+}
+
+table.entries th:nth-child(3),
+table.entries td:nth-child(3){
+  width:16% !important;
+}
+
+table.entries th:nth-child(4),
+table.entries td:nth-child(4){
+  width:16% !important;
+}
+
+table.entries th:nth-child(5),
+table.entries td:nth-child(5){
+  width:13% !important;
+}
+
+table.entries th:nth-child(6),
+table.entries td:nth-child(6){
+  width:10% !important;
+}
+
+/* Header kompakter */
+table.entries th{
+  font-size:11px !important;
+  padding:9px 4px !important;
+  white-space:nowrap !important;
+  text-align:center !important;
+}
+
+/* Zellen kompakter */
+table.entries td{
+  font-size:11px !important;
+  padding:7px 4px !important;
+  text-align:center !important;
+  vertical-align:middle !important;
+}
+
+/* Datum lesbar aber kompakt */
+table.entries td:first-child{
+  font-size:11px !important;
+  font-weight:900 !important;
+  letter-spacing:-.4px !important;
+}
+
+/* Inputs in der Tabelle kompakt */
+table.entries select,
+table.entries input{
+  width:100% !important;
+  min-width:0 !important;
+  height:34px !important;
+  padding:0 6px !important;
+  border-radius:16px !important;
+  font-size:11px !important;
+  font-weight:700 !important;
+  text-align:center !important;
+  box-sizing:border-box !important;
+}
+
+/* Kehre-Feld etwas kleiner, damit Text passt */
+table.entries td:nth-child(2) select{
+  text-align:left !important;
+  padding-left:8px !important;
+  padding-right:16px !important;
+}
+
+/* Stunden rechts kompakt */
+table.entries td:last-child{
+  font-size:11px !important;
+  font-weight:900 !important;
+  color:#64748b !important;
+}
+
+/* Scrollbar/Leiste ausblenden, weil alles sichtbar ist */
+.tableWrap::-webkit-scrollbar,
+.table-wrap::-webkit-scrollbar,
+.entriesTableWrap::-webkit-scrollbar,
+.entries-table-wrap::-webkit-scrollbar{
+  display:none !important;
+}
+
+@media(max-width:520px){
+  table.entries th{
+    font-size:10.5px !important;
+    padding:8px 3px !important;
+  }
+
+  table.entries td{
+    font-size:10.5px !important;
+    padding:6px 3px !important;
+  }
+
+  table.entries select,
+  table.entries input{
+    height:32px !important;
+    font-size:10.5px !important;
+    padding:0 5px !important;
+  }
+
+  table.entries td:first-child{
+    font-size:10.5px !important;
+  }
+}
+
+/* ============================================= */
 
 </style>
 </head>
@@ -2557,7 +2682,91 @@ tbody tr:nth-child(odd){
 <div class="pinBack" id="pinBack">
   <div class="pinCard">
     <div class="pinTitle">Code erforderlich</div>
-    
+    <p class="pinHint">Bitte Code eingeben, um das Stundenformular zu öffnen.</p>
+    <div class="pinRow">
+      <input id="pinInput" inputmode="numeric" autocomplete="one-time-code" placeholder="Login-Code eingeben">
+      <button class="pinOk" id="pinBtn" type="button">OK</button>
+    </div>
+    <div class="pinError" id="pinError">Falscher Code</div>
+  </div>
+</div>
+
+<div class="dlgBack" id="dlgBack">
+  <div class="dlg" role="dialog" aria-modal="true" aria-labelledby="dlgTitle">
+    <div class="dlgTop" id="dlgTitle">Hinweis</div>
+    <div class="dlgBody" id="dlgMsg"></div>
+    <div class="dlgBtns" id="dlgBtns">
+      <button class="dlgBtn" type="button" id="dlgCancel">Abbrechen</button>
+      <button class="dlgBtn primary" type="button" id="dlgOk">OK</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== BOTTOM SHEET (A) ===== -->
+<div class="timeSheetBack" id="timeSheetBack">
+  <div class="timeSheet" role="dialog" aria-modal="true" aria-labelledby="timeSheetTitle">
+    <div class="timeSheetTitle" id="timeSheetTitle">Uhrzeit</div>
+    <div id="timeSheetList"></div>
+    <div class="timeSheetFooter">
+      <button class="timeSheetBtn" type="button" id="timeSheetClose">Abbrechen</button>
+    </div>
+  </div>
+</div>
+<input id="nativeTime" type="time" style="position:fixed; left:-9999px; width:1px; height:1px; opacity:0;" />
+<!-- =========================== -->
+
+<div class="wrap">
+
+  <div class="topbar">
+    <div class="btnrow">
+      <button class="send" id="sendBtn" type="button">Übersicht prüfen</button>
+      <button class="danger" id="delBtn" type="button">Alles löschen</button>
+    </div>
+  </div>
+
+  <div class="card userCard">
+    <div class="userHeader">
+      <div class="userAvatar">👤</div>
+      <div>
+        <div class="userTitle">Mitarbeiterbereich</div>
+        <div class="userSub">Bitte PIN und Monat auswählen</div>
+      </div>
+    </div>
+
+    <div class="modernPinSection">
+      <div class="fieldTitle"><span class="ico">👤</span>Personal-PIN</div>
+      <div class="pinWrap">
+        <span class="pinIcon">🔒</span>
+        <input id="name" placeholder="PIN eingeben">
+      </div>
+      <div class="small" id="nameError" style="display:none; color:var(--danger); font-weight:900;">
+        Bitte gültige PIN (2 Ziffern) eingeben.
+      </div>
+    </div>
+
+    <div class="modernPeriodSection">
+      <div class="fieldTitle"><span class="ico">📅</span>Zeitraum wählen</div>
+      <div class="periodGrid">
+        <div class="periodBox">
+          <span class="periodIcon">📅</span>
+          <span class="miniLabel">Monat</span>
+          <select id="month"></select>
+        </div>
+        <div class="periodBox">
+          <span class="periodIcon">📅</span>
+          <span class="miniLabel">Jahr</span>
+          <select id="year"></select>
+        </div>
+      </div>
+    </div>
+
+    <div class="userFooter">Digitale Zeiterfassung · entwickelt </div>
+  </div>
+
+  <div class="tableCard">
+    <div class="tableHeadRow">
+      <div class="title">Eintragen</div>
+      <div class="hint">↔ nach rechts wischen</div>
     </div>
 
     <div class="tableScroll">
