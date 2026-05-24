@@ -2242,7 +2242,9 @@ button.danger::before{
 
 
 
-/* ===== ÜBERSICHT-KARTEN FINAL MODERN ===== */
+
+
+/* ===== ÜBERSICHT-KARTEN MIT SYMBOLEN FINAL ===== */
 .previewStats{
   display:grid !important;
   grid-template-columns:repeat(3,1fr) !important;
@@ -2253,22 +2255,23 @@ button.danger::before{
 .previewStat{
   position:relative !important;
   overflow:hidden !important;
-  border-radius:20px !important;
-  padding:14px 12px !important;
-  min-height:94px !important;
+  border-radius:18px !important;
+  padding:13px 10px 12px !important;
+  min-height:105px !important;
   border:1px solid rgba(226,232,240,.95) !important;
-  box-shadow:0 12px 28px rgba(15,23,42,.07) !important;
+  box-shadow:0 10px 24px rgba(15,23,42,.06) !important;
+  text-align:left !important;
 }
 
 .previewStat::after{
   content:"";
   position:absolute;
-  right:-20px;
+  right:-18px;
   top:-22px;
-  width:70px;
-  height:70px;
+  width:64px;
+  height:64px;
   border-radius:999px;
-  opacity:.9;
+  opacity:.95;
 }
 
 .previewStat:nth-child(1){
@@ -2296,27 +2299,44 @@ button.danger::before{
 }
 
 .previewStatIcon{
-  width:36px !important;
-  height:36px !important;
+  display:flex !important;
+  align-items:center !important;
+  justify-content:center !important;
+  width:34px !important;
+  height:34px !important;
   border-radius:999px !important;
-  box-shadow:0 8px 18px rgba(79,70,229,.16) !important;
-  margin-bottom:8px !important;
+  margin:0 0 9px 0 !important;
+  font-size:17px !important;
+  color:#fff !important;
+  box-shadow:0 8px 18px rgba(15,23,42,.13) !important;
+}
+
+.previewStatIcon.purple{
+  background:linear-gradient(135deg,#7c3aed,#4f46e5) !important;
+}
+
+.previewStatIcon.blue{
+  background:linear-gradient(135deg,#2563eb,#0284c7) !important;
+}
+
+.previewStatIcon.green{
+  background:linear-gradient(135deg,#22c55e,#16a34a) !important;
 }
 
 .previewStatLabel{
   color:#475569 !important;
   font-size:12px !important;
   font-weight:1000 !important;
-  line-height:1.1 !important;
+  line-height:1.12 !important;
   letter-spacing:-.2px !important;
 }
 
 .previewStatValue{
   color:#0f172a !important;
-  font-size:24px !important;
+  font-size:23px !important;
   font-weight:1000 !important;
   line-height:1.05 !important;
-  letter-spacing:-.8px !important;
+  letter-spacing:-.7px !important;
   margin-top:5px !important;
 }
 
@@ -2339,20 +2359,23 @@ button.danger::before{
   }
 
   .previewStat{
-    min-height:72px !important;
-    border-radius:16px !important;
-    padding:9px 5px !important;
+    min-height:84px !important;
+    border-radius:15px !important;
+    padding:9px 6px !important;
   }
 
   .previewStat::after{
-    width:48px !important;
-    height:48px !important;
+    width:44px !important;
+    height:44px !important;
     right:-14px !important;
     top:-16px !important;
   }
 
   .previewStatIcon{
-    display:none !important;
+    width:26px !important;
+    height:26px !important;
+    font-size:13px !important;
+    margin-bottom:6px !important;
   }
 
   .previewStatLabel{
@@ -2360,11 +2383,11 @@ button.danger::before{
   }
 
   .previewStatValue{
-    font-size:18px !important;
+    font-size:17px !important;
     margin-top:3px !important;
   }
 }
-/* ======================================= */
+/* ============================================= */
 
 </style>
 </head>
@@ -3326,14 +3349,14 @@ function openPreview(){
 
     <div class="previewStats">
       <div class="previewStat">
-        <div class="previewStatIcon purple">🕒</div>
+        <div class="previewStatIcon purple">◷</div>
         <div>
           <div class="previewStatLabel">Gesamtstunden</div>
           <div class="previewStatValue">${formatHoursSmart(sum) || "0"} h</div>
         </div>
       </div>
       <div class="previewStat">
-        <div class="previewStatIcon blue">📅</div>
+        <div class="previewStatIcon blue">☑</div>
         <div>
           <div class="previewStatLabel">Gearbeitete Tage</div>
           <div class="previewStatValue">${workedDays}</div>
@@ -3341,7 +3364,7 @@ function openPreview(){
         </div>
       </div>
       <div class="previewStat">
-        <div class="previewStatIcon green">📍</div>
+        <div class="previewStatIcon green">⌘</div>
         <div>
           <div class="previewStatLabel">Kehren</div>
           <div class="previewStatValue">${routeText}</div>
