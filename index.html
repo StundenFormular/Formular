@@ -2403,8 +2403,12 @@ button.danger::before{
 /* ============================================= */
 
 
-/* ===== ÜBERSICHT BUTTON GRÜN ===== */
+
+
+
+/* ===== FINAL GREEN PREVIEW BUTTON ===== */
 #previewBtn{
+  position:relative !important;
   background:linear-gradient(135deg,#16a34a 0%,#22c55e 45%,#0ea5a4 100%) !important;
   color:#ffffff !important;
   border:none !important;
@@ -2425,11 +2429,13 @@ button.danger::before{
   content:"›";
   position:absolute;
   right:18px;
+  top:50%;
+  transform:translateY(-50%);
   font-size:28px;
   font-weight:700;
-  opacity:.92;
+  color:#ffffff;
 }
-/* ================================= */
+/* ===================================== */
 
 </style>
 </head>
