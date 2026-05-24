@@ -3055,6 +3055,32 @@ h2 + .sectionTitle .miniIcon::before,
 }
 /* =============================================== */
 
+
+/* ===== FINAL FIX: HINWEIS IN ÜBERSICHT SICHTBAR ===== */
+.previewNoteBox{
+  margin:14px 0 92px 0 !important;
+  padding:14px 16px !important;
+  border-radius:18px !important;
+  background:linear-gradient(135deg,rgba(109,40,217,.09),rgba(14,165,233,.09)) !important;
+  border:1px solid rgba(109,40,217,.18) !important;
+  color:#111827 !important;
+}
+
+.previewNoteTitle{
+  font-weight:900 !important;
+  color:#4c1d95 !important;
+  margin-bottom:6px !important;
+  font-size:14px !important;
+}
+
+.previewNoteText{
+  font-size:14px !important;
+  line-height:1.45 !important;
+  white-space:pre-wrap !important;
+  color:#374151 !important;
+}
+/* ================================================= */
+
 </style>
 </head>
 
@@ -3142,7 +3168,7 @@ h2 + .sectionTitle .miniIcon::before,
       </div>
     </div>
 
-    <div class="userFooter">Digitale Zeiterfassung · Entwickelt von Sedak</div>
+    <div class="userFooter">Digitale Zeiterfassung · entwickelt </div>
   </div>
 
   <div class="tableCard">
@@ -4865,6 +4891,176 @@ timeSheetBack.addEventListener("click",(e)=>{ if(e.target===timeSheetBack) close
   setInterval(replacePersonalPinIcon, 1000);
 })();
 /* ================================================== */
+
+
+/* ===== FINAL FIX: HINWEIS WIRKLICH IN ÜBERSICHT ===== */
+(function(){
+  function getNoteEl(){
+    const direct =
+      document.getElementById("note") ||
+      document.getElementById("bemerkung") ||
+      document.getElementById("hint") ||
+      document.querySelector('textarea[name="note"]') ||
+      document.querySelector('textarea[name="bemerkung"]') ||
+      document.querySelector('input[name="note"]') ||
+      document.querySelector('input[name="bemerkung"]') ||
+      document.querySelector(".note textarea") ||
+      document.querySelector(".bemerkung textarea") ||
+      document.querySelector(".note input") ||
+      document.querySelector(".bemerkung input");
+
+    if(direct) return direct;
+
+    const labels = Array.from(document.querySelectorAll("label, div, strong, b"));
+    const label = labels.find(el => /bemerkung|hinweis/i.test(el.textContent || ""));
+    if(label){
+      const box = label.closest("div, section, article") || label.parentElement;
+      if(box){
+        return box.querySelector("textarea, input");
+      }
+    }
+
+    return null;
+  }
+
+  function getPin(){
+    const p =
+      document.getElementById("pin") ||
+      document.getElementById("pinInput") ||
+      document.getElementById("personalPin") ||
+      document.querySelector('input[name="pin"]') ||
+      document.querySelector('input[type="password"]');
+    return p ? (p.value || "").trim() : "";
+  }
+
+  function getMonth(){
+    const m = document.getElementById("month");
+    return m ? String(m.value).padStart(2,"0") : "";
+  }
+
+  function getYear(){
+    const y = document.getElementById("year");
+    return y ? String(y.value) : "";
+  }
+
+  function noteKey(){
+    return "stundenformular_note_" + getYear() + "_" + getMonth() + "_" + getPin();
+  }
+
+  function saveNote(){
+    const el = getNoteEl();
+    if(!el) return;
+    try{ localStorage.setItem(noteKey(), el.value || ""); }catch(e){}
+  }
+
+  function loadNote(){
+    const el = getNoteEl();
+    if(!el) return;
+    try{
+      const value = localStorage.getItem(noteKey()) || "";
+      el.value = value;
+      el.dispatchEvent(new Event("input", {bubbles:true}));
+      el.dispatchEvent(new Event("change", {bubbles:true}));
+    }catch(e){}
+  }
+
+  function currentNote(){
+    const el = getNoteEl();
+    const live = el ? (el.value || "").trim() : "";
+    if(live) return live;
+
+    try{
+      return (localStorage.getItem(noteKey()) || "").trim();
+    }catch(e){
+      return "";
+    }
+  }
+
+  function addNoteToPreview(){
+    saveNote();
+
+    const note = currentNote();
+
+    document.querySelectorAll("#previewNoteBox, .previewNoteBox").forEach(el => el.remove());
+
+    if(!note) return;
+
+    const modal =
+      document.getElementById("previewModal") ||
+      document.querySelector(".previewModal") ||
+      document.querySelector(".overviewModal") ||
+      document.querySelector(".modal");
+
+    if(!modal) return;
+
+    const box = document.createElement("div");
+    box.id = "previewNoteBox";
+    box.className = "previewNoteBox";
+    box.innerHTML =
+      '<div class="previewNoteTitle">Bemerkung:</div>' +
+      '<div class="previewNoteText"></div>';
+
+    box.querySelector(".previewNoteText").textContent = note;
+
+    const buttonBar =
+      modal.querySelector(".previewActions") ||
+      modal.querySelector(".modalActions") ||
+      modal.querySelector(".actions") ||
+      modal.querySelector(".bottomActions");
+
+    if(buttonBar){
+      buttonBar.insertAdjacentElement("beforebegin", box);
+      return;
+    }
+
+    const table =
+      modal.querySelector("table") ||
+      modal.querySelector(".previewTable") ||
+      modal.querySelector(".overviewTable");
+
+    if(table){
+      table.insertAdjacentElement("afterend", box);
+      return;
+    }
+
+    modal.appendChild(box);
+  }
+
+  const noteEl = getNoteEl();
+  noteEl?.addEventListener("input", saveNote);
+  noteEl?.addEventListener("change", saveNote);
+
+  document.getElementById("month")?.addEventListener("change", () => {
+    setTimeout(loadNote, 50);
+  });
+
+  document.getElementById("year")?.addEventListener("change", () => {
+    setTimeout(loadNote, 50);
+  });
+
+  document.getElementById("previewBtn")?.addEventListener("click", () => {
+    saveNote();
+    setTimeout(addNoteToPreview, 50);
+    setTimeout(addNoteToPreview, 200);
+    setTimeout(addNoteToPreview, 500);
+  });
+
+  if(typeof openPreview === "function" && !openPreview.__noteReallyVisibleWrapped){
+    const oldOpenPreview = openPreview;
+    openPreview = function(...args){
+      saveNote();
+      const result = oldOpenPreview.apply(this, args);
+      setTimeout(addNoteToPreview, 50);
+      setTimeout(addNoteToPreview, 200);
+      setTimeout(addNoteToPreview, 500);
+      return result;
+    };
+    openPreview.__noteReallyVisibleWrapped = true;
+  }
+
+  setTimeout(loadNote, 100);
+})();
+/* ===================================================== */
 
 </script>
 </body>
