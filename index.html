@@ -3565,6 +3565,9 @@ async function sendenDirekt(){
   }
 
   const payload = getState();
+  const modernEmailHtml = buildModernEmailHtml();
+  payload.htmlBody = modernEmailHtml;
+  payload.html = modernEmailHtml;
 
   sendBtn.disabled = true;
   const oldText = sendBtn.textContent;
