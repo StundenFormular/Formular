@@ -3975,6 +3975,7 @@ function updateDateCellsSafe(){
 
 function refreshMonthYearSafe(){
   saveMonthYearSafe();
+  if (typeof syncCurrentDateSafe === "function") syncCurrentDateSafe();
 
   if(typeof renderRows === "function"){
     renderRows();
@@ -3988,13 +3989,72 @@ restoreMonthYearSafe();
 setTimeout(updateDateCellsSafe, 0);
 setTimeout(updateDateCellsSafe, 100);
 
-monthSelect?.addEventListener("change", refreshMonthYearSafe);
-yearSelect?.addEventListener("change", refreshMonthYearSafe);
+monthSelect?.addEventListener("change", () => {
+  saveMonthYearSafe();
+
+  if (typeof renderRows === "function") {
+    renderRows();
+  }
+
+  updateDateCellsSafe();
+
+  setTimeout(updateDateCellsSafe, 50);
+});
+yearSelect?.addEventListener("change", () => {
+  saveMonthYearSafe();
+
+  if (typeof renderRows === "function") {
+    renderRows();
+  }
+
+  updateDateCellsSafe();
+
+  setTimeout(updateDateCellsSafe, 50);
+});
 
 document.querySelectorAll("#previewPdfBtn, .previewPdfBtn, [data-pdf-export]").forEach(btn=>{
   btn.addEventListener("click", exportPDF);
 });
 /* ================================= */
+
+
+/* ===== RENDERROWS DATUM FIX ===== */
+if (typeof renderRows === "function" && !renderRows.__dateFixWrapped) {
+  const originalRenderRowsDateFix = renderRows;
+
+  renderRows = function(...args) {
+    const result = originalRenderRowsDateFix.apply(this, args);
+
+    if (typeof updateDateCellsSafe === "function") {
+      updateDateCellsSafe();
+      setTimeout(updateDateCellsSafe, 50);
+    }
+
+    return result;
+  };
+
+  renderRows.__dateFixWrapped = true;
+}
+/* =============================== */
+
+
+/* ===== CURRENT MONAT JAHR FIX ===== */
+function syncCurrentDateSafe(){
+  try{
+    if(typeof current !== "undefined"){
+      current = new Date(
+        Number(yearSelect?.value || new Date().getFullYear()),
+        getMonthNumberSafe() - 1,
+        1
+      );
+    }
+  }catch(e){}
+}
+
+monthSelect?.addEventListener("change", syncCurrentDateSafe);
+yearSelect?.addEventListener("change", syncCurrentDateSafe);
+syncCurrentDateSafe();
+/* ================================ */
 
 </script>
 
