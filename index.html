@@ -1,4 +1,4 @@
-	<!doctype html>
+<!doctype html>
 <html lang="de">
 <head>
 <meta charset="utf-8">
@@ -2516,6 +2516,36 @@ tbody tr:nth-child(odd){
 }
 
 /* ================================================ */
+
+
+/* ===== AVATAR IM MITARBEITERBEREICH HOCHWERTIGER ===== */
+.heroIcon,
+.employeeAvatar,
+.userAvatar,
+.profileIcon{
+  width:86px !important;
+  height:86px !important;
+  border-radius:999px !important;
+  background:linear-gradient(135deg,#6d28d9,#0ea5e9) !important;
+  border:6px solid rgba(255,255,255,.95) !important;
+  box-shadow:
+    0 14px 28px rgba(37,99,235,.18),
+    0 0 0 1px rgba(255,255,255,.75) !important;
+  display:flex !important;
+  align-items:center !important;
+  justify-content:center !important;
+  color:#ffffff !important;
+  overflow:hidden !important;
+}
+
+.heroIcon::before,
+.employeeAvatar::before,
+.userAvatar::before,
+.profileIcon::before{
+  color:#ffffff !important;
+  opacity:.95 !important;
+}
+/* =============================================== */
 
 </style>
 </head>
