@@ -2419,6 +2419,45 @@ button.danger::before{
 }
 /* =================================== */
 
+
+/* ===== TABELLEN HEADER MODERNER ===== */
+.table-header{
+  background: linear-gradient(135deg,#6b46ff,#4f46e5);
+  color:#fff;
+  font-weight:800;
+  letter-spacing:.3px;
+  border-bottom:2px solid rgba(255,255,255,.15);
+}
+
+.table-header th{
+  background: rgba(255,255,255,.04);
+  backdrop-filter: blur(4px);
+}
+
+/* ===== ZEILEN LEICHT ABWECHSELND ===== */
+tbody tr:nth-child(even){
+  background:#fcfbff;
+}
+
+tbody tr:nth-child(odd){
+  background:#f7f3ff;
+}
+
+/* ===== MONATSFELD FIX ===== */
+#month{
+  font-size:16px !important;
+  font-weight:800 !important;
+  letter-spacing:-0.3px !important;
+  padding-right:34px !important;
+  width:100% !important;
+  overflow:hidden !important;
+  text-overflow:ellipsis !important;
+}
+
+.month-box{
+  min-width:165px !important;
+}
+
 </style>
 </head>
 
@@ -2506,7 +2545,7 @@ button.danger::before{
       </div>
     </div>
 
-    <div class="userFooter">Digitale Zeiterfassung · entwickelt von</div>
+    <div class="userFooter">Digitale Zeiterfassung · entwickelt </div>
   </div>
 
   <div class="tableCard">
