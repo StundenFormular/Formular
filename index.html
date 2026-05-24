@@ -2899,6 +2899,76 @@ label[for="pinInput"]::before{
 }
 /* ================================================================ */
 
+
+/* ===== FINAL: HINWEIS-BOX IN ÜBERSICHT ===== */
+.previewNoteBox{
+  margin:14px 0 88px 0 !important;
+  padding:14px 16px !important;
+  border-radius:18px !important;
+  background:linear-gradient(135deg,rgba(109,40,217,.08),rgba(14,165,233,.08)) !important;
+  border:1px solid rgba(109,40,217,.14) !important;
+  color:#111827 !important;
+}
+
+.previewNoteTitle{
+  font-weight:900 !important;
+  color:#4c1d95 !important;
+  margin-bottom:6px !important;
+  font-size:14px !important;
+}
+
+.previewNoteText{
+  font-size:14px !important;
+  line-height:1.45 !important;
+  white-space:pre-wrap !important;
+  color:#374151 !important;
+}
+/* =========================================== */
+
+
+/* ===== FINAL: KLEINEN KOPF NEBEN PERSONAL-PIN DURCH SCHLÜSSEL ERSETZEN ===== */
+
+/* Der kleine Icon-Kasten links vom Personal-PIN-Titel */
+.userCard .sectionTitle:nth-of-type(1) .sectionIcon,
+.userCard .sectionTitle:first-of-type .sectionIcon,
+.sectionTitle .personIcon,
+.sectionTitle .userIcon,
+.pinTitle .sectionIcon,
+.pinLabel .sectionIcon,
+.pin-title .sectionIcon{
+  font-size:0 !important;
+}
+
+.userCard .sectionTitle:nth-of-type(1) .sectionIcon::before,
+.userCard .sectionTitle:first-of-type .sectionIcon::before,
+.sectionTitle .personIcon::before,
+.sectionTitle .userIcon::before,
+.pinTitle .sectionIcon::before,
+.pinLabel .sectionIcon::before,
+.pin-title .sectionIcon::before{
+  content:"🔑" !important;
+  font-size:28px !important;
+}
+
+/* Falls der Kopf als Emoji/Text in der Überschrift steckt */
+.sectionTitle,
+.pinTitle,
+.pinLabel,
+.pin-title{
+  --pin-key-dummy:0;
+}
+
+/* Schloss im PIN-Eingabefeld leer lassen */
+.pinInputIcon,
+.pin-icon,
+.inputIcon.lock,
+.lockIcon,
+.pinWrap .inputIcon,
+.pin-field .inputIcon{
+  visibility:hidden !important;
+}
+/* =============================================================== */
+
 </style>
 </head>
 
@@ -2986,7 +3056,7 @@ label[for="pinInput"]::before{
       </div>
     </div>
 
-    <div class="userFooter">Digitale Zeiterfassung · entwickelt </div>
+    <div class="userFooter">Digitale Zeiterfassung · Entwickelt von Sedak</div>
   </div>
 
   <div class="tableCard">
@@ -4527,6 +4597,69 @@ timeSheetBack.addEventListener("click",(e)=>{ if(e.target===timeSheetBack) close
   }
 })();
 /* ================================================= */
+
+
+/* ===== FINAL: HINWEIS IN ÜBERSICHT ANZEIGEN ===== */
+(function(){
+  function getNoteValue(){
+    const noteEl =
+      document.getElementById("note") ||
+      document.getElementById("bemerkung") ||
+      document.getElementById("hint") ||
+      document.querySelector('textarea[name="note"]') ||
+      document.querySelector('textarea[name="bemerkung"]') ||
+      document.querySelector('input[name="note"]') ||
+      document.querySelector('input[name="bemerkung"]');
+
+    return noteEl ? (noteEl.value || "").trim() : "";
+  }
+
+  function insertPreviewNote(){
+    const note = getNoteValue();
+
+    document.querySelectorAll(".previewNoteBox, #previewNoteBox").forEach(el => el.remove());
+
+    if(!note) return;
+
+    const table =
+      document.querySelector("#previewModal table") ||
+      document.querySelector(".previewModal table") ||
+      document.querySelector("#previewTable") ||
+      document.querySelector(".previewTable") ||
+      document.querySelector(".overviewTable") ||
+      document.querySelector(".preview table");
+
+    if(!table) return;
+
+    const box = document.createElement("div");
+    box.id = "previewNoteBox";
+    box.className = "previewNoteBox";
+    box.innerHTML =
+      '<div class="previewNoteTitle">Bemerkung:</div>' +
+      '<div class="previewNoteText"></div>';
+
+    box.querySelector(".previewNoteText").textContent = note;
+
+    table.insertAdjacentElement("afterend", box);
+  }
+
+  document.getElementById("previewBtn")?.addEventListener("click", ()=>{
+    setTimeout(insertPreviewNote, 50);
+    setTimeout(insertPreviewNote, 200);
+  });
+
+  if(typeof openPreview === "function" && !openPreview.__noteFixWrapped){
+    const oldOpenPreview = openPreview;
+    openPreview = function(...args){
+      const result = oldOpenPreview.apply(this, args);
+      setTimeout(insertPreviewNote, 50);
+      setTimeout(insertPreviewNote, 200);
+      return result;
+    };
+    openPreview.__noteFixWrapped = true;
+  }
+})();
+/* =============================================== */
 
 </script>
 </body>
