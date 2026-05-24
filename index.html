@@ -2726,9 +2726,11 @@ label[for="pinInput"]::before{
 /* ================================================ */
 
 
-/* ===== FINAL FIX: PERSONAL-PIN SCHLÜSSEL + VON 31 ENTFERNEN ===== */
 
-/* kleines Kopf-Icon direkt neben Personal-PIN durch Schlüssel ersetzen */
+
+/* ===== FINAL FIX: SCHLÜSSEL AN LABEL + VON31 WEG ===== */
+
+/* Kopf-Icon neben "Personal-PIN" durch Schlüssel ersetzen */
 .pinLabel .icon,
 .pin-title .icon,
 .pinTitle .icon,
@@ -2736,7 +2738,10 @@ label[for="pinInput"]::before{
 .pin-title-icon,
 .pinTitleIcon,
 .pinSectionIcon,
-.pin-section-icon{
+.pin-section-icon,
+.pinLabel > span:first-child,
+.pin-title > span:first-child,
+.pinTitle > span:first-child{
   font-size:0 !important;
 }
 
@@ -2747,15 +2752,18 @@ label[for="pinInput"]::before{
 .pin-title-icon::before,
 .pinTitleIcon::before,
 .pinSectionIcon::before,
-.pin-section-icon::before{
+.pin-section-icon::before,
+.pinLabel > span:first-child::before,
+.pin-title > span:first-child::before,
+.pinTitle > span:first-child::before{
   content:"🔑" !important;
   font-size:28px !important;
 }
 
-/* falls dein kleines Kopf-Icon als Badge vor dem Text gebaut ist */
-.pinLabel::before,
-.pin-title::before,
-.pinTitle::before,
+/* Falls das Label kein eigenes Icon hat, Schlüssel direkt vor Text setzen */
+.pinLabel:not(:has(.icon))::before,
+.pin-title:not(:has(.icon))::before,
+.pinTitle:not(:has(.icon))::before,
 label[for="pin"]::before,
 label[for="pinInput"]::before{
   content:"🔑" !important;
@@ -2764,17 +2772,29 @@ label[for="pinInput"]::before{
   vertical-align:middle !important;
 }
 
-/* Schloss im Eingabefeld bleibt leer/unsichtbar */
+/* Schloss im PIN-Feld komplett ausblenden */
 .pinInputIcon,
 .pin-icon,
 .inputIcon.lock,
 .lockIcon,
 .pinWrap .inputIcon,
-.pin-field .inputIcon{
+.pin-field .inputIcon,
+.pinWrap span:first-child,
+.pin-field span:first-child{
   visibility:hidden !important;
 }
 
-/* Übersicht-Karten Überschriften/Werte zentrieren */
+/* Gearbeitete Tage: Unterzeile endgültig weg */
+.previewStat small,
+.previewStatSub,
+.previewSub,
+.workedDaysSub,
+.previewStat .sub,
+.previewStat .muted{
+  display:none !important;
+}
+
+/* Übersicht-Karten weiter zentriert */
 .previewStat,
 .previewStats .previewStat{
   text-align:center !important;
@@ -2791,15 +2811,7 @@ label[for="pinInput"]::before{
 .previewStatValue{
   text-align:center !important;
 }
-
-/* Unterzeile wie "von 31 Tagen" ausblenden */
-.previewStat small,
-.previewStatSub,
-.previewSub,
-.workedDaysSub{
-  display:none !important;
-}
-/* =============================================================== */
+/* ================================================= */
 
 </style>
 </head>
@@ -4290,48 +4302,60 @@ timeSheetBack.addEventListener("click",(e)=>{ if(e.target===timeSheetBack) close
 /* ================================================= */
 
 
-/* ===== FINAL FIX RUNTIME: VON 31 ENTFERNEN + SCHLÜSSEL ===== */
+
+
+/* ===== FINAL RUNTIME FIX: VON31 WEG + SCHLÜSSEL LABEL ===== */
 (function(){
-  function finalSmallFixes(){
-    /* "von 31 Tagen" nach jedem Öffnen der Übersicht entfernen */
-    document.querySelectorAll("*").forEach(el=>{
-      if(el.children.length === 0 && /von\s+\d+\s*Tagen/i.test(el.textContent || "")){
-        el.textContent = el.textContent.replace(/von\s+\d+\s*Tagen/gi, "").trim();
+  function removeVon31AndFixKey(){
+    /* "von 31 Tagen" aus allen Textknoten entfernen */
+    const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
+    const nodes = [];
+    while(walker.nextNode()){
+      nodes.push(walker.currentNode);
+    }
+
+    nodes.forEach(node=>{
+      if(/von\s+\d+\s*Tagen/i.test(node.nodeValue || "")){
+        node.nodeValue = node.nodeValue.replace(/von\s+\d+\s*Tagen/gi, "").trim();
       }
     });
 
-    /* Falls die Gearbeitete-Tage-Karte noch HTML mit Unterzeile hat */
+    /* Falls es in HTML der Karte steckt */
     document.querySelectorAll(".previewStat, .previewStats .previewStat").forEach(card=>{
       card.innerHTML = card.innerHTML
         .replace(/<br\s*\/?>\s*von\s+\d+\s*Tagen/gi, "")
+        .replace(/<small[^>]*>\s*von\s+\d+\s*Tagen\s*<\/small>/gi, "")
         .replace(/von\s+\d+\s*Tagen/gi, "");
     });
 
-    /* Kleines Kopf-Icon neben Personal-PIN zu Schlüssel ändern */
+    /* Kopf-Icon neben Personal-PIN durch Schlüssel ersetzen */
     document.querySelectorAll(".pinLabel, .pin-title, .pinTitle, label[for='pin'], label[for='pinInput']").forEach(label=>{
-      label.innerHTML = label.innerHTML
-        .replace(/👤|👥|🧑/g, "🔑");
+      label.innerHTML = label.innerHTML.replace(/👤|👥|🧑/g, "🔑");
     });
   }
 
-  finalSmallFixes();
+  removeVon31AndFixKey();
 
   document.getElementById("previewBtn")?.addEventListener("click", ()=>{
-    setTimeout(finalSmallFixes, 0);
-    setTimeout(finalSmallFixes, 80);
+    setTimeout(removeVon31AndFixKey, 0);
+    setTimeout(removeVon31AndFixKey, 100);
+    setTimeout(removeVon31AndFixKey, 300);
   });
 
-  const oldOpenPreview = window.openPreview;
-  if(typeof oldOpenPreview === "function"){
-    window.openPreview = function(...args){
-      const result = oldOpenPreview.apply(this, args);
-      setTimeout(finalSmallFixes, 0);
-      setTimeout(finalSmallFixes, 80);
+  const oldOpenPreviewFinalFix = window.openPreview;
+  if(typeof oldOpenPreviewFinalFix === "function" && !oldOpenPreviewFinalFix.__finalFixWrapped){
+    const wrapped = function(...args){
+      const result = oldOpenPreviewFinalFix.apply(this, args);
+      setTimeout(removeVon31AndFixKey, 0);
+      setTimeout(removeVon31AndFixKey, 100);
+      setTimeout(removeVon31AndFixKey, 300);
       return result;
     };
+    wrapped.__finalFixWrapped = true;
+    window.openPreview = wrapped;
   }
 })();
-/* ========================================================== */
+/* ======================================================= */
 
 </script>
 </body>
