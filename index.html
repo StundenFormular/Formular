@@ -3837,6 +3837,38 @@ timeSheetBack.addEventListener("click",(e)=>{ if(e.target===timeSheetBack) close
   build();
   requirePin();
 })();
+
+const monthSelect = document.getElementById("month");
+
+const monate = [
+  "Januar",
+  "Februar",
+  "März",
+  "April",
+  "Mai",
+  "Juni",
+  "Juli",
+  "August",
+  "September",
+  "Oktober",
+  "November",
+  "Dezember"
+];
+
+monthSelect.innerHTML = "";
+
+monate.forEach((monat, index) => {
+
+  const option = document.createElement("option");
+
+  option.value = String(index + 1).padStart(2, "0");
+
+  option.textContent = monat;
+
+  monthSelect.appendChild(option);
+
+});
+
 </script>
 
 <style>
