@@ -4036,70 +4036,82 @@ timeSheetBack.addEventListener("click",(e)=>{ if(e.target===timeSheetBack) close
   requirePin();
 })();
 
-/* ===== PIN BEI MONATSWECHSEL BEHALTEN ===== */
+
+
+
+/* ===== STABILER PIN STORAGE FIX ===== */
 (function(){
-  function getPinInput(){
-    return document.querySelector(
-      '#pin, #pinInput, #personalPin, input[name="pin"], input[type="password"], input[type="text"]'
-    );
+
+  const pinInput =
+    document.getElementById("pin") ||
+    document.getElementById("pinInput") ||
+    document.getElementById("personalPin") ||
+    document.querySelector('input[name="pin"]');
+
+  if(!pinInput) return;
+
+  function savePinStable(){
+    try{
+      localStorage.setItem(
+        "stundenformular_pin",
+        pinInput.value || ""
+      );
+    }catch(e){}
   }
 
-  function savePinBeforeChange(){
-    const pinInput = getPinInput();
-    if(pinInput){
-      sessionStorage.setItem("stundenformular_temp_pin", pinInput.value || "");
-      localStorage.setItem("stundenformular_pin", pinInput.value || "");
-    }
+  function restorePinStable(){
+    try{
+      const savedPin =
+        localStorage.getItem("stundenformular_pin") || "";
+
+      if(savedPin){
+        pinInput.value = savedPin;
+      }
+    }catch(e){}
   }
 
-  function restorePinAfterChange(){
-    const savedPin =
-      sessionStorage.getItem("stundenformular_temp_pin") ||
-      localStorage.getItem("stundenformular_pin") ||
-      "";
+  pinInput.addEventListener("input", savePinStable);
 
-    const pinInput = getPinInput();
-    if(pinInput && savedPin){
-      pinInput.value = savedPin;
-      pinInput.dispatchEvent(new Event("input", { bubbles:true }));
-      pinInput.dispatchEvent(new Event("change", { bubbles:true }));
-    }
+  restorePinStable();
+
+  if(typeof applyMonthAuto === "function"){
+
+    const originalApplyMonthAuto = applyMonthAuto;
+
+    applyMonthAuto = function(...args){
+
+      const currentPin = pinInput.value || "";
+
+      const result = originalApplyMonthAuto.apply(this, args);
+
+      pinInput.value = currentPin;
+
+      savePinStable();
+
+      return result;
+    };
   }
 
-  document.addEventListener("input", function(e){
-    if(e.target && (
-      e.target.id === "pin" ||
-      e.target.id === "pinInput" ||
-      e.target.id === "personalPin" ||
-      e.target.name === "pin"
-    )){
-      localStorage.setItem("stundenformular_pin", e.target.value || "");
-      sessionStorage.setItem("stundenformular_temp_pin", e.target.value || "");
-    }
-  });
+  if(typeof build === "function"){
 
-  const monthElSafe = document.getElementById("month");
-  const yearElSafe = document.getElementById("year");
+    const originalBuild = build;
 
-  monthElSafe?.addEventListener("mousedown", savePinBeforeChange);
-  monthElSafe?.addEventListener("focus", savePinBeforeChange);
-  monthElSafe?.addEventListener("change", function(){
-    savePinBeforeChange();
-    setTimeout(restorePinAfterChange, 0);
-    setTimeout(restorePinAfterChange, 80);
-  });
+    build = function(...args){
 
-  yearElSafe?.addEventListener("mousedown", savePinBeforeChange);
-  yearElSafe?.addEventListener("focus", savePinBeforeChange);
-  yearElSafe?.addEventListener("change", function(){
-    savePinBeforeChange();
-    setTimeout(restorePinAfterChange, 0);
-    setTimeout(restorePinAfterChange, 80);
-  });
+      const currentPin = pinInput.value || "";
 
-  setTimeout(restorePinAfterChange, 0);
+      const result = originalBuild.apply(this, args);
+
+      pinInput.value = currentPin;
+
+      savePinStable();
+
+      return result;
+    };
+  }
+
 })();
-/* ======================================= */
+/* ==================================== */
 
 </script>
 </body>
