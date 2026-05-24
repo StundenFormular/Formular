@@ -2180,6 +2180,65 @@ button.danger::before{
 }
 /* =================================================== */
 
+
+/* ===== EINGETRAGENE TAGE DEUTLICHER HERVORHEBEN ===== */
+#rows tr.rowFilled td{
+  background:linear-gradient(90deg, rgba(109,40,217,.13), rgba(59,130,246,.08)) !important;
+}
+
+#rows tr.rowFilled td:first-child{
+  position:relative;
+  color:#0f172a !important;
+  font-weight:1000 !important;
+}
+
+#rows tr.rowFilled td:first-child::before{
+  content:"";
+  position:absolute;
+  left:0;
+  top:8px;
+  bottom:8px;
+  width:5px;
+  border-radius:999px;
+  background:linear-gradient(180deg,#7c3aed,#2563eb);
+}
+
+#rows tr.rowFilled select,
+#rows tr.rowFilled .timeField input,
+#rows tr.rowFilled .entryHours{
+  border-color:rgba(124,58,237,.65) !important;
+  background:rgba(255,255,255,.88) !important;
+  color:#0f172a !important;
+  font-weight:800 !important;
+  box-shadow:0 0 0 3px rgba(124,58,237,.06) !important;
+}
+
+#rows tr.rowFilled .timeField input{
+  color:#4f46e5 !important;
+  font-weight:900 !important;
+}
+
+#rows tr.rowEmpty td{
+  background:rgba(255,255,255,.72) !important;
+}
+
+#rows tr.rowEmpty td:first-child{
+  color:#64748b !important;
+}
+
+#rows tr.rowEmpty select,
+#rows tr.rowEmpty .timeField input,
+#rows tr.rowEmpty .entryHours{
+  border-color:#e2e8f0 !important;
+  color:#64748b !important;
+  background:#fff !important;
+}
+
+#rows tr{
+  transition:background .2s ease, opacity .2s ease;
+}
+/* =================================================== */
+
 </style>
 </head>
 
@@ -3443,6 +3502,24 @@ function requirePin(){
     if(e.key==="Enter") check();
   });
 }
+
+
+function updateEntryRowHighlight(){
+  document.querySelectorAll("#rows tr").forEach(tr=>{
+    const ort = (tr.querySelector(".ort")?.value || "").trim();
+    const start = (tr.querySelector(".start")?.value || "").trim();
+    const end = (tr.querySelector(".end")?.value || "").trim();
+    const hrs = (tr.querySelector(".hours")?.value || "").trim();
+
+    const filled = !!(ort || start || end || hrs);
+
+    tr.classList.toggle("rowFilled", filled);
+    tr.classList.toggle("rowEmpty", !filled);
+  });
+}
+
+document.addEventListener("input", updateEntryRowHighlight);
+document.addEventListener("change", updateEntryRowHighlight);
 
 pdfBtn.addEventListener("click", exportPDF);
 sendBtn.addEventListener("click", openPreview);
