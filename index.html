@@ -2900,30 +2900,6 @@ label[for="pinInput"]::before{
 /* ================================================================ */
 
 
-/* ===== FINAL: HINWEIS-BOX IN ÜBERSICHT ===== */
-.previewNoteBox{
-  margin:14px 0 88px 0 !important;
-  padding:14px 16px !important;
-  border-radius:18px !important;
-  background:linear-gradient(135deg,rgba(109,40,217,.08),rgba(14,165,233,.08)) !important;
-  border:1px solid rgba(109,40,217,.14) !important;
-  color:#111827 !important;
-}
-
-.previewNoteTitle{
-  font-weight:900 !important;
-  color:#4c1d95 !important;
-  margin-bottom:6px !important;
-  font-size:14px !important;
-}
-
-.previewNoteText{
-  font-size:14px !important;
-  line-height:1.45 !important;
-  white-space:pre-wrap !important;
-  color:#374151 !important;
-}
-/* =========================================== */
 
 
 /* ===== FINAL: KLEINEN KOPF NEBEN PERSONAL-PIN DURCH SCHLÜSSEL ERSETZEN ===== */
@@ -2968,6 +2944,116 @@ label[for="pinInput"]::before{
   visibility:hidden !important;
 }
 /* =============================================================== */
+
+
+/* ===== FINAL ECHT: PERSONAL-PIN ICON = SCHLÜSSEL ===== */
+
+/* Kleines blaues Kopf-Icon neben "Personal-PIN" wirklich ersetzen */
+.fieldRow .fieldIcon,
+.formRow .fieldIcon,
+.sectionRow .fieldIcon,
+.labelRow .fieldIcon,
+.pinRow .fieldIcon,
+.pinHeader .fieldIcon,
+.pinBlock .fieldIcon,
+.pinSection .fieldIcon,
+.pinLabelBox,
+.pinLabelIcon,
+.pinIconSmall,
+.iconBadge.person,
+.iconBadge.user,
+.smallIcon.person,
+.smallIcon.user{
+  color:transparent !important;
+  font-size:0 !important;
+  background:rgba(109,40,217,.10) !important;
+  position:relative !important;
+}
+
+.fieldRow .fieldIcon::before,
+.formRow .fieldIcon::before,
+.sectionRow .fieldIcon::before,
+.labelRow .fieldIcon::before,
+.pinRow .fieldIcon::before,
+.pinHeader .fieldIcon::before,
+.pinBlock .fieldIcon::before,
+.pinSection .fieldIcon::before,
+.pinLabelBox::before,
+.pinLabelIcon::before,
+.pinIconSmall::before,
+.iconBadge.person::before,
+.iconBadge.user::before,
+.smallIcon.person::before,
+.smallIcon.user::before{
+  content:"🔑" !important;
+  color:#6d28d9 !important;
+  font-size:28px !important;
+  line-height:1 !important;
+  position:absolute !important;
+  left:50% !important;
+  top:50% !important;
+  transform:translate(-50%,-50%) !important;
+}
+
+/* Sehr gezielt: Das erste kleine Icon direkt vor dem Personal-PIN-Text */
+h2 + .sectionTitle .icon,
+h2 + .sectionTitle .miniIcon,
+.userCard .sectionTitle:first-of-type .icon,
+.userCard .sectionTitle:first-of-type .miniIcon,
+.userCard .sectionTitle:first-of-type .sectionIcon{
+  color:transparent !important;
+  font-size:0 !important;
+  position:relative !important;
+}
+
+h2 + .sectionTitle .icon::before,
+h2 + .sectionTitle .miniIcon::before,
+.userCard .sectionTitle:first-of-type .icon::before,
+.userCard .sectionTitle:first-of-type .miniIcon::before,
+.userCard .sectionTitle:first-of-type .sectionIcon::before{
+  content:"🔑" !important;
+  color:#6d28d9 !important;
+  font-size:28px !important;
+}
+
+/* Schloss im PIN-Eingabefeld leer/unsichtbar lassen */
+.pinInputIcon,
+.pin-input-icon,
+.inputIcon.lock,
+.lockIcon,
+.pinWrap .inputIcon,
+.pin-field .inputIcon,
+.pinWrap span:first-child,
+.pin-field span:first-child{
+  visibility:hidden !important;
+}
+
+/* ================================================= */
+
+
+/* ===== FINAL ECHT: HINWEIS-BOX IN ÜBERSICHT ===== */
+.previewNoteBox{
+  margin:14px 0 92px 0 !important;
+  padding:14px 16px !important;
+  border-radius:18px !important;
+  background:linear-gradient(135deg,rgba(109,40,217,.08),rgba(14,165,233,.08)) !important;
+  border:1px solid rgba(109,40,217,.14) !important;
+}
+
+.previewNoteTitle{
+  font-weight:900 !important;
+  color:#4c1d95 !important;
+  margin-bottom:6px !important;
+  font-size:14px !important;
+}
+
+.previewNoteText{
+  font-size:14px !important;
+  line-height:1.45 !important;
+  white-space:pre-wrap !important;
+  color:#374151 !important;
+}
+/* =============================================== */
 
 </style>
 </head>
@@ -4599,35 +4685,88 @@ timeSheetBack.addEventListener("click",(e)=>{ if(e.target===timeSheetBack) close
 /* ================================================= */
 
 
-/* ===== FINAL: HINWEIS IN ÜBERSICHT ANZEIGEN ===== */
+
+
+/* ===== FINAL ECHT: HINWEIS PRO MONAT + IN ÜBERSICHT ===== */
 (function(){
-  function getNoteValue(){
-    const noteEl =
-      document.getElementById("note") ||
+  function getPin(){
+    const el =
+      document.getElementById("pin") ||
+      document.getElementById("pinInput") ||
+      document.getElementById("personalPin") ||
+      document.querySelector('input[name="pin"]') ||
+      document.querySelector('input[type="password"]');
+    return (el && el.value ? el.value.trim() : "");
+  }
+
+  function getMonth(){
+    const m = document.getElementById("month");
+    return m ? String(m.value).padStart(2,"0") : "";
+  }
+
+  function getYear(){
+    const y = document.getElementById("year");
+    return y ? String(y.value) : "";
+  }
+
+  function noteKey(){
+    return "stundenformular_note_" + getYear() + "_" + getMonth() + "_" + getPin();
+  }
+
+  function getNoteElement(){
+    return document.getElementById("note") ||
       document.getElementById("bemerkung") ||
       document.getElementById("hint") ||
       document.querySelector('textarea[name="note"]') ||
       document.querySelector('textarea[name="bemerkung"]') ||
       document.querySelector('input[name="note"]') ||
-      document.querySelector('input[name="bemerkung"]');
+      document.querySelector('input[name="bemerkung"]') ||
+      document.querySelector("textarea");
+  }
 
+  function saveNoteForMonth(){
+    const noteEl = getNoteElement();
+    if(!noteEl) return;
+    try{
+      localStorage.setItem(noteKey(), noteEl.value || "");
+    }catch(e){}
+  }
+
+  function loadNoteForMonth(){
+    const noteEl = getNoteElement();
+    if(!noteEl) return;
+    try{
+      const saved = localStorage.getItem(noteKey()) || "";
+      noteEl.value = saved;
+      noteEl.dispatchEvent(new Event("input", {bubbles:true}));
+      noteEl.dispatchEvent(new Event("change", {bubbles:true}));
+    }catch(e){}
+  }
+
+  function currentNote(){
+    const noteEl = getNoteElement();
     return noteEl ? (noteEl.value || "").trim() : "";
   }
 
-  function insertPreviewNote(){
-    const note = getNoteValue();
+  function insertNoteIntoPreview(){
+    saveNoteForMonth();
 
-    document.querySelectorAll(".previewNoteBox, #previewNoteBox").forEach(el => el.remove());
+    const note = currentNote();
+
+    document.querySelectorAll(".previewNoteBox, #previewNoteBox").forEach(el=>el.remove());
 
     if(!note) return;
 
+    const modal =
+      document.getElementById("previewModal") ||
+      document.querySelector(".previewModal") ||
+      document.querySelector(".modal") ||
+      document.body;
+
     const table =
-      document.querySelector("#previewModal table") ||
-      document.querySelector(".previewModal table") ||
-      document.querySelector("#previewTable") ||
-      document.querySelector(".previewTable") ||
-      document.querySelector(".overviewTable") ||
-      document.querySelector(".preview table");
+      modal.querySelector("table") ||
+      modal.querySelector(".previewTable") ||
+      modal.querySelector(".overviewTable");
 
     if(!table) return;
 
@@ -4639,27 +4778,93 @@ timeSheetBack.addEventListener("click",(e)=>{ if(e.target===timeSheetBack) close
       '<div class="previewNoteText"></div>';
 
     box.querySelector(".previewNoteText").textContent = note;
-
     table.insertAdjacentElement("afterend", box);
   }
 
-  document.getElementById("previewBtn")?.addEventListener("click", ()=>{
-    setTimeout(insertPreviewNote, 50);
-    setTimeout(insertPreviewNote, 200);
+  function replacePersonalPinIcon(){
+    /* Direkter DOM-Fallback: suche Text "Personal-PIN" und ersetze Icon davor */
+    document.querySelectorAll("body *").forEach(el=>{
+      if((el.textContent || "").trim().includes("Personal-PIN")){
+        const prev = el.previousElementSibling;
+        if(prev && prev.children.length <= 2 && prev.offsetWidth <= 80 && prev.offsetHeight <= 80){
+          prev.textContent = "🔑";
+          prev.style.color = "#6d28d9";
+          prev.style.fontSize = "28px";
+          prev.style.display = "flex";
+          prev.style.alignItems = "center";
+          prev.style.justifyContent = "center";
+        }
+
+        const first = el.querySelector("span, i, .icon, .miniIcon, .sectionIcon");
+        if(first){
+          first.textContent = "🔑";
+          first.style.color = "#6d28d9";
+          first.style.fontSize = "28px";
+        }
+      }
+    });
+  }
+
+  function removeVon31(){
+    document.querySelectorAll(".previewStat, .previewStats .previewStat").forEach(card=>{
+      card.innerHTML = card.innerHTML
+        .replace(/<div class="previewStatLabel">\s*von\s+\d+\s*Tagen\s*<\/div>/gi, "")
+        .replace(/<br\s*\/?>\s*von\s+\d+\s*Tagen/gi, "")
+        .replace(/von\s+\d+\s*Tagen/gi, "");
+    });
+  }
+
+  const noteEl = getNoteElement();
+  noteEl?.addEventListener("input", saveNoteForMonth);
+  noteEl?.addEventListener("change", saveNoteForMonth);
+
+  document.getElementById("month")?.addEventListener("change", ()=>{
+    setTimeout(loadNoteForMonth, 0);
+    setTimeout(replacePersonalPinIcon, 50);
   });
 
-  if(typeof openPreview === "function" && !openPreview.__noteFixWrapped){
+  document.getElementById("year")?.addEventListener("change", ()=>{
+    setTimeout(loadNoteForMonth, 0);
+    setTimeout(replacePersonalPinIcon, 50);
+  });
+
+  document.getElementById("pin")?.addEventListener("input", ()=>{
+    setTimeout(loadNoteForMonth, 0);
+  });
+  document.getElementById("pinInput")?.addEventListener("input", ()=>{
+    setTimeout(loadNoteForMonth, 0);
+  });
+  document.getElementById("personalPin")?.addEventListener("input", ()=>{
+    setTimeout(loadNoteForMonth, 0);
+  });
+
+  document.getElementById("previewBtn")?.addEventListener("click", ()=>{
+    saveNoteForMonth();
+    setTimeout(insertNoteIntoPreview, 50);
+    setTimeout(insertNoteIntoPreview, 200);
+    setTimeout(removeVon31, 50);
+    setTimeout(removeVon31, 200);
+  });
+
+  if(typeof openPreview === "function" && !openPreview.__finalNoteMonthWrapped){
     const oldOpenPreview = openPreview;
     openPreview = function(...args){
-      const result = oldOpenPreview.apply(this, args);
-      setTimeout(insertPreviewNote, 50);
-      setTimeout(insertPreviewNote, 200);
+      saveNoteForMonth();
+      const result = oldOpenPreview.apply(this,args);
+      setTimeout(insertNoteIntoPreview, 50);
+      setTimeout(insertNoteIntoPreview, 200);
+      setTimeout(removeVon31, 50);
+      setTimeout(removeVon31, 200);
       return result;
     };
-    openPreview.__noteFixWrapped = true;
+    openPreview.__finalNoteMonthWrapped = true;
   }
+
+  setTimeout(loadNoteForMonth, 0);
+  setTimeout(replacePersonalPinIcon, 100);
+  setInterval(replacePersonalPinIcon, 1000);
 })();
-/* =============================================== */
+/* ================================================== */
 
 </script>
 </body>
