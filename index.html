@@ -3905,7 +3905,6 @@ function openPreview(){
         <div>
           <div class="previewStatLabel">Gearbeitete Tage</div>
           <div class="previewStatValue">${workedDays}</div>
-          <div class="previewStatLabel">von ${days} Tagen</div>
         </div>
       </div>
       <div class="previewStat">
@@ -4488,6 +4487,46 @@ timeSheetBack.addEventListener("click",(e)=>{ if(e.target===timeSheetBack) close
   }
 })();
 /* ================================= */
+
+
+/* ===== FINAL: VON 31 TAGEN GARANTIERT ENTFERNEN ===== */
+(function(){
+  function removeWorkedDaysSubText(){
+    document.querySelectorAll(".previewStatLabel").forEach(el=>{
+      const txt = (el.textContent || "").trim();
+      if(/^von\s+\d+\s*Tagen$/i.test(txt)){
+        el.remove();
+      }
+    });
+
+    document.querySelectorAll(".previewStat, .previewStats .previewStat").forEach(card=>{
+      card.innerHTML = card.innerHTML
+        .replace(/<div class="previewStatLabel">\s*von\s+\d+\s*Tagen\s*<\/div>/gi, "")
+        .replace(/von\s+\d+\s*Tagen/gi, "");
+    });
+  }
+
+  removeWorkedDaysSubText();
+
+  document.getElementById("previewBtn")?.addEventListener("click", ()=>{
+    setTimeout(removeWorkedDaysSubText, 0);
+    setTimeout(removeWorkedDaysSubText, 80);
+    setTimeout(removeWorkedDaysSubText, 250);
+  });
+
+  if(typeof openPreview === "function" && !openPreview.__removeWorkedDaysSubWrapped){
+    const oldOpenPreview = openPreview;
+    openPreview = function(...args){
+      const result = oldOpenPreview.apply(this, args);
+      setTimeout(removeWorkedDaysSubText, 0);
+      setTimeout(removeWorkedDaysSubText, 80);
+      setTimeout(removeWorkedDaysSubText, 250);
+      return result;
+    };
+    openPreview.__removeWorkedDaysSubWrapped = true;
+  }
+})();
+/* ================================================= */
 
 </script>
 </body>
