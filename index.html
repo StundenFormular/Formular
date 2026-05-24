@@ -2512,19 +2512,23 @@ button.danger::before{
 /* =================================== */
 
 
-/* ===== MONATSNAME IM FELD KLEINER ===== */
+
+
+/* ===== MONATSFELD LESBAR ===== */
 #month{
-  font-size:clamp(18px, 5vw, 28px) !important;
+  font-size:20px !important;
+  font-weight:900 !important;
   letter-spacing:-.8px !important;
-  padding-right:34px !important;
+  padding-right:32px !important;
+  min-width:0 !important;
 }
 
 @media(max-width:520px){
   #month{
-    font-size:22px !important;
+    font-size:19px !important;
   }
 }
-/* ==================================== */
+/* ============================ */
 
 </style>
 </head>
@@ -2613,7 +2617,7 @@ button.danger::before{
       </div>
     </div>
 
-    <div class="userFooter">Digitale Zeiterfassung · Entwickelt von Sedak</div>
+    <div class="userFooter">Digitale Zeiterfassung · entwickelt </div>
   </div>
 
   <div class="tableCard">
@@ -3885,66 +3889,112 @@ monate.forEach((monat, index) => {
 });
 
 
-/* ===== FIX MONATSNAMEN + DATUM SYNC ===== */
-const MONTH_NAMES_FIX = [
+
+
+
+/* ===== PDF + MONAT SPEICHER FIX ===== */
+const MONTH_NAMES_SAFE = [
   "Januar","Februar","März","April","Mai","Juni",
   "Juli","August","September","Oktober","November","Dezember"
 ];
 
-function monthNumberFix(){
+function getMonthNumberSafe(){
   const raw = String(monthSelect?.value || "").trim();
-  const byName = MONTH_NAMES_FIX.indexOf(raw);
-  if(byName >= 0) return byName + 1;
+  const number = parseInt(raw, 10);
+  if(!isNaN(number) && number >= 1 && number <= 12) return number;
 
-  const n = parseInt(raw, 10);
-  if(!isNaN(n) && n >= 1 && n <= 12) return n;
+  const byName = MONTH_NAMES_SAFE.indexOf(raw);
+  if(byName >= 0) return byName + 1;
 
   return new Date().getMonth() + 1;
 }
 
-function normalizeMonthDropdownFix(){
+function setupMonthNamesSafe(){
   if(!monthSelect) return;
 
-  const currentNumber = monthNumberFix();
+  const savedMonth =
+    localStorage.getItem("stundenformular_month") ||
+    localStorage.getItem("month") ||
+    monthSelect.value ||
+    String(new Date().getMonth() + 1).padStart(2,"0");
+
+  const monthNumber = parseInt(savedMonth, 10) || getMonthNumberSafe();
 
   monthSelect.innerHTML = "";
-  MONTH_NAMES_FIX.forEach((name, index)=>{
-    const opt = document.createElement("option");
-    opt.value = String(index + 1).padStart(2, "0");
-    opt.textContent = name;
-    monthSelect.appendChild(opt);
+
+  MONTH_NAMES_SAFE.forEach((name, index)=>{
+    const option = document.createElement("option");
+    option.value = String(index + 1).padStart(2,"0");
+    option.textContent = name;
+    monthSelect.appendChild(option);
   });
 
-  monthSelect.value = String(currentNumber).padStart(2, "0");
+  monthSelect.value = String(monthNumber).padStart(2,"0");
 }
 
-function updateMonthLabelsFix(){
-  const monthNum = monthNumberFix();
-  const mm = String(monthNum).padStart(2, "0");
+function saveMonthYearSafe(){
+  if(monthSelect) localStorage.setItem("stundenformular_month", String(getMonthNumberSafe()).padStart(2,"0"));
+  if(yearSelect) localStorage.setItem("stundenformular_year", String(yearSelect.value || ""));
+}
+
+function restoreMonthYearSafe(){
+  const sm = localStorage.getItem("stundenformular_month");
+  const sy = localStorage.getItem("stundenformular_year");
+
+  setupMonthNamesSafe();
+
+  if(sm && monthSelect){
+    monthSelect.value = String(parseInt(sm,10)).padStart(2,"0");
+  }
+
+  if(sy && yearSelect){
+    yearSelect.value = sy;
+  }
+}
+
+function updateDateCellsSafe(){
+  const mm = String(getMonthNumberSafe()).padStart(2,"0");
+  const yy = String(yearSelect?.value || new Date().getFullYear()).slice(-2);
 
   document.querySelectorAll("#rows tr").forEach(tr=>{
-    const d = String(tr.dataset.day || tr.querySelector("td:first-child")?.textContent?.slice(0,2) || "").padStart(2, "0");
     const first = tr.querySelector("td:first-child");
-    if(first && d && d !== "NaN"){
-      first.textContent = `${d}.${mm}.${String(yearSelect?.value || new Date().getFullYear()).slice(-2)}`;
+    if(!first) return;
+
+    let day = tr.dataset.day;
+    if(!day){
+      const txt = first.textContent.trim();
+      day = txt.slice(0,2);
+    }
+
+    day = String(parseInt(day,10)).padStart(2,"0");
+    if(day !== "NaN"){
+      first.textContent = `${day}.${mm}.${yy}`;
     }
   });
 }
 
-function afterMonthChangeFix(){
-  normalizeMonthDropdownFix();
-  updateMonthLabelsFix();
+function refreshMonthYearSafe(){
+  saveMonthYearSafe();
+
+  if(typeof renderRows === "function"){
+    renderRows();
+  }
+
+  setTimeout(updateDateCellsSafe, 0);
+  setTimeout(updateDateCellsSafe, 80);
 }
 
-normalizeMonthDropdownFix();
-setTimeout(updateMonthLabelsFix, 0);
-monthSelect?.addEventListener("change", ()=>{
-  setTimeout(afterMonthChangeFix, 0);
+restoreMonthYearSafe();
+setTimeout(updateDateCellsSafe, 0);
+setTimeout(updateDateCellsSafe, 100);
+
+monthSelect?.addEventListener("change", refreshMonthYearSafe);
+yearSelect?.addEventListener("change", refreshMonthYearSafe);
+
+document.querySelectorAll("#previewPdfBtn, .previewPdfBtn, [data-pdf-export]").forEach(btn=>{
+  btn.addEventListener("click", exportPDF);
 });
-yearSelect?.addEventListener("change", ()=>{
-  setTimeout(updateMonthLabelsFix, 0);
-});
-/* ===================================== */
+/* ================================= */
 
 </script>
 
@@ -4069,19 +4119,23 @@ button#previewBtn.primary.greenPreviewBtn::after{
 /* =================================== */
 
 
-/* ===== MONATSNAME IM FELD KLEINER ===== */
+
+
+/* ===== MONATSFELD LESBAR ===== */
 #month{
-  font-size:clamp(18px, 5vw, 28px) !important;
+  font-size:20px !important;
+  font-weight:900 !important;
   letter-spacing:-.8px !important;
-  padding-right:34px !important;
+  padding-right:32px !important;
+  min-width:0 !important;
 }
 
 @media(max-width:520px){
   #month{
-    font-size:22px !important;
+    font-size:19px !important;
   }
 }
-/* ==================================== */
+/* ============================ */
 
 </style>
 
@@ -4185,19 +4239,23 @@ button#previewBtn.primary.greenPreviewBtn::after{
 /* =================================== */
 
 
-/* ===== MONATSNAME IM FELD KLEINER ===== */
+
+
+/* ===== MONATSFELD LESBAR ===== */
 #month{
-  font-size:clamp(18px, 5vw, 28px) !important;
+  font-size:20px !important;
+  font-weight:900 !important;
   letter-spacing:-.8px !important;
-  padding-right:34px !important;
+  padding-right:32px !important;
+  min-width:0 !important;
 }
 
 @media(max-width:520px){
   #month{
-    font-size:22px !important;
+    font-size:19px !important;
   }
 }
-/* ==================================== */
+/* ============================ */
 
 </style>
 </body>
