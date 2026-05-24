@@ -2407,34 +2407,13 @@ button.danger::before{
 
 
 /* ===== FINAL GREEN PREVIEW BUTTON ===== */
-#previewBtn{
-  position:relative !important;
-  background:linear-gradient(135deg,#16a34a 0%,#22c55e 45%,#0ea5a4 100%) !important;
-  color:#ffffff !important;
-  border:none !important;
-  box-shadow:0 10px 24px rgba(34,197,94,.28) !important;
-}
 
-#previewBtn:hover{
-  transform:translateY(-1px);
-  box-shadow:0 14px 28px rgba(34,197,94,.34) !important;
-}
 
-#previewBtn .btnIcon{
-  background:rgba(0,0,0,.18) !important;
-  color:#ffffff !important;
-}
 
-#previewBtn::after{
-  content:"›";
-  position:absolute;
-  right:18px;
-  top:50%;
-  transform:translateY(-50%);
-  font-size:28px;
-  font-weight:700;
-  color:#ffffff;
-}
+
+
+
+
 /* ===================================== */
 
 </style>
@@ -3764,5 +3743,33 @@ timeSheetBack.addEventListener("click",(e)=>{ if(e.target===timeSheetBack) close
   requirePin();
 })();
 </script>
+
+<style>
+button#previewBtn.primary.greenPreviewBtn{
+  position:relative !important;
+  background:linear-gradient(135deg,#16a34a 0%,#22c55e 45%,#0ea5a4 100%) !important;
+  background-color:#16a34a !important;
+  color:#ffffff !important;
+  border:none !important;
+  box-shadow:0 10px 24px rgba(34,197,94,.35) !important;
+}
+
+button#previewBtn.primary.greenPreviewBtn .btnIcon{
+  background:rgba(0,0,0,.18) !important;
+  color:#ffffff !important;
+}
+
+button#previewBtn.primary.greenPreviewBtn::after{
+  content:"›";
+  position:absolute;
+  right:18px;
+  top:50%;
+  transform:translateY(-50%);
+  font-size:28px;
+  font-weight:700;
+  color:#ffffff;
+}
+</style>
+
 </body>
 </html>
