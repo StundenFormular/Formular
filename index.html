@@ -2389,6 +2389,19 @@ button.danger::before{
 }
 /* ============================================= */
 
+
+/* ===== HAUPTSEITE: NUR ÜBERSICHT + LÖSCHEN ===== */
+.btnrow{
+  grid-template-columns:1fr 1fr !important;
+}
+
+@media(max-width:520px){
+  .btnrow{
+    grid-template-columns:1fr 1fr !important;
+  }
+}
+/* ============================================= */
+
 </style>
 </head>
 
@@ -2436,7 +2449,6 @@ button.danger::before{
   <div class="topbar">
     <div class="btnrow">
       <button class="send" id="sendBtn" type="button">Übersicht prüfen</button>
-      <button class="primary" id="pdfBtn" type="button">PDF Export</button>
       <button class="danger" id="delBtn" type="button">Alles löschen</button>
     </div>
   </div>
@@ -3671,7 +3683,7 @@ function updateEntryRowHighlight(){
 document.addEventListener("input", updateEntryRowHighlight);
 document.addEventListener("change", updateEntryRowHighlight);
 
-pdfBtn.addEventListener("click", exportPDF);
+pdfBtn?.addEventListener("click", exportPDF);
 sendBtn.addEventListener("click", openPreview);
 delBtn.addEventListener("click", allesLoeschen);
 
