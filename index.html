@@ -2813,6 +2813,92 @@ label[for="pinInput"]::before{
 }
 /* ================================================= */
 
+
+/* ===== FINAL KORREKTUR: PIN NICHT AUTO + SCHLÜSSEL + VON31 WEG ===== */
+.pinLabel .icon,
+.pin-title .icon,
+.pinTitle .icon,
+.pinLabel .miniIcon,
+.pin-title .miniIcon,
+.pinTitle .miniIcon,
+.pinLabelIcon,
+.pin-title-icon,
+.pinTitleIcon,
+.pinSectionIcon,
+.pin-section-icon,
+.pinLabel > span:first-child,
+.pin-title > span:first-child,
+.pinTitle > span:first-child{
+  font-size:0 !important;
+}
+
+.pinLabel .icon::before,
+.pin-title .icon::before,
+.pinTitle .icon::before,
+.pinLabel .miniIcon::before,
+.pin-title .miniIcon::before,
+.pinTitle .miniIcon::before,
+.pinLabelIcon::before,
+.pin-title-icon::before,
+.pinTitleIcon::before,
+.pinSectionIcon::before,
+.pin-section-icon::before,
+.pinLabel > span:first-child::before,
+.pin-title > span:first-child::before,
+.pinTitle > span:first-child::before{
+  content:"🔑" !important;
+  font-size:28px !important;
+}
+
+.pinLabel::before,
+.pin-title::before,
+.pinTitle::before,
+label[for="pin"]::before,
+label[for="pinInput"]::before{
+  content:"🔑" !important;
+  margin-right:10px !important;
+  font-size:28px !important;
+  vertical-align:middle !important;
+}
+
+.pinInputIcon,
+.pin-icon,
+.inputIcon.lock,
+.lockIcon,
+.pinWrap .inputIcon,
+.pin-field .inputIcon,
+.pinWrap span:first-child,
+.pin-field span:first-child{
+  visibility:hidden !important;
+}
+
+.previewStat small,
+.previewStatSub,
+.previewSub,
+.workedDaysSub,
+.previewStat .sub,
+.previewStat .muted{
+  display:none !important;
+}
+
+.previewStat,
+.previewStats .previewStat{
+  text-align:center !important;
+  align-items:center !important;
+  justify-content:center !important;
+}
+
+.previewStatIcon{
+  margin-left:auto !important;
+  margin-right:auto !important;
+}
+
+.previewStatLabel,
+.previewStatValue{
+  text-align:center !important;
+}
+/* ================================================================ */
+
 </style>
 </head>
 
@@ -4179,79 +4265,7 @@ timeSheetBack.addEventListener("click",(e)=>{ if(e.target===timeSheetBack) close
 
 
 
-/* ===== STABILER PIN STORAGE FIX ===== */
-(function(){
 
-  const pinInput =
-    document.getElementById("pin") ||
-    document.getElementById("pinInput") ||
-    document.getElementById("personalPin") ||
-    document.querySelector('input[name="pin"]');
-
-  if(!pinInput) return;
-
-  function savePinStable(){
-    try{
-      localStorage.setItem(
-        "stundenformular_pin",
-        pinInput.value || ""
-      );
-    }catch(e){}
-  }
-
-  function restorePinStable(){
-    try{
-      const savedPin =
-        localStorage.getItem("stundenformular_pin") || "";
-
-      if(savedPin){
-        pinInput.value = savedPin;
-      }
-    }catch(e){}
-  }
-
-  pinInput.addEventListener("input", savePinStable);
-
-  restorePinStable();
-
-  if(typeof applyMonthAuto === "function"){
-
-    const originalApplyMonthAuto = applyMonthAuto;
-
-    applyMonthAuto = function(...args){
-
-      const currentPin = pinInput.value || "";
-
-      const result = originalApplyMonthAuto.apply(this, args);
-
-      pinInput.value = currentPin;
-
-      savePinStable();
-
-      return result;
-    };
-  }
-
-  if(typeof build === "function"){
-
-    const originalBuild = build;
-
-    build = function(...args){
-
-      const currentPin = pinInput.value || "";
-
-      const result = originalBuild.apply(this, args);
-
-      pinInput.value = currentPin;
-
-      savePinStable();
-
-      return result;
-    };
-  }
-
-})();
-/* ==================================== */
 
 
 /* ===== FINAL: ÜBERSICHT TEXT + AKTUELLES DATUM ICON ===== */
@@ -4307,7 +4321,7 @@ timeSheetBack.addEventListener("click",(e)=>{ if(e.target===timeSheetBack) close
 /* ===== FINAL RUNTIME FIX: VON31 WEG + SCHLÜSSEL LABEL ===== */
 (function(){
   function removeVon31AndFixKey(){
-    /* "von 31 Tagen" aus allen Textknoten entfernen */
+    /* "" aus allen Textknoten entfernen */
     const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
     const nodes = [];
     while(walker.nextNode()){
@@ -4356,6 +4370,124 @@ timeSheetBack.addEventListener("click",(e)=>{ if(e.target===timeSheetBack) close
   }
 })();
 /* ======================================================= */
+
+
+/* ===== FINAL RUNTIME KORREKTUR ===== */
+(function(){
+  function pinInput(){
+    return document.getElementById("pin") ||
+      document.getElementById("pinInput") ||
+      document.getElementById("personalPin") ||
+      document.querySelector('input[name="pin"]') ||
+      document.querySelector('input[type="password"]');
+  }
+
+  let sessionPin = "";
+
+  function rememberPin(){
+    const p = pinInput();
+    if(p) sessionPin = p.value || "";
+  }
+
+  function restorePin(){
+    const p = pinInput();
+    if(p && sessionPin){
+      p.value = sessionPin;
+      p.dispatchEvent(new Event("input",{bubbles:true}));
+      p.dispatchEvent(new Event("change",{bubbles:true}));
+    }
+  }
+
+  function removeStoredPin(){
+    try{
+      localStorage.removeItem("stundenformular_pin");
+      sessionStorage.removeItem("stundenformular_pin");
+      sessionStorage.removeItem("stundenformular_temp_pin");
+    }catch(e){}
+  }
+
+  function removeVon31(){
+    document.querySelectorAll(".previewStat, .previewStats .previewStat").forEach(card=>{
+      card.innerHTML = card.innerHTML
+        .replace(/<br\s*\/?>\s*von\s+\d+\s*Tagen/gi,"")
+        .replace(/<small[^>]*>\s*von\s+\d+\s*Tagen\s*<\/small>/gi,"")
+        .replace(/von\s+\d+\s*Tagen/gi,"");
+    });
+
+    const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
+    const nodes = [];
+    while(walker.nextNode()) nodes.push(walker.currentNode);
+    nodes.forEach(n=>{
+      if(/von\s+\d+\s*Tagen/i.test(n.nodeValue || "")){
+        n.nodeValue = n.nodeValue.replace(/von\s+\d+\s*Tagen/gi,"").trim();
+      }
+    });
+  }
+
+  function keyLabel(){
+    document.querySelectorAll(".pinLabel, .pin-title, .pinTitle, label[for='pin'], label[for='pinInput']").forEach(label=>{
+      label.innerHTML = label.innerHTML.replace(/👤|👥|🧑|👨|👩/g,"🔑");
+    });
+  }
+
+  removeStoredPin();
+  removeVon31();
+  keyLabel();
+
+  pinInput()?.addEventListener("input", rememberPin);
+
+  if(typeof build === "function" && !build.__pinFixWrapped){
+    const oldBuild = build;
+    build = function(...args){
+      rememberPin();
+      const r = oldBuild.apply(this,args);
+      setTimeout(restorePin,0);
+      setTimeout(removeVon31,0);
+      setTimeout(keyLabel,0);
+      return r;
+    };
+    build.__pinFixWrapped = true;
+  }
+
+  if(typeof applyMonthAuto === "function" && !applyMonthAuto.__pinFixWrapped){
+    const oldApply = applyMonthAuto;
+    applyMonthAuto = function(...args){
+      rememberPin();
+      const r = oldApply.apply(this,args);
+      setTimeout(restorePin,0);
+      setTimeout(removeVon31,80);
+      setTimeout(keyLabel,80);
+      return r;
+    };
+    applyMonthAuto.__pinFixWrapped = true;
+  }
+
+  document.getElementById("month")?.addEventListener("change",()=>{rememberPin(); setTimeout(restorePin,80);});
+  document.getElementById("year")?.addEventListener("change",()=>{rememberPin(); setTimeout(restorePin,80);});
+
+  document.getElementById("previewBtn")?.addEventListener("click",()=>{
+    rememberPin();
+    setTimeout(removeVon31,0);
+    setTimeout(removeVon31,100);
+    setTimeout(removeVon31,300);
+    setTimeout(keyLabel,100);
+  });
+
+  if(typeof openPreview === "function" && !openPreview.__finalFixWrapped){
+    const oldPreview = openPreview;
+    openPreview = function(...args){
+      rememberPin();
+      const r = oldPreview.apply(this,args);
+      setTimeout(removeVon31,0);
+      setTimeout(removeVon31,100);
+      setTimeout(removeVon31,300);
+      setTimeout(keyLabel,100);
+      return r;
+    };
+    openPreview.__finalFixWrapped = true;
+  }
+})();
+/* ================================= */
 
 </script>
 </body>
