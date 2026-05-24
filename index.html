@@ -2518,34 +2518,35 @@ tbody tr:nth-child(odd){
 /* ================================================ */
 
 
-/* ===== AVATAR IM MITARBEITERBEREICH HOCHWERTIGER ===== */
-.heroIcon,
-.employeeAvatar,
-.userAvatar,
-.profileIcon{
-  width:86px !important;
-  height:86px !important;
-  border-radius:999px !important;
-  background:linear-gradient(135deg,#6d28d9,#0ea5e9) !important;
-  border:6px solid rgba(255,255,255,.95) !important;
-  box-shadow:
-    0 14px 28px rgba(37,99,235,.18),
-    0 0 0 1px rgba(255,255,255,.75) !important;
-  display:flex !important;
-  align-items:center !important;
-  justify-content:center !important;
-  color:#ffffff !important;
-  overflow:hidden !important;
+/* ===== EINTRAGEN: HINWEIS ENTFERNEN + TABELLE SCROLLBAR ===== */
+.swipeHint,
+.swipe-hint,
+.scrollHint,
+.scroll-hint,
+.hintSwipe,
+.hint-swipe{
+  display:none !important;
 }
 
-.heroIcon::before,
-.employeeAvatar::before,
-.userAvatar::before,
-.profileIcon::before{
-  color:#ffffff !important;
-  opacity:.95 !important;
+.entryHead{
+  justify-content:flex-start !important;
 }
-/* =============================================== */
+
+.tableWrap,
+.table-wrap,
+.entriesTableWrap,
+.entries-table-wrap{
+  overflow-x:auto !important;
+  -webkit-overflow-scrolling:touch !important;
+}
+
+.tableWrap table,
+.table-wrap table,
+.entriesTableWrap table,
+.entries-table-wrap table{
+  min-width:760px !important;
+}
+/* =========================================================== */
 
 </style>
 </head>
@@ -2556,91 +2557,7 @@ tbody tr:nth-child(odd){
 <div class="pinBack" id="pinBack">
   <div class="pinCard">
     <div class="pinTitle">Code erforderlich</div>
-    <p class="pinHint">Bitte Code eingeben, um das Stundenformular zu öffnen.</p>
-    <div class="pinRow">
-      <input id="pinInput" inputmode="numeric" autocomplete="one-time-code" placeholder="Login-Code eingeben">
-      <button class="pinOk" id="pinBtn" type="button">OK</button>
-    </div>
-    <div class="pinError" id="pinError">Falscher Code</div>
-  </div>
-</div>
-
-<div class="dlgBack" id="dlgBack">
-  <div class="dlg" role="dialog" aria-modal="true" aria-labelledby="dlgTitle">
-    <div class="dlgTop" id="dlgTitle">Hinweis</div>
-    <div class="dlgBody" id="dlgMsg"></div>
-    <div class="dlgBtns" id="dlgBtns">
-      <button class="dlgBtn" type="button" id="dlgCancel">Abbrechen</button>
-      <button class="dlgBtn primary" type="button" id="dlgOk">OK</button>
-    </div>
-  </div>
-</div>
-
-<!-- ===== BOTTOM SHEET (A) ===== -->
-<div class="timeSheetBack" id="timeSheetBack">
-  <div class="timeSheet" role="dialog" aria-modal="true" aria-labelledby="timeSheetTitle">
-    <div class="timeSheetTitle" id="timeSheetTitle">Uhrzeit</div>
-    <div id="timeSheetList"></div>
-    <div class="timeSheetFooter">
-      <button class="timeSheetBtn" type="button" id="timeSheetClose">Abbrechen</button>
-    </div>
-  </div>
-</div>
-<input id="nativeTime" type="time" style="position:fixed; left:-9999px; width:1px; height:1px; opacity:0;" />
-<!-- =========================== -->
-
-<div class="wrap">
-
-  <div class="topbar">
-    <div class="btnrow">
-      <button class="send" id="sendBtn" type="button">Übersicht prüfen</button>
-      <button class="danger" id="delBtn" type="button">Alles löschen</button>
-    </div>
-  </div>
-
-  <div class="card userCard">
-    <div class="userHeader">
-      <div class="userAvatar">👤</div>
-      <div>
-        <div class="userTitle">Mitarbeiterbereich</div>
-        <div class="userSub">Bitte PIN und Monat auswählen</div>
-      </div>
-    </div>
-
-    <div class="modernPinSection">
-      <div class="fieldTitle"><span class="ico">👤</span>Personal-PIN</div>
-      <div class="pinWrap">
-        <span class="pinIcon">🔒</span>
-        <input id="name" placeholder="PIN eingeben">
-      </div>
-      <div class="small" id="nameError" style="display:none; color:var(--danger); font-weight:900;">
-        Bitte gültige PIN (2 Ziffern) eingeben.
-      </div>
-    </div>
-
-    <div class="modernPeriodSection">
-      <div class="fieldTitle"><span class="ico">📅</span>Zeitraum wählen</div>
-      <div class="periodGrid">
-        <div class="periodBox">
-          <span class="periodIcon">📅</span>
-          <span class="miniLabel">Monat</span>
-          <select id="month"></select>
-        </div>
-        <div class="periodBox">
-          <span class="periodIcon">📅</span>
-          <span class="miniLabel">Jahr</span>
-          <select id="year"></select>
-        </div>
-      </div>
-    </div>
-
-    <div class="userFooter">Digitale Zeiterfassung · entwickelt </div>
-  </div>
-
-  <div class="tableCard">
-    <div class="tableHeadRow">
-      <div class="title">Eintragen</div>
-      <div class="hint">↔ nach rechts wischen</div>
+    
     </div>
 
     <div class="tableScroll">
