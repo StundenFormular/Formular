@@ -3771,5 +3771,43 @@ button#previewBtn.primary.greenPreviewBtn::after{
 }
 </style>
 
+<style>
+
+/* ===== FORCE: ERSTER HAUPTBUTTON GRÜN ===== */
+.btnrow button:first-child,
+.btnrow .send:first-child,
+.btnrow #sendBtn,
+.btnrow #previewBtn{
+  position:relative !important;
+  background:linear-gradient(135deg,#16a34a 0%,#22c55e 45%,#0ea5a4 100%) !important;
+  background-color:#16a34a !important;
+  color:#ffffff !important;
+  border:none !important;
+  box-shadow:0 10px 24px rgba(34,197,94,.35) !important;
+}
+
+.btnrow button:first-child::after,
+.btnrow .send:first-child::after,
+.btnrow #sendBtn::after,
+.btnrow #previewBtn::after{
+  content:"›";
+  position:absolute;
+  right:18px;
+  top:50%;
+  transform:translateY(-50%);
+  font-size:28px;
+  font-weight:800;
+  color:#ffffff;
+}
+
+.btnrow button:first-child::before,
+.btnrow .send:first-child::before,
+.btnrow #sendBtn::before,
+.btnrow #previewBtn::before{
+  color:#ffffff !important;
+}
+/* ======================================= */
+
+</style>
 </body>
 </html>
