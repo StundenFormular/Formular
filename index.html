@@ -2403,132 +2403,21 @@ button.danger::before{
 /* ============================================= */
 
 
-
-
-
-/* ===== FINAL GREEN PREVIEW BUTTON ===== */
-
-
-
-
-
-
-
-/* ===================================== */
-
-
-/* ===== PREMIUM OVERVIEW BUTTON ===== */
-
-.premiumPreviewBtn{
-  position:relative;
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  gap:14px;
-
-  width:100%;
-  min-height:92px;
-
-  padding:0 24px;
-
-  border:none;
-  border-radius:32px;
-
-  background:
-    radial-gradient(circle at top left, rgba(255,255,255,.20), transparent 35%),
-    linear-gradient(135deg,#4ade80 0%,#22c55e 38%,#14b8a6 100%) !important;
-
-  color:#ffffff !important;
-
-  box-shadow:
-    0 12px 28px rgba(34,197,94,.24),
-    inset 0 1px 0 rgba(255,255,255,.22);
-
-  overflow:hidden;
-
-  transition:.22s ease;
-}
-
-.premiumPreviewBtn:hover{
-  transform:translateY(-2px);
-
-  box-shadow:
-    0 18px 34px rgba(34,197,94,.30),
-    inset 0 1px 0 rgba(255,255,255,.24);
-}
-
-.premiumPreviewBtn::before{
-  content:"";
-
-  position:absolute;
-  top:-35px;
-  right:-35px;
-
-  width:120px;
-  height:120px;
-
-  background:rgba(255,255,255,.10);
-
-  border-radius:50%;
-}
-
-.premiumPreviewBtn .btnIcon{
-  width:46px;
-  height:46px;
-
-  display:flex;
-  align-items:center;
-  justify-content:center;
-
-  border-radius:16px;
-
-  background:rgba(255,255,255,.16);
-
-  font-size:24px;
-
-  backdrop-filter:blur(8px);
-}
-
-.premiumPreviewBtn span:nth-child(2){
-  flex:1;
-
-  text-align:left;
-
-  font-size:20px;
-  font-weight:800;
-  letter-spacing:-0.3px;
-
-  color:#ffffff;
-}
-
-.premiumPreviewBtn .btnArrow{
-  font-size:34px;
-  font-weight:900;
-
-  opacity:.95;
-  color:#ffffff;
-}
-
-/* =================================== */
-
-
-
-
-/* ===== MONATSFELD LESBAR ===== */
+/* ===== MONATSNAME LESBAR IM FELD ===== */
 #month{
-  font-size:20px !important;
+  font-size:18px !important;
   font-weight:900 !important;
-  letter-spacing:-.8px !important;
-  padding-right:32px !important;
+  letter-spacing:-.7px !important;
+  padding-right:30px !important;
   min-width:0 !important;
 }
 
 @media(max-width:520px){
   #month{
-    font-size:19px !important;
+    font-size:17px !important;
   }
 }
-/* ============================ */
+/* =================================== */
 
 </style>
 </head>
@@ -2617,7 +2506,7 @@ button.danger::before{
       </div>
     </div>
 
-    <div class="userFooter">Digitale Zeiterfassung · entwickelt </div>
+    <div class="userFooter">Digitale Zeiterfassung · entwickelt von</div>
   </div>
 
   <div class="tableCard">
@@ -2799,6 +2688,20 @@ const timeSheetClose = document.getElementById("timeSheetClose");
 const nativeTime = document.getElementById("nativeTime");
 
 let current = new Date(); current.setDate(1);
+
+try{
+  const savedMonth = localStorage.getItem("stundenformular_last_month");
+  const savedYear  = localStorage.getItem("stundenformular_last_year");
+
+  if(savedMonth && savedYear){
+    const m = parseInt(savedMonth, 10);
+    const y = parseInt(savedYear, 10);
+
+    if(!isNaN(m) && !isNaN(y) && m >= 1 && m <= 12){
+      current = new Date(y, m - 1, 1);
+    }
+  }
+}catch(e){}
 let dirty = false;
 let exported = false;
 
@@ -2810,7 +2713,7 @@ function daysInMonth(m,y){ return new Date(y, m, 0).getDate(); }
 function markDirty(){
   dirty=true;
   exported=false;
-  pdfBtn.disabled=false;
+  if(pdfBtn) pdfBtn.disabled=false;
 }
 
 function setActiveRow(tr){
@@ -2926,15 +2829,30 @@ function validateRowsBeforeSend(){
 }
 
 function fillMonthYear(){
+  const monthNames = [
+    "Januar",
+    "Februar",
+    "März",
+    "April",
+    "Mai",
+    "Juni",
+    "Juli",
+    "August",
+    "September",
+    "Oktober",
+    "November",
+    "Dezember"
+  ];
+
   monthEl.innerHTML="";
   yearEl.innerHTML="";
 
-  for(let i=1;i<=12;i++){
+  monthNames.forEach((name, index)=>{
     const o=document.createElement("option");
-    o.value=String(i);
-    o.textContent=pad2(i);
+    o.value=String(index + 1);
+    o.textContent=name;
     monthEl.appendChild(o);
-  }
+  });
 
   const nowY=new Date().getFullYear();
   for(let i=nowY-3;i<=nowY+6;i++){
@@ -3233,13 +3151,20 @@ function build(){
 
   updateTotal();
 
-  if(exported && !dirty) pdfBtn.disabled=true;
+  if(exported && !dirty) if(pdfBtn) pdfBtn.disabled=true;
 }
 
 function applyMonthAuto(){
   const mm=parseInt(monthEl.value,10);
   const yy=parseInt(yearEl.value,10);
+
   current=new Date(yy, mm-1, 1);
+
+  try{
+    localStorage.setItem("stundenformular_last_month", String(mm));
+    localStorage.setItem("stundenformular_last_year", String(yy));
+  }catch(e){}
+
   dirty=false;
   exported=false;
   build();
@@ -3419,7 +3344,7 @@ function exportPDF(){
   buildPrintTable();
   exported=true;
   dirty=false;
-  pdfBtn.disabled=true;
+  if(pdfBtn) pdfBtn.disabled=true;
   saveState();
   window.print();
 }
@@ -3856,467 +3781,6 @@ timeSheetBack.addEventListener("click",(e)=>{ if(e.target===timeSheetBack) close
   build();
   requirePin();
 })();
-
-const monthSelect = document.getElementById("month");
-
-const monate = [
-  "Januar",
-  "Februar",
-  "März",
-  "April",
-  "Mai",
-  "Juni",
-  "Juli",
-  "August",
-  "September",
-  "Oktober",
-  "November",
-  "Dezember"
-];
-
-monthSelect.innerHTML = "";
-
-monate.forEach((monat, index) => {
-
-  const option = document.createElement("option");
-
-  option.value = String(index + 1).padStart(2, "0");
-
-  option.textContent = monat;
-
-  monthSelect.appendChild(option);
-
-});
-
-
-
-
-
-/* ===== PDF + MONAT SPEICHER FIX ===== */
-const MONTH_NAMES_SAFE = [
-  "Januar","Februar","März","April","Mai","Juni",
-  "Juli","August","September","Oktober","November","Dezember"
-];
-
-function getMonthNumberSafe(){
-  const raw = String(monthSelect?.value || "").trim();
-  const number = parseInt(raw, 10);
-  if(!isNaN(number) && number >= 1 && number <= 12) return number;
-
-  const byName = MONTH_NAMES_SAFE.indexOf(raw);
-  if(byName >= 0) return byName + 1;
-
-  return new Date().getMonth() + 1;
-}
-
-function setupMonthNamesSafe(){
-  if(!monthSelect) return;
-
-  const savedMonth =
-    localStorage.getItem("stundenformular_month") ||
-    localStorage.getItem("month") ||
-    monthSelect.value ||
-    String(new Date().getMonth() + 1).padStart(2,"0");
-
-  const monthNumber = parseInt(savedMonth, 10) || getMonthNumberSafe();
-
-  monthSelect.innerHTML = "";
-
-  MONTH_NAMES_SAFE.forEach((name, index)=>{
-    const option = document.createElement("option");
-    option.value = String(index + 1).padStart(2,"0");
-    option.textContent = name;
-    monthSelect.appendChild(option);
-  });
-
-  monthSelect.value = String(monthNumber).padStart(2,"0");
-}
-
-function saveMonthYearSafe(){
-  if(monthSelect) localStorage.setItem("stundenformular_month", String(getMonthNumberSafe()).padStart(2,"0"));
-  if(yearSelect) localStorage.setItem("stundenformular_year", String(yearSelect.value || ""));
-}
-
-function restoreMonthYearSafe(){
-  const sm = localStorage.getItem("stundenformular_month");
-  const sy = localStorage.getItem("stundenformular_year");
-
-  setupMonthNamesSafe();
-
-  if(sm && monthSelect){
-    monthSelect.value = String(parseInt(sm,10)).padStart(2,"0");
-  }
-
-  if(sy && yearSelect){
-    yearSelect.value = sy;
-  }
-}
-
-function updateDateCellsSafe(){
-  const mm = String(getMonthNumberSafe()).padStart(2,"0");
-  const yy = String(yearSelect?.value || new Date().getFullYear()).slice(-2);
-
-  document.querySelectorAll("#rows tr").forEach(tr=>{
-    const first = tr.querySelector("td:first-child");
-    if(!first) return;
-
-    let day = tr.dataset.day;
-    if(!day){
-      const txt = first.textContent.trim();
-      day = txt.slice(0,2);
-    }
-
-    day = String(parseInt(day,10)).padStart(2,"0");
-    if(day !== "NaN"){
-      first.textContent = `${day}.${mm}.${yy}`;
-    }
-  });
-}
-
-function refreshMonthYearSafe(){
-  saveMonthYearSafe();
-  if (typeof syncCurrentDateSafe === "function") syncCurrentDateSafe();
-
-  if(typeof renderRows === "function"){
-    renderRows();
-  }
-
-  setTimeout(updateDateCellsSafe, 0);
-  setTimeout(updateDateCellsSafe, 80);
-}
-
-restoreMonthYearSafe();
-setTimeout(updateDateCellsSafe, 0);
-setTimeout(updateDateCellsSafe, 100);
-
-monthSelect?.addEventListener("change", () => {
-  saveMonthYearSafe();
-
-  if (typeof renderRows === "function") {
-    renderRows();
-  }
-
-  updateDateCellsSafe();
-
-  setTimeout(updateDateCellsSafe, 50);
-});
-yearSelect?.addEventListener("change", () => {
-  saveMonthYearSafe();
-
-  if (typeof renderRows === "function") {
-    renderRows();
-  }
-
-  updateDateCellsSafe();
-
-  setTimeout(updateDateCellsSafe, 50);
-});
-
-document.querySelectorAll("#previewPdfBtn, .previewPdfBtn, [data-pdf-export]").forEach(btn=>{
-  btn.addEventListener("click", exportPDF);
-});
-/* ================================= */
-
-
-/* ===== RENDERROWS DATUM FIX ===== */
-if (typeof renderRows === "function" && !renderRows.__dateFixWrapped) {
-  const originalRenderRowsDateFix = renderRows;
-
-  renderRows = function(...args) {
-    const result = originalRenderRowsDateFix.apply(this, args);
-
-    if (typeof updateDateCellsSafe === "function") {
-      updateDateCellsSafe();
-      setTimeout(updateDateCellsSafe, 50);
-    }
-
-    return result;
-  };
-
-  renderRows.__dateFixWrapped = true;
-}
-/* =============================== */
-
-
-/* ===== CURRENT MONAT JAHR FIX ===== */
-function syncCurrentDateSafe(){
-  try{
-    if(typeof current !== "undefined"){
-      current = new Date(
-        Number(yearSelect?.value || new Date().getFullYear()),
-        getMonthNumberSafe() - 1,
-        1
-      );
-    }
-  }catch(e){}
-}
-
-monthSelect?.addEventListener("change", syncCurrentDateSafe);
-yearSelect?.addEventListener("change", syncCurrentDateSafe);
-syncCurrentDateSafe();
-/* ================================ */
-
 </script>
-
-<style>
-button#previewBtn.primary.greenPreviewBtn{
-  position:relative !important;
-  background:linear-gradient(135deg,#16a34a 0%,#22c55e 45%,#0ea5a4 100%) !important;
-  background-color:#16a34a !important;
-  color:#ffffff !important;
-  border:none !important;
-  box-shadow:0 10px 24px rgba(34,197,94,.35) !important;
-}
-
-button#previewBtn.primary.greenPreviewBtn .btnIcon{
-  background:rgba(0,0,0,.18) !important;
-  color:#ffffff !important;
-}
-
-button#previewBtn.primary.greenPreviewBtn::after{
-  content:"›";
-  position:absolute;
-  right:18px;
-  top:50%;
-  transform:translateY(-50%);
-  font-size:28px;
-  font-weight:700;
-  color:#ffffff;
-}
-
-/* ===== PREMIUM OVERVIEW BUTTON ===== */
-
-.premiumPreviewBtn{
-  position:relative;
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  gap:14px;
-
-  width:100%;
-  min-height:92px;
-
-  padding:0 24px;
-
-  border:none;
-  border-radius:32px;
-
-  background:
-    radial-gradient(circle at top left, rgba(255,255,255,.20), transparent 35%),
-    linear-gradient(135deg,#4ade80 0%,#22c55e 38%,#14b8a6 100%) !important;
-
-  color:#ffffff !important;
-
-  box-shadow:
-    0 12px 28px rgba(34,197,94,.24),
-    inset 0 1px 0 rgba(255,255,255,.22);
-
-  overflow:hidden;
-
-  transition:.22s ease;
-}
-
-.premiumPreviewBtn:hover{
-  transform:translateY(-2px);
-
-  box-shadow:
-    0 18px 34px rgba(34,197,94,.30),
-    inset 0 1px 0 rgba(255,255,255,.24);
-}
-
-.premiumPreviewBtn::before{
-  content:"";
-
-  position:absolute;
-  top:-35px;
-  right:-35px;
-
-  width:120px;
-  height:120px;
-
-  background:rgba(255,255,255,.10);
-
-  border-radius:50%;
-}
-
-.premiumPreviewBtn .btnIcon{
-  width:46px;
-  height:46px;
-
-  display:flex;
-  align-items:center;
-  justify-content:center;
-
-  border-radius:16px;
-
-  background:rgba(255,255,255,.16);
-
-  font-size:24px;
-
-  backdrop-filter:blur(8px);
-}
-
-.premiumPreviewBtn span:nth-child(2){
-  flex:1;
-
-  text-align:left;
-
-  font-size:20px;
-  font-weight:800;
-  letter-spacing:-0.3px;
-
-  color:#ffffff;
-}
-
-.premiumPreviewBtn .btnArrow{
-  font-size:34px;
-  font-weight:900;
-
-  opacity:.95;
-  color:#ffffff;
-}
-
-/* =================================== */
-
-
-
-
-/* ===== MONATSFELD LESBAR ===== */
-#month{
-  font-size:20px !important;
-  font-weight:900 !important;
-  letter-spacing:-.8px !important;
-  padding-right:32px !important;
-  min-width:0 !important;
-}
-
-@media(max-width:520px){
-  #month{
-    font-size:19px !important;
-  }
-}
-/* ============================ */
-
-</style>
-
-<style>
-
-
-
-
-/* ===== PREMIUM OVERVIEW BUTTON ===== */
-
-.premiumPreviewBtn{
-  position:relative;
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  gap:14px;
-
-  width:100%;
-  min-height:92px;
-
-  padding:0 24px;
-
-  border:none;
-  border-radius:32px;
-
-  background:
-    radial-gradient(circle at top left, rgba(255,255,255,.20), transparent 35%),
-    linear-gradient(135deg,#4ade80 0%,#22c55e 38%,#14b8a6 100%) !important;
-
-  color:#ffffff !important;
-
-  box-shadow:
-    0 12px 28px rgba(34,197,94,.24),
-    inset 0 1px 0 rgba(255,255,255,.22);
-
-  overflow:hidden;
-
-  transition:.22s ease;
-}
-
-.premiumPreviewBtn:hover{
-  transform:translateY(-2px);
-
-  box-shadow:
-    0 18px 34px rgba(34,197,94,.30),
-    inset 0 1px 0 rgba(255,255,255,.24);
-}
-
-.premiumPreviewBtn::before{
-  content:"";
-
-  position:absolute;
-  top:-35px;
-  right:-35px;
-
-  width:120px;
-  height:120px;
-
-  background:rgba(255,255,255,.10);
-
-  border-radius:50%;
-}
-
-.premiumPreviewBtn .btnIcon{
-  width:46px;
-  height:46px;
-
-  display:flex;
-  align-items:center;
-  justify-content:center;
-
-  border-radius:16px;
-
-  background:rgba(255,255,255,.16);
-
-  font-size:24px;
-
-  backdrop-filter:blur(8px);
-}
-
-.premiumPreviewBtn span:nth-child(2){
-  flex:1;
-
-  text-align:left;
-
-  font-size:20px;
-  font-weight:800;
-  letter-spacing:-0.3px;
-
-  color:#ffffff;
-}
-
-.premiumPreviewBtn .btnArrow{
-  font-size:34px;
-  font-weight:900;
-
-  opacity:.95;
-  color:#ffffff;
-}
-
-/* =================================== */
-
-
-
-
-/* ===== MONATSFELD LESBAR ===== */
-#month{
-  font-size:20px !important;
-  font-weight:900 !important;
-  letter-spacing:-.8px !important;
-  padding-right:32px !important;
-  min-width:0 !important;
-}
-
-@media(max-width:520px){
-  #month{
-    font-size:19px !important;
-  }
-}
-/* ============================ */
-
-</style>
 </body>
 </html>
