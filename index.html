@@ -3102,6 +3102,54 @@ h2 + .sectionTitle .miniIcon::before,
 }
 /* ================================================ */
 
+
+/* ===== FIX NACH KALENDER-ENTFERNUNG: MONAT/JAHR SAUBER ===== */
+.periodGrid{
+  grid-template-columns:1fr 1fr !important;
+  gap:14px !important;
+}
+
+.periodBox{
+  padding:14px 42px 14px 18px !important;
+  min-width:0 !important;
+  overflow:hidden !important;
+}
+
+.periodBox .miniLabel{
+  display:block !important;
+  margin:0 0 4px 0 !important;
+  text-align:left !important;
+}
+
+.periodBox select{
+  width:100% !important;
+  max-width:100% !important;
+  min-width:0 !important;
+  padding:0 24px 0 0 !important;
+  margin:0 !important;
+  box-sizing:border-box !important;
+  text-align:left !important;
+  overflow:visible !important;
+  text-overflow:clip !important;
+  white-space:nowrap !important;
+}
+
+#month,
+#year{
+  font-size:18px !important;
+  font-weight:900 !important;
+  letter-spacing:-0.4px !important;
+}
+
+@media(max-width:520px){
+  #month,
+  #year{
+    font-size:17px !important;
+    letter-spacing:-0.5px !important;
+  }
+}
+/* ======================================================= */
+
 </style>
 </head>
 
@@ -3189,7 +3237,7 @@ h2 + .sectionTitle .miniIcon::before,
       </div>
     </div>
 
-    <div class="userFooter">Digitale Zeiterfassung · Entwickelt von Sedak</div>
+    <div class="userFooter">Digitale Zeiterfassung · entwickelt für das Team von Abu-Hafez</div>
   </div>
 
   <div class="tableCard">
