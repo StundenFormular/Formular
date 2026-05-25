@@ -3106,42 +3106,59 @@ h2 + .sectionTitle .miniIcon::before,
 
 
 
-/* ===== MONAT/JAHR FINAL KORREKT ===== */
+
+
+
+/* ===== MONAT/JAHR SAUBER ZENTRIERT ===== */
 .periodGrid{
   display:grid !important;
   grid-template-columns:1fr 1fr !important;
-  gap:16px !important;
+  gap:18px !important;
+  align-items:start !important;
 }
 
 .periodBox{
-  position:relative !important;
   width:100% !important;
   min-width:0 !important;
-  padding:18px 18px 14px 18px !important;
+  padding:14px 16px !important;
   box-sizing:border-box !important;
-}
-
-.periodBox select{
-  width:100% !important;
-  font-size:18px !important;
-  font-weight:900 !important;
-  padding-right:26px !important;
-  background-position:right 10px center !important;
-  min-width:0 !important;
+  display:flex !important;
+  flex-direction:column !important;
+  justify-content:center !important;
 }
 
 .periodBox .miniLabel{
-  display:block !important;
-  margin-bottom:6px !important;
+  text-align:center !important;
+  margin:0 0 8px 0 !important;
   font-size:14px !important;
   font-weight:800 !important;
   color:#6b7280 !important;
 }
 
+.periodBox select{
+  width:100% !important;
+  text-align:center !important;
+  text-align-last:center !important;
+  font-size:17px !important;
+  font-weight:900 !important;
+  padding:0 28px 0 10px !important;
+  box-sizing:border-box !important;
+  overflow:visible !important;
+  white-space:nowrap !important;
+}
+
+#month{
+  font-size:16px !important;
+}
+
+#year{
+  font-size:18px !important;
+}
+
 .periodIcon{
   display:none !important;
 }
-/* ==================================== */
+/* ====================================== */
 
 </style>
 </head>
