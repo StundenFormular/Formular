@@ -3081,6 +3081,38 @@ h2 + .sectionTitle .miniIcon::before,
 }
 /* ================================================= */
 
+
+/* ===== MINI KALENDER BEI MONAT/JAHR ENTFERNEN ===== */
+.monthSelect .calendarIcon,
+.yearSelect .calendarIcon,
+.selectIcon.calendar,
+.monthBox .icon,
+.yearBox .icon,
+.month-select .icon,
+.year-select .icon,
+.month-picker .icon,
+.year-picker .icon{
+    display:none !important;
+    visibility:hidden !important;
+    width:0 !important;
+    height:0 !important;
+    margin:0 !important;
+    padding:0 !important;
+}
+
+/* Abstand korrigieren */
+.monthSelect,
+.yearSelect,
+.monthBox,
+.yearBox,
+.month-select,
+.year-select,
+.month-picker,
+.year-picker{
+    padding-left:18px !important;
+}
+/* ================================================== */
+
 </style>
 </head>
 
@@ -3168,7 +3200,7 @@ h2 + .sectionTitle .miniIcon::before,
       </div>
     </div>
 
-    <div class="userFooter">Digitale Zeiterfassung · entwickelt </div>
+    <div class="userFooter">Digitale Zeiterfassung · Entwickelt von Sedak</div>
   </div>
 
   <div class="tableCard">
