@@ -3158,6 +3158,49 @@ select ~ img,
 }
 /* ================================================== */
 
+
+/* ===== KALENDER ICONS ENDGÜLTIG ENTFERNEN ===== */
+
+/* Monat/Jahr Container */
+.month-select img,
+.year-select img,
+.monthBox img,
+.yearBox img,
+.monthSelect img,
+.yearSelect img,
+.month-select svg,
+.year-select svg,
+.monthBox svg,
+.yearBox svg,
+.monthSelect svg,
+.yearSelect svg{
+    display:none !important;
+}
+
+/* Erstes kleines Element links komplett entfernen */
+.month-select > *:first-child,
+.year-select > *:first-child,
+.monthBox > *:first-child,
+.yearBox > *:first-child,
+.monthSelect > *:first-child,
+.yearSelect > *:first-child{
+    display:none !important;
+    width:0 !important;
+    height:0 !important;
+    overflow:hidden !important;
+}
+
+/* Innenabstand korrigieren */
+.month-select,
+.year-select,
+.monthBox,
+.yearBox,
+.monthSelect,
+.yearSelect{
+    padding-left:20px !important;
+}
+/* ============================================ */
+
 </style>
 </head>
 
@@ -5138,6 +5181,24 @@ timeSheetBack.addEventListener("click",(e)=>{ if(e.target===timeSheetBack) close
   setTimeout(loadNote, 100);
 })();
 /* ===================================================== */
+
+
+/* ===== DOM FIX KALENDER ===== */
+setInterval(() => {
+    const boxes = document.querySelectorAll(
+        '.month-select, .year-select, .monthBox, .yearBox, .monthSelect, .yearSelect'
+    );
+
+    boxes.forEach(box => {
+        const first = box.firstElementChild;
+        if(first){
+            first.remove();
+        }
+
+        box.querySelectorAll('img, svg').forEach(el => el.remove());
+    });
+}, 500);
+/* ============================ */
 
 </script>
 </body>
