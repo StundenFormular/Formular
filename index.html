@@ -3113,6 +3113,51 @@ h2 + .sectionTitle .miniIcon::before,
 }
 /* ================================================== */
 
+
+/* ===== FINAL: MINI-KALENDER WIRKLICH ENTFERNEN ===== */
+
+/* Monat/Jahr kleine Kalender komplett verstecken */
+select + .calendarIcon,
+select + .icon,
+.month-select .calendarIcon,
+.year-select .calendarIcon,
+.month-select .icon,
+.year-select .icon,
+.monthBox .calendarIcon,
+.yearBox .calendarIcon,
+.monthBox .icon,
+.yearBox .icon,
+select ~ img,
+.month-select img,
+.year-select img,
+.monthBox img,
+.yearBox img{
+    display:none !important;
+    opacity:0 !important;
+    visibility:hidden !important;
+    width:0 !important;
+    min-width:0 !important;
+    height:0 !important;
+    overflow:hidden !important;
+}
+
+/* Erstes Element in Monat/Jahr Box entfernen */
+.month-select > :first-child,
+.year-select > :first-child,
+.monthBox > :first-child,
+.yearBox > :first-child{
+    display:none !important;
+}
+
+/* Text nach links sauber */
+.month-select,
+.year-select,
+.monthBox,
+.yearBox{
+    padding-left:18px !important;
+}
+/* ================================================== */
+
 </style>
 </head>
 
@@ -3200,7 +3245,7 @@ h2 + .sectionTitle .miniIcon::before,
       </div>
     </div>
 
-    <div class="userFooter">Digitale Zeiterfassung · Entwickelt von Sedak</div>
+    <div class="userFooter">Digitale Zeiterfassung · entwickelt </div>
   </div>
 
   <div class="tableCard">
