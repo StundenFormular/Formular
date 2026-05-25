@@ -3103,52 +3103,45 @@ h2 + .sectionTitle .miniIcon::before,
 /* ================================================ */
 
 
-/* ===== FIX NACH KALENDER-ENTFERNUNG: MONAT/JAHR SAUBER ===== */
+
+
+
+/* ===== MONAT/JAHR FINAL KORREKT ===== */
 .periodGrid{
+  display:grid !important;
   grid-template-columns:1fr 1fr !important;
-  gap:14px !important;
+  gap:16px !important;
 }
 
 .periodBox{
-  padding:14px 42px 14px 18px !important;
+  position:relative !important;
+  width:100% !important;
   min-width:0 !important;
-  overflow:hidden !important;
-}
-
-.periodBox .miniLabel{
-  display:block !important;
-  margin:0 0 4px 0 !important;
-  text-align:left !important;
+  padding:18px 18px 14px 18px !important;
+  box-sizing:border-box !important;
 }
 
 .periodBox select{
   width:100% !important;
-  max-width:100% !important;
-  min-width:0 !important;
-  padding:0 24px 0 0 !important;
-  margin:0 !important;
-  box-sizing:border-box !important;
-  text-align:left !important;
-  overflow:visible !important;
-  text-overflow:clip !important;
-  white-space:nowrap !important;
-}
-
-#month,
-#year{
   font-size:18px !important;
   font-weight:900 !important;
-  letter-spacing:-0.4px !important;
+  padding-right:26px !important;
+  background-position:right 10px center !important;
+  min-width:0 !important;
 }
 
-@media(max-width:520px){
-  #month,
-  #year{
-    font-size:17px !important;
-    letter-spacing:-0.5px !important;
-  }
+.periodBox .miniLabel{
+  display:block !important;
+  margin-bottom:6px !important;
+  font-size:14px !important;
+  font-weight:800 !important;
+  color:#6b7280 !important;
 }
-/* ======================================================= */
+
+.periodIcon{
+  display:none !important;
+}
+/* ==================================== */
 
 </style>
 </head>
