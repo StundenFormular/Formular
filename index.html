@@ -3082,124 +3082,25 @@ h2 + .sectionTitle .miniIcon::before,
 /* ================================================= */
 
 
-/* ===== MINI KALENDER BEI MONAT/JAHR ENTFERNEN ===== */
-.monthSelect .calendarIcon,
-.yearSelect .calendarIcon,
-.selectIcon.calendar,
-.monthBox .icon,
-.yearBox .icon,
-.month-select .icon,
-.year-select .icon,
-.month-picker .icon,
-.year-picker .icon{
-    display:none !important;
-    visibility:hidden !important;
-    width:0 !important;
-    height:0 !important;
-    margin:0 !important;
-    padding:0 !important;
+
+
+
+
+
+
+
+
+
+/* ===== PERIOD ICONS HTML ENTFERNT - AUSRICHTUNG ===== */
+.periodBox{
+  padding-left:18px !important;
 }
 
-/* Abstand korrigieren */
-.monthSelect,
-.yearSelect,
-.monthBox,
-.yearBox,
-.month-select,
-.year-select,
-.month-picker,
-.year-picker{
-    padding-left:18px !important;
+.periodBox .miniLabel,
+.periodBox select{
+  margin-left:0 !important;
 }
-/* ================================================== */
-
-
-/* ===== FINAL: MINI-KALENDER WIRKLICH ENTFERNEN ===== */
-
-/* Monat/Jahr kleine Kalender komplett verstecken */
-select + .calendarIcon,
-select + .icon,
-.month-select .calendarIcon,
-.year-select .calendarIcon,
-.month-select .icon,
-.year-select .icon,
-.monthBox .calendarIcon,
-.yearBox .calendarIcon,
-.monthBox .icon,
-.yearBox .icon,
-select ~ img,
-.month-select img,
-.year-select img,
-.monthBox img,
-.yearBox img{
-    display:none !important;
-    opacity:0 !important;
-    visibility:hidden !important;
-    width:0 !important;
-    min-width:0 !important;
-    height:0 !important;
-    overflow:hidden !important;
-}
-
-/* Erstes Element in Monat/Jahr Box entfernen */
-.month-select > :first-child,
-.year-select > :first-child,
-.monthBox > :first-child,
-.yearBox > :first-child{
-    display:none !important;
-}
-
-/* Text nach links sauber */
-.month-select,
-.year-select,
-.monthBox,
-.yearBox{
-    padding-left:18px !important;
-}
-/* ================================================== */
-
-
-/* ===== KALENDER ICONS ENDGÜLTIG ENTFERNEN ===== */
-
-/* Monat/Jahr Container */
-.month-select img,
-.year-select img,
-.monthBox img,
-.yearBox img,
-.monthSelect img,
-.yearSelect img,
-.month-select svg,
-.year-select svg,
-.monthBox svg,
-.yearBox svg,
-.monthSelect svg,
-.yearSelect svg{
-    display:none !important;
-}
-
-/* Erstes kleines Element links komplett entfernen */
-.month-select > *:first-child,
-.year-select > *:first-child,
-.monthBox > *:first-child,
-.yearBox > *:first-child,
-.monthSelect > *:first-child,
-.yearSelect > *:first-child{
-    display:none !important;
-    width:0 !important;
-    height:0 !important;
-    overflow:hidden !important;
-}
-
-/* Innenabstand korrigieren */
-.month-select,
-.year-select,
-.monthBox,
-.yearBox,
-.monthSelect,
-.yearSelect{
-    padding-left:20px !important;
-}
-/* ============================================ */
+/* ================================================ */
 
 </style>
 </head>
@@ -3276,19 +3177,19 @@ select ~ img,
       <div class="fieldTitle"><span class="ico">📅</span>Zeitraum wählen</div>
       <div class="periodGrid">
         <div class="periodBox">
-          <span class="periodIcon">📅</span>
+          
           <span class="miniLabel">Monat</span>
           <select id="month"></select>
         </div>
         <div class="periodBox">
-          <span class="periodIcon">📅</span>
+          
           <span class="miniLabel">Jahr</span>
           <select id="year"></select>
         </div>
       </div>
     </div>
 
-    <div class="userFooter">Digitale Zeiterfassung · entwickelt </div>
+    <div class="userFooter">Digitale Zeiterfassung · Entwickelt von Sedak</div>
   </div>
 
   <div class="tableCard">
@@ -5183,22 +5084,7 @@ timeSheetBack.addEventListener("click",(e)=>{ if(e.target===timeSheetBack) close
 /* ===================================================== */
 
 
-/* ===== DOM FIX KALENDER ===== */
-setInterval(() => {
-    const boxes = document.querySelectorAll(
-        '.month-select, .year-select, .monthBox, .yearBox, .monthSelect, .yearSelect'
-    );
 
-    boxes.forEach(box => {
-        const first = box.firstElementChild;
-        if(first){
-            first.remove();
-        }
-
-        box.querySelectorAll('img, svg').forEach(el => el.remove());
-    });
-}, 500);
-/* ============================ */
 
 </script>
 </body>
