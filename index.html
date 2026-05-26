@@ -5283,6 +5283,126 @@ timeSheetBack.addEventListener("click",(e)=>{ if(e.target===timeSheetBack) close
 })();
 /* ====================================================== */
 
+
+/* ===== FIX: EINZIGE ZENTRALE LIVE-GESAMTBERECHNUNG ===== */
+(function(){
+
+  function parseHours(v){
+    if(v == null) return 0;
+    const txt = String(v).replace(",", ".").trim();
+    const n = parseFloat(txt);
+    return isNaN(n) ? 0 : n;
+  }
+
+  function recalcFullTotal(){
+
+    let total = 0;
+
+    document.querySelectorAll("tbody tr, .tableRow, tr").forEach(tr=>{
+
+      const select = tr.querySelector("select");
+
+      if(select){
+        const val = (
+          select.value ||
+          select.options?.[select.selectedIndex]?.text ||
+          ""
+        ).toLowerCase();
+
+        if(
+          !val ||
+          val.includes("kehre wählen") ||
+          val.includes("kehre waehlen")
+        ){
+          return;
+        }
+      }
+
+      const hourElement =
+        tr.querySelector(".entryHours") ||
+        tr.querySelector(".hours") ||
+        tr.querySelector("[data-hours]") ||
+        tr.querySelector(".std");
+
+      if(!hourElement) return;
+
+      const value =
+        "value" in hourElement
+          ? hourElement.value
+          : hourElement.textContent;
+
+      total += parseHours(value);
+    });
+
+    total = Math.round(total * 100) / 100;
+
+    const totalText =
+      Number.isInteger(total)
+        ? total + " Std"
+        : String(total).replace(".", ",") + " Std";
+
+    document.querySelectorAll("*").forEach(el=>{
+
+      const text = (el.textContent || "").trim();
+
+      if(text.startsWith("Gesamtstunden:")){
+        el.textContent = "Gesamtstunden: " + totalText;
+      }
+
+    });
+
+    return total;
+  }
+
+  function runEverything(){
+    if(typeof calc === "function") calc();
+    if(typeof updateTotal === "function") updateTotal();
+
+    recalcFullTotal();
+
+    if(typeof save === "function") save();
+  }
+
+  document.addEventListener("change", function(e){
+
+    if(
+      e.target.closest("tr") ||
+      e.target.matches("select,input")
+    ){
+      setTimeout(runEverything, 0);
+      setTimeout(runEverything, 60);
+      setTimeout(runEverything, 150);
+    }
+
+  });
+
+  document.addEventListener("input", function(e){
+
+    if(
+      e.target.closest("tr") ||
+      e.target.matches("select,input")
+    ){
+      setTimeout(runEverything, 0);
+      setTimeout(runEverything, 60);
+    }
+
+  });
+
+  document.addEventListener("click", function(e){
+
+    if(e.target.closest("tr")){
+      setTimeout(runEverything, 120);
+    }
+
+  });
+
+  window.addEventListener("load", function(){
+    setTimeout(runEverything, 300);
+  });
+
+})();
+/* ======================================================= */
+
 </script>
 </body>
 </html>
