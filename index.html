@@ -2430,76 +2430,42 @@ tbody tr:nth-child(odd){
 }
 
 
-
-/* ===== MONAT / JAHR SAUBER ZENTRIERT ===== */
-
+/* ===== MONATSFELD FINAL LESBAR ===== */
 .periodGrid,
 .period-row,
 .monthYear,
 .month-year-row{
   display:grid !important;
-  grid-template-columns:1fr 1fr !important;
+  grid-template-columns:minmax(0, 1.15fr) minmax(0, .85fr) !important;
   gap:14px !important;
-  align-items:start !important;
-}
-
-.periodBox{
-  display:flex !important;
-  flex-direction:column !important;
-  justify-content:flex-start !important;
-  align-items:center !important;
-  min-width:0 !important;
-}
-
-.periodBox .periodIcon{
-  display:none !important;
-}
-
-.periodBox .miniLabel{
-  position:static !important;
-  margin:0 0 8px 0 !important;
-  padding:0 !important;
-  text-align:center !important;
-  width:100% !important;
-  font-size:14px !important;
-  font-weight:900 !important;
-  color:#6b7280 !important;
-}
-
-.periodBox select{
-  min-height:58px !important;
-  width:100% !important;
-  padding:0 18px !important;
-  text-align:center !important;
-  text-align-last:center !important;
-  border-radius:20px !important;
 }
 
 #month{
-  font-size:17px !important;
+  font-size:15px !important;
   font-weight:900 !important;
-  letter-spacing:-0.4px !important;
+  letter-spacing:-0.5px !important;
+  padding-right:24px !important;
+  overflow:visible !important;
+  text-overflow:clip !important;
+  white-space:nowrap !important;
+  min-width:0 !important;
 }
 
 #year{
-  font-size:17px !important;
-  font-weight:900 !important;
-  letter-spacing:-0.4px !important;
+  font-size:24px !important;
 }
 
 @media(max-width:520px){
-
   #month{
-    font-size:16px !important;
+    font-size:14px !important;
+    letter-spacing:-0.7px !important;
   }
 
   #year{
-    font-size:16px !important;
+    font-size:22px !important;
   }
 }
-
 /* ================================== */
-
 
 
 /* ===== FINAL: ÜBERSICHT GRÜN + JAHR WIE MONAT ===== */
@@ -5177,6 +5143,145 @@ timeSheetBack.addEventListener("click",(e)=>{ if(e.target===timeSheetBack) close
 
 
 
+
+
+/* ===== FIX: GESAMTSTUNDEN NACH LÖSCHEN EINER KEHRE AKTUALISIEREN ===== */
+(function(){
+  function isEmptyKehreValue(value){
+    const v = String(value || "").trim().toLowerCase();
+    return !v || v === "-" || v.includes("kehre wählen") || v.includes("kehre waehlen");
+  }
+
+  function recalcNow(){
+    if(typeof calc === "function") calc();
+    if(typeof save === "function") save();
+    if(typeof updateTotal === "function") updateTotal();
+  }
+
+  function clearRowIfKehreEmpty(selectEl){
+    if(!selectEl) return;
+
+    const value = selectEl.value || selectEl.options?.[selectEl.selectedIndex]?.text || "";
+    if(!isEmptyKehreValue(value)) return;
+
+    const tr = selectEl.closest("tr");
+    if(!tr) return;
+
+    tr.querySelectorAll("input").forEach(input=>{
+      input.value = "";
+      input.dispatchEvent(new Event("input", {bubbles:true}));
+      input.dispatchEvent(new Event("change", {bubbles:true}));
+    });
+
+    const hoursEl = tr.querySelector(".entryHours");
+    if(hoursEl){
+      if("value" in hoursEl) hoursEl.value = "0,00";
+      hoursEl.textContent = "0,00";
+    }
+
+    tr.classList.remove("rowFilled", "trActive");
+    tr.classList.add("rowEmpty");
+
+    recalcNow();
+  }
+
+  document.addEventListener("change", function(e){
+    const el = e.target;
+    if(!el || el.tagName !== "SELECT") return;
+
+    const tr = el.closest("tr");
+    if(!tr) return;
+
+    clearRowIfKehreEmpty(el);
+
+    setTimeout(recalcNow, 0);
+    setTimeout(recalcNow, 80);
+  });
+
+  document.addEventListener("input", function(e){
+    const tr = e.target?.closest?.("tr");
+    if(!tr) return;
+
+    setTimeout(recalcNow, 0);
+  });
+})();
+/* =================================================================== */
+
+
+/* ===== FIX: GESAMTSTUNDEN UNTEN LIVE AKTUALISIEREN ===== */
+(function(){
+  function parseHourText(txt){
+    txt = String(txt || "").trim().replace(",", ".");
+    const match = txt.match(/-?\d+(\.\d+)?/);
+    return match ? Number(match[0]) : 0;
+  }
+
+  function getRowHours(tr){
+    const kehreSelect = tr.querySelector("select");
+    const kehreText = kehreSelect ? (kehreSelect.value || kehreSelect.options?.[kehreSelect.selectedIndex]?.text || "") : "";
+    const isEmptyKehre = !kehreText || /kehre wählen|kehre waehlen|^-$/.test(kehreText.toLowerCase());
+
+    if(isEmptyKehre) return 0;
+
+    const h =
+      tr.querySelector(".entryHours") ||
+      tr.querySelector(".hours") ||
+      tr.querySelector("[data-hours]");
+
+    if(!h) return 0;
+
+    return parseHourText(("value" in h ? h.value : h.textContent));
+  }
+
+  function updateBottomTotalLive(){
+    let sum = 0;
+
+    document.querySelectorAll("#rows tr, tbody tr").forEach(tr=>{
+      sum += getRowHours(tr);
+    });
+
+    const rounded = Math.round(sum * 100) / 100;
+    const display = Number.isInteger(rounded)
+      ? String(rounded)
+      : String(rounded).replace(".", ",");
+
+    document.querySelectorAll(".total, #total, .gesamtstunden, .gesamtStunden").forEach(el=>{
+      if(/gesamtstunden/i.test(el.textContent || "") || el.classList.contains("total")){
+        el.textContent = "Gesamtstunden: " + display + " Std";
+      }
+    });
+  }
+
+  function runAll(){
+    if(typeof calc === "function") calc();
+    if(typeof updateTotal === "function") updateTotal();
+    updateBottomTotalLive();
+    if(typeof save === "function") save();
+  }
+
+  document.addEventListener("change", function(e){
+    if(e.target?.closest?.("tr")){
+      setTimeout(runAll, 0);
+      setTimeout(runAll, 100);
+    }
+  });
+
+  document.addEventListener("input", function(e){
+    if(e.target?.closest?.("tr")){
+      setTimeout(runAll, 0);
+      setTimeout(runAll, 100);
+    }
+  });
+
+  document.addEventListener("click", function(e){
+    if(e.target?.closest?.("tr")){
+      setTimeout(runAll, 150);
+    }
+  });
+
+  setTimeout(updateBottomTotalLive, 300);
+})();
+/* ====================================================== */
 
 </script>
 </body>
