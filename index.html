@@ -2430,42 +2430,7 @@ tbody tr:nth-child(odd){
 }
 
 
-/* ===== MONATSFELD FINAL LESBAR ===== */
-.periodGrid,
-.period-row,
-.monthYear,
-.month-year-row{
-  display:grid !important;
-  grid-template-columns:minmax(0, 1.15fr) minmax(0, .85fr) !important;
-  gap:14px !important;
-}
 
-#month{
-  font-size:15px !important;
-  font-weight:900 !important;
-  letter-spacing:-0.5px !important;
-  padding-right:24px !important;
-  overflow:visible !important;
-  text-overflow:clip !important;
-  white-space:nowrap !important;
-  min-width:0 !important;
-}
-
-#year{
-  font-size:24px !important;
-}
-
-@media(max-width:520px){
-  #month{
-    font-size:14px !important;
-    letter-spacing:-0.7px !important;
-  }
-
-  #year{
-    font-size:22px !important;
-  }
-}
-/* ================================== */
 
 
 /* ===== FINAL: ÜBERSICHT GRÜN + JAHR WIE MONAT ===== */
@@ -3109,56 +3074,104 @@ h2 + .sectionTitle .miniIcon::before,
 
 
 
-/* ===== MONAT/JAHR SAUBER ZENTRIERT ===== */
+
+
+
+/* ===== FINAL FIX: MONAT / JAHR OPTISCH SAUBER ZENTRIERT ===== */
 .periodGrid{
   display:grid !important;
   grid-template-columns:1fr 1fr !important;
   gap:18px !important;
+  width:100% !important;
   align-items:start !important;
 }
 
 .periodBox{
+  position:relative !important;
   width:100% !important;
   min-width:0 !important;
-  padding:14px 16px !important;
+  height:86px !important;
+  padding:12px 16px 10px 16px !important;
   box-sizing:border-box !important;
   display:flex !important;
   flex-direction:column !important;
+  align-items:center !important;
   justify-content:center !important;
+  overflow:visible !important;
+}
+
+.periodBox .periodIcon{
+  display:none !important;
 }
 
 .periodBox .miniLabel{
-  text-align:center !important;
+  position:static !important;
+  display:block !important;
+  width:100% !important;
   margin:0 0 8px 0 !important;
+  padding:0 !important;
+  text-align:center !important;
   font-size:14px !important;
-  font-weight:800 !important;
+  line-height:1 !important;
+  font-weight:900 !important;
   color:#6b7280 !important;
 }
 
 .periodBox select{
+  position:static !important;
+  display:block !important;
   width:100% !important;
-  text-align:center !important;
-  text-align-last:center !important;
-  font-size:17px !important;
-  font-weight:900 !important;
+  max-width:100% !important;
+  min-width:0 !important;
+  height:36px !important;
+  margin:0 !important;
   padding:0 28px 0 10px !important;
   box-sizing:border-box !important;
-  overflow:visible !important;
+  border:0 !important;
+  background-color:transparent !important;
+  color:#020617 !important;
+  font-weight:900 !important;
+  text-align:center !important;
+  text-align-last:center !important;
   white-space:nowrap !important;
+  overflow:visible !important;
+  text-overflow:clip !important;
 }
 
 #month{
-  font-size:16px !important;
+  font-size:18px !important;
+  letter-spacing:-0.6px !important;
 }
 
 #year{
   font-size:18px !important;
+  letter-spacing:-0.4px !important;
 }
 
-.periodIcon{
-  display:none !important;
+@media(max-width:520px){
+  .periodGrid{
+    gap:16px !important;
+  }
+
+  .periodBox{
+    height:84px !important;
+    padding:12px 14px 10px 14px !important;
+  }
+
+  .periodBox .miniLabel{
+    font-size:14px !important;
+    margin-bottom:8px !important;
+  }
+
+  #month{
+    font-size:17px !important;
+  }
+
+  #year{
+    font-size:17px !important;
+  }
 }
-/* ====================================== */
+/* ============================================================ */
 
 </style>
 </head>
