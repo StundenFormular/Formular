@@ -3404,8 +3404,7 @@ const ORTE = [
   { value: "Hagenbecks Tierpark", short: "Hagenbecks Tierpark", start: "23:00", end: "08:00" },
   { value: "Farmsen", short: "Farmsen", start: "22:00", end: "08:00" },
   { value: "Ochsenzoll", short: "Ochsenzoll", start: "22:00", end: "07:00" },
-  { value: "Volksdorf", short: "Volksdorf", start: "22:00", end: "07:00" },
-  { value: "Volksdorf/Farmsen", short: "Volksdorf/Farmsen", start: "22:00", end: "08:00" }
+  { value: "Volksdorf", short: "Volksdorf", start: "22:00", end: "07:00" }
 ];
 
 const START_CHOICES = ["21:00","22:00","23:00"];
@@ -5434,6 +5433,114 @@ timeSheetBack.addEventListener("click",(e)=>{ if(e.target===timeSheetBack) close
 
 })();
 /* ======================================================= */
+
+
+/* ===== FIX: GELOESCHTE KEHRE NICHT ALS ARBEITSTAG ZAEHLEN ===== */
+(function(){
+  function isEmptyKehre(select){
+    if(!select) return true;
+    const txt = (
+      select.value ||
+      select.options?.[select.selectedIndex]?.text ||
+      ""
+    ).trim().toLowerCase();
+
+    return !txt ||
+      txt === "-" ||
+      txt.includes("kehre wählen") ||
+      txt.includes("kehre waehlen");
+  }
+
+  function clearDeletedKehreRows(){
+    document.querySelectorAll("#rows tr, tbody tr").forEach(tr=>{
+      const select = tr.querySelector("select");
+      if(!select || !isEmptyKehre(select)) return;
+
+      tr.querySelectorAll("input").forEach(input=>{
+        input.value = "";
+      });
+
+      const hours = tr.querySelector(".entryHours");
+      if(hours){
+        if("value" in hours) hours.value = "";
+        hours.textContent = "";
+      }
+
+      tr.classList.remove("rowFilled", "trActive");
+      tr.classList.add("rowEmpty");
+    });
+  }
+
+  function getCleanTotal(){
+    let sum = 0;
+
+    document.querySelectorAll("#rows tr, tbody tr").forEach(tr=>{
+      const select = tr.querySelector("select");
+      if(!select || isEmptyKehre(select)) return;
+
+      const hours = tr.querySelector(".entryHours");
+      if(!hours) return;
+
+      const raw = ("value" in hours ? hours.value : hours.textContent) || "";
+      const n = parseFloat(String(raw).replace(",", "."));
+      if(!isNaN(n) && n > 0) sum += n;
+    });
+
+    return Math.round(sum * 100) / 100;
+  }
+
+  function updateCleanTotalDisplay(){
+    clearDeletedKehreRows();
+
+    const total = getCleanTotal();
+    const txt = Number.isInteger(total)
+      ? total + " Std"
+      : String(total).replace(".", ",") + " Std";
+
+    document.querySelectorAll(".total, #total, .gesamtstunden, .gesamtStunden").forEach(el=>{
+      if(el.classList.contains("total") || /gesamtstunden/i.test(el.textContent || "")){
+        el.textContent = "Gesamtstunden: " + txt;
+      }
+    });
+
+    if(typeof save === "function") save();
+  }
+
+  document.addEventListener("change", function(e){
+    if(e.target?.tagName === "SELECT" || e.target?.closest?.("tr")){
+      setTimeout(updateCleanTotalDisplay, 0);
+      setTimeout(updateCleanTotalDisplay, 80);
+      setTimeout(updateCleanTotalDisplay, 180);
+    }
+  });
+
+  document.addEventListener("input", function(e){
+    if(e.target?.closest?.("tr")){
+      setTimeout(updateCleanTotalDisplay, 0);
+      setTimeout(updateCleanTotalDisplay, 80);
+    }
+  });
+
+  document.getElementById("previewBtn")?.addEventListener("click", function(){
+    updateCleanTotalDisplay();
+  }, true);
+
+  const oldOpenPreview = window.openPreview;
+  if(typeof oldOpenPreview === "function" && !oldOpenPreview.__cleanDeletedRowsWrapped){
+    window.openPreview = function(...args){
+      updateCleanTotalDisplay();
+      const result = oldOpenPreview.apply(this, args);
+      setTimeout(updateCleanTotalDisplay, 80);
+      return result;
+    };
+    window.openPreview.__cleanDeletedRowsWrapped = true;
+  }
+
+  window.addEventListener("load", ()=>{
+    setTimeout(updateCleanTotalDisplay, 300);
+  });
+})();
+/* ================================================================ */
 
 </script>
 </body>
