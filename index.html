@@ -3685,7 +3685,7 @@ function buildOrtOptions(){
         data-short="${o.short}" 
         data-start="${o.start}" 
         data-end="${o.end}">
-        ${o.short}
+        ${o.short} (${o.start}–${o.end} Uhr)
       </option>`
     ).join("");
     return `<optgroup label="${typ.includes("Nacht") ? "🌙 " : "☀️ "}${typ}">${options}</optgroup>`;
