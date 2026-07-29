@@ -204,6 +204,19 @@ input, select{
   background:#fff;
 }
 
+/* Nachtschicht/Tagschicht-Überschriften im Kehre-Dropdown hervorheben.
+   Hinweis: native Auswahlmenüs (Android/iOS) werden vom Betriebssystem
+   gerendert - wie stark diese Regel greift, hängt vom Browser ab. */
+select.ort optgroup{
+  font-weight:900;
+  font-style:normal;
+  color:var(--accent);
+}
+select.ort option{
+  font-weight:400;
+  color:var(--text);
+}
+
 /* ===== EIN FELD + RESET IM FELD ===== */
 .timeField{
   position:relative;
@@ -3416,14 +3429,14 @@ const PIN_BG_FILE = "nr3.jpg";
 const STORAGE_PREFIX = "sad_stundenformular_v10:";
 
 const ORTE = [
-  { value: "Niendorf Nord", short: "Niendorf Nord", start: "21:00", end: "06:00", typ: "Nachtschicht (18 Uhr bis 06 Uhr)" },
-  { value: "Hagenbecks Tierpark", short: "Hagenbecks Tierpark", start: "23:00", end: "08:00", typ: "Nachtschicht (18 Uhr bis 06 Uhr)" },
-  { value: "Farmsen", short: "Farmsen", start: "22:00", end: "08:00", typ: "Nachtschicht (18 Uhr bis 06 Uhr)" },
-  { value: "Ochsenzoll", short: "Ochsenzoll", start: "22:00", end: "07:00", typ: "Nachtschicht (18 Uhr bis 06 Uhr)" },
-  { value: "Volksdorf", short: "Volksdorf", start: "21:00", end: "06:00", typ: "Nachtschicht (18 Uhr bis 06 Uhr)" },
-  { value: "Großhandsdorf", short: "Großhandsdorf", start: "21:00", end: "06:00", typ: "Nachtschicht (18 Uhr bis 06 Uhr)" },
-  { value: "Volksdorf/Farmsen", short: "Volksdorf/Farmsen", start: "22:00", end: "08:00", typ: "Nachtschicht (18 Uhr bis 06 Uhr)" },
-  { value: "Ochsenzoll (Tag)", short: "Ochsenzoll", start: "06:00", end: "18:00", typ: "Tagschicht (06 Uhr bis 18 Uhr)" }
+  { value: "Niendorf Nord", short: "Niendorf Nord", start: "21:00", end: "06:00", typ: "Nachtschicht" },
+  { value: "Hagenbecks Tierpark", short: "Hagenbecks Tierpark", start: "23:00", end: "08:00", typ: "Nachtschicht" },
+  { value: "Farmsen", short: "Farmsen", start: "22:00", end: "08:00", typ: "Nachtschicht" },
+  { value: "Ochsenzoll", short: "Ochsenzoll", start: "22:00", end: "07:00", typ: "Nachtschicht" },
+  { value: "Volksdorf", short: "Volksdorf", start: "21:00", end: "06:00", typ: "Nachtschicht" },
+  { value: "Großhandsdorf", short: "Großhandsdorf", start: "21:00", end: "06:00", typ: "Nachtschicht" },
+  { value: "Volksdorf/Farmsen", short: "Volksdorf/Farmsen", start: "22:00", end: "08:00", typ: "Nachtschicht" },
+  { value: "Ochsenzoll (Tag)", short: "Ochsenzoll", start: "06:00", end: "18:00", typ: "Tagschicht" }
 ];
 
 const START_CHOICES = ["21:00","22:00","23:00"];
@@ -3675,7 +3688,7 @@ function buildOrtOptions(){
         ${o.short}
       </option>`
     ).join("");
-    return `<optgroup label="${typ}">${options}</optgroup>`;
+    return `<optgroup label="${typ.includes("Nacht") ? "🌙 " : "☀️ "}${typ}">${options}</optgroup>`;
   }).join("");
 }
 
