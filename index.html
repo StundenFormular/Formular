@@ -2,11 +2,11 @@
 <html lang="de">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Stundenformular</title>
   <link rel="manifest" href="manifest.json">
 
-<meta name="theme-color" content="#4f46e5">
+<meta name="theme-color" content="#3D3A87">
 
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Stundenformular">
@@ -23,8 +23,8 @@
   --border:#e2e8f0;
   --danger:#ef4444;
 
-  --accent:#4f46e5;
-  --accent2:#06b6d4;
+  --accent:#3D3A87;
+  --accent2:#E8A33D;
   --shadow: 0 12px 28px rgba(0,0,0,.10);
 
   --pinBg: none;
@@ -37,13 +37,21 @@ body{
   background:linear-gradient(180deg, #eef2ff 0%, var(--bg) 40%);
   color:var(--text);
 }
-.wrap{ max-width:560px; margin:0 auto; padding:12px; }
+.wrap{
+  max-width:560px;
+  margin:0 auto;
+  padding:12px;
+  padding-top: calc(12px + env(safe-area-inset-top));
+  padding-bottom: calc(12px + env(safe-area-inset-bottom));
+  padding-left: calc(12px + env(safe-area-inset-left));
+  padding-right: calc(12px + env(safe-area-inset-right));
+}
 
 .topbar{
   position:sticky;
-  top:10px;
+  top: calc(10px + env(safe-area-inset-top));
   z-index:60;
-  background:linear-gradient(135deg, rgba(79,70,229,.12), rgba(6,182,212,.10));
+  background:linear-gradient(135deg, rgba(61,58,135,.12), rgba(232,163,61,.10));
   border:1px solid rgba(226,232,240,.9);
   border-radius:18px;
   padding:10px;
@@ -76,16 +84,16 @@ button.danger{
   background:#fff;
 }
 button.send{
-  background:linear-gradient(135deg, rgba(79,70,229,.95), rgba(6,182,212,.90));
+  background:linear-gradient(135deg, rgba(61,58,135,.95), rgba(232,163,61,.90));
   color:#fff;
-  border-color:rgba(79,70,229,.35);
+  border-color:rgba(61,58,135,.35);
 }
 button:disabled{ opacity:.55; cursor:not-allowed; }
 .small{ font-size:12px; color:var(--muted); margin-top:6px; }
 
 .card{
   margin-top:10px;
-  background:linear-gradient(135deg, rgba(79,70,229,.18), rgba(6,182,212,.12));
+  background:linear-gradient(135deg, rgba(61,58,135,.18), rgba(232,163,61,.12));
   border:1px solid rgba(226,232,240,.95);
   border-radius:18px;
   padding:14px;
@@ -94,7 +102,7 @@ button:disabled{ opacity:.55; cursor:not-allowed; }
 .cardDivider{
   height:2px;
   margin:12px 0 6px;
-  background:linear-gradient(90deg, rgba(79,70,229,.55), rgba(6,182,212,.55));
+  background:linear-gradient(90deg, rgba(61,58,135,.55), rgba(232,163,61,.55));
   border-radius:999px;
   opacity:.7;
 }
@@ -123,7 +131,7 @@ input, select{
 
 .tableCard{
   margin-top:10px;
-  background:linear-gradient(135deg, rgba(79,70,229,.10), rgba(6,182,212,.08));
+  background:linear-gradient(135deg, rgba(61,58,135,.10), rgba(232,163,61,.08));
   border:1px solid rgba(226,232,240,.95);
   border-radius:18px;
   padding:12px;
@@ -177,14 +185,14 @@ input, select{
 
 .entryTable th,
 .entryTable td{
-  border-right: 1px solid rgba(109,40,217,.08);
+  border-right: 1px solid rgba(44,40,96,.08);
 }
 .entryTable th:last-child,
 .entryTable td:last-child{
   border-right: none;
 }
 .entryTable td{
-  border-bottom: 1px solid rgba(109,40,217,.06);
+  border-bottom: 1px solid rgba(44,40,96,.06);
 }
 
 .entryTable select{
@@ -231,10 +239,10 @@ input, select{
 .colStd{ width:120px; }
 
 .trActive td{
-  background: linear-gradient(90deg, rgba(79,70,229,.08), rgba(6,182,212,.06));
+  background: linear-gradient(90deg, rgba(61,58,135,.08), rgba(232,163,61,.06));
 }
 .trActive td:first-child{
-  box-shadow: inset 4px 0 0 rgba(79,70,229,.65);
+  box-shadow: inset 4px 0 0 rgba(61,58,135,.65);
 }
 
 
@@ -259,7 +267,7 @@ input, select{
     gap:12px;
     margin:0 0 5mm 0;
     padding-bottom:3mm;
-    border-bottom:2px solid #6d28d9;
+    border-bottom:2px solid #2C2860;
   }
 
   #printTitle{
@@ -271,7 +279,7 @@ input, select{
 
   #printSubTitle{
     font-size:12pt;
-    color:#4f46e5;
+    color:#3D3A87;
     font-weight:1000;
     margin-top:2mm;
   }
@@ -281,7 +289,7 @@ input, select{
     height:14mm;
     border-radius:4mm;
     background:#ede9fe;
-    color:#4f46e5;
+    color:#3D3A87;
     display:flex;
     align-items:center;
     justify-content:center;
@@ -299,7 +307,7 @@ input, select{
     margin:0 0 3mm 0;
   }
 
-  #printMetaTop b{ color:#4f46e5; }
+  #printMetaTop b{ color:#3D3A87; }
 
   #printTable{
     width:100%;
@@ -314,7 +322,7 @@ input, select{
   }
 
   #printTable th{
-    background:linear-gradient(135deg,#6d28d9,#2563eb);
+    background:linear-gradient(135deg,#2C2860,#3D3A87);
     color:#fff;
     font-weight:1000;
     padding:2.4mm 2mm;
@@ -346,7 +354,7 @@ input, select{
 
   #printTable tfoot th{
     background:#f3e8ff;
-    color:#4f46e5;
+    color:#3D3A87;
     font-size:10pt;
     padding:2.5mm 2mm;
     border-top:1px solid #ddd6fe;
@@ -359,7 +367,7 @@ input, select{
     border-radius:999px;
     padding:1mm 2mm;
     background:#ede9fe;
-    color:#4f46e5;
+    color:#3D3A87;
     font-weight:1000;
   }
 
@@ -399,7 +407,7 @@ input, select{
     width:10mm;
     height:10mm;
     border-radius:999px;
-    background:linear-gradient(135deg,#8b5cf6,#4f46e5);
+    background:linear-gradient(135deg,#8b5cf6,#3D3A87);
     color:#fff;
     display:flex;
     align-items:center;
@@ -415,7 +423,7 @@ input, select{
   }
 
   .printInfoValue{
-    color:#4f46e5;
+    color:#3D3A87;
     font-size:16pt;
     font-weight:1000;
     line-height:1.05;
@@ -458,7 +466,7 @@ input, select{
   align-items:center;
   gap:10px;
   padding:12px;
-  background:linear-gradient(135deg, rgba(79,70,229,.10), rgba(6,182,212,.08));
+  background:linear-gradient(135deg, rgba(61,58,135,.10), rgba(232,163,61,.08));
   border-bottom:1px solid var(--border);
 }
 .modalBody{
@@ -484,8 +492,8 @@ input, select{
   padding:16px;
 
   background:
-    radial-gradient(1200px 600px at 30% 20%, rgba(79,70,229,.28), transparent 55%),
-    radial-gradient(1000px 600px at 70% 80%, rgba(6,182,212,.22), transparent 55%),
+    radial-gradient(1200px 600px at 30% 20%, rgba(61,58,135,.28), transparent 55%),
+    radial-gradient(1000px 600px at 70% 80%, rgba(232,163,61,.22), transparent 55%),
     linear-gradient(rgba(0,0,0,0.72), rgba(0,0,0,0.78)),
     var(--pinBg);
   background-position:center;
@@ -525,7 +533,7 @@ input, select{
   padding:12px 16px;
   border-radius:16px;
   border:1px solid rgba(255,255,255,0.16);
-  background: linear-gradient(135deg, rgba(79,70,229,.92), rgba(6,182,212,.88));
+  background: linear-gradient(135deg, rgba(61,58,135,.92), rgba(232,163,61,.88));
   color:#fff;
   font-weight:1000;
   cursor:pointer;
@@ -561,7 +569,7 @@ input, select{
 }
 .dlgTop{
   padding:12px 14px;
-  background:linear-gradient(135deg, rgba(79,70,229,.10), rgba(6,182,212,.08));
+  background:linear-gradient(135deg, rgba(61,58,135,.10), rgba(232,163,61,.08));
   border-bottom:1px solid var(--border);
   font-weight:1000;
 }
@@ -592,9 +600,9 @@ input, select{
   background:#fff;
 }
 .dlgBtn.primary{
-  background:linear-gradient(135deg, rgba(79,70,229,.95), rgba(6,182,212,.90));
+  background:linear-gradient(135deg, rgba(61,58,135,.95), rgba(232,163,61,.90));
   color:#fff;
-  border-color:rgba(79,70,229,.35);
+  border-color:rgba(61,58,135,.35);
 }
 
 
@@ -754,12 +762,12 @@ input, select{
   width:72px;
   height:72px;
   border-radius:999px;
-  background:rgba(37,99,235,.10);
+  background:rgba(61,58,135,.10);
   margin:0 auto;
   display:flex;
   align-items:center;
   justify-content:center;
-  color:#2563eb;
+  color:#3D3A87;
   font-size:38px;
   font-weight:1000;
 }
@@ -782,7 +790,7 @@ input, select{
 
 .sendConfirmNote{
   margin:18px auto 18px;
-  background:rgba(37,99,235,.08);
+  background:rgba(61,58,135,.08);
   border-radius:16px;
   padding:14px;
   display:flex;
@@ -799,8 +807,8 @@ input, select{
   width:34px;
   height:34px;
   border-radius:999px;
-  border:2px solid rgba(37,99,235,.65);
-  color:#2563eb;
+  border:2px solid rgba(61,58,135,.65);
+  color:#3D3A87;
   display:flex;
   align-items:center;
   justify-content:center;
@@ -823,10 +831,10 @@ input, select{
 
 .sendConfirmCancel,
 .sendConfirmSend{
-  background:linear-gradient(135deg,#3b82f6,#1d4ed8);
+  background:linear-gradient(135deg,#4A3F91,#2C2860);
   border:none;
   color:#fff;
-  box-shadow:0 12px 24px rgba(37,99,235,.25);
+  box-shadow:0 12px 24px rgba(61,58,135,.25);
 }
 
 .sendConfirmCancel{
@@ -836,10 +844,10 @@ input, select{
 }
 
 .sendConfirmSend{
-  background:linear-gradient(135deg,#3b82f6,#1d4ed8);
+  background:linear-gradient(135deg,#4A3F91,#2C2860);
   border:none;
   color:#fff;
-  box-shadow:0 12px 24px rgba(37,99,235,.25);
+  box-shadow:0 12px 24px rgba(61,58,135,.25);
 }
 /* ==================================== */
 
@@ -886,8 +894,8 @@ input, select{
   display:inline-block;
 }
 .timeOpt.active .radio{
-  border-color: rgba(79,70,229,.95);
-  box-shadow: inset 0 0 0 4px rgba(79,70,229,.95);
+  border-color: rgba(61,58,135,.95);
+  box-shadow: inset 0 0 0 4px rgba(61,58,135,.95);
 }
 .timeSheetFooter{
   margin-top:12px;
@@ -905,9 +913,9 @@ input, select{
   background:#fff;
 }
 .timeSheetBtn.primary{
-  background:linear-gradient(135deg, rgba(79,70,229,.95), rgba(6,182,212,.90));
+  background:linear-gradient(135deg, rgba(61,58,135,.95), rgba(232,163,61,.90));
   color:#fff;
-  border-color:rgba(79,70,229,.35);
+  border-color:rgba(61,58,135,.35);
 }
 .timeOpt.dangerOpt{
   color: var(--danger);
@@ -928,7 +936,7 @@ input, select{
   border:1px solid rgba(255,255,255,.70);
   border-radius:26px;
   padding:10px;
-  box-shadow:0 18px 38px rgba(79,70,229,.12);
+  box-shadow:0 18px 38px rgba(61,58,135,.12);
 }
 .btnrow{ gap:10px; }
 .btnrow button{
@@ -949,18 +957,18 @@ button.danger::before{ content:"🗑 "; }
   padding:22px;
   border-radius:28px;
   background:
-    radial-gradient(circle at 78% 18%, rgba(99,102,241,.22), transparent 32%),
-    radial-gradient(circle at 90% 35%, rgba(6,182,212,.18), transparent 30%),
+    radial-gradient(circle at 78% 18%, rgba(92,88,184,.22), transparent 32%),
+    radial-gradient(circle at 90% 35%, rgba(232,163,61,.18), transparent 30%),
     linear-gradient(135deg, rgba(255,255,255,.78), rgba(219,234,254,.78));
   border:1px solid rgba(255,255,255,.75);
-  box-shadow:0 18px 42px rgba(79,70,229,.14);
+  box-shadow:0 18px 42px rgba(61,58,135,.14);
 }
 .userHeader{ display:flex; align-items:center; gap:14px; margin-bottom:18px; }
 .userAvatar{
   width:62px; height:62px; border-radius:999px;
-  background:linear-gradient(135deg,#7c3aed,#0ea5e9);
+  background:linear-gradient(135deg,#4A3F91,#5C58B8);
   color:#fff; display:flex; align-items:center; justify-content:center;
-  font-size:34px; box-shadow:0 12px 26px rgba(79,70,229,.24); flex:0 0 auto;
+  font-size:34px; box-shadow:0 12px 26px rgba(61,58,135,.24); flex:0 0 auto;
 }
 .userTitle{ font-size:26px; line-height:1.05; font-weight:1000; color:#0f172a; }
 .userSub{ margin-top:5px; font-size:15px; font-weight:750; color:#64748b; }
@@ -970,8 +978,8 @@ button.danger::before{ content:"🗑 "; }
 }
 .fieldTitle .ico{
   width:30px; height:30px; border-radius:10px;
-  background:rgba(79,70,229,.12); display:inline-flex;
-  align-items:center; justify-content:center; color:#4f46e5; font-size:17px;
+  background:rgba(61,58,135,.12); display:inline-flex;
+  align-items:center; justify-content:center; color:#3D3A87; font-size:17px;
 }
 .pinWrap{ position:relative; }
 .pinWrap input{
@@ -985,7 +993,7 @@ button.danger::before{ content:"🗑 "; }
   width:30px; height:30px; border-radius:999px; display:flex;
   align-items:center; justify-content:center; pointer-events:none;
 }
-.pinIcon{ left:16px; background:rgba(79,70,229,.12); color:#4f46e5; font-size:17px; }
+.pinIcon{ left:16px; background:rgba(61,58,135,.12); color:#3D3A87; font-size:17px; }
 .pinOkIcon{ right:16px; border:2px solid rgba(34,197,94,.8); color:#16a34a; font-weight:1000; }
 .periodGrid{ display:grid; grid-template-columns:1fr 1fr; gap:10px; }
 .periodBox{ position:relative; }
@@ -1002,7 +1010,7 @@ button.danger::before{ content:"🗑 "; }
 .periodIcon{
   position:absolute; left:16px; top:50%; transform:translateY(-50%);
   width:30px; height:30px; border-radius:999px;
-  background:rgba(59,130,246,.12); color:#2563eb;
+  background:rgba(74,63,145,.12); color:#3D3A87;
   display:flex; align-items:center; justify-content:center;
   font-size:16px; pointer-events:none;
 }
@@ -1012,18 +1020,18 @@ button.danger::before{ content:"🗑 "; }
 }
 .userFooter::before,.userFooter::after{
   content:""; height:2px; flex:1; border-radius:999px;
-  background:linear-gradient(90deg, rgba(124,58,237,.25), rgba(6,182,212,.35));
+  background:linear-gradient(90deg, rgba(74,63,145,.25), rgba(232,163,61,.35));
 }
 .tableCard{
   border-radius:28px;
   background:rgba(255,255,255,.62);
   border:1px solid rgba(255,255,255,.72);
-  box-shadow:0 18px 42px rgba(79,70,229,.10);
+  box-shadow:0 18px 42px rgba(61,58,135,.10);
   padding:12px;
 }
-.tableHeadRow .title::before{ content:"☷ "; color:#4f46e5; }
+.tableHeadRow .title::before{ content:"☷ "; color:#3D3A87; }
 .tableHeadRow .hint{
-  background:rgba(79,70,229,.10); color:#4f46e5;
+  background:rgba(61,58,135,.10); color:#3D3A87;
   padding:7px 12px; border-radius:999px;
 }
 .tableScroll{ border-radius:22px; border:1px solid rgba(226,232,240,.9); }
@@ -1052,7 +1060,7 @@ button.danger::before{ content:"🗑 "; }
 .modalTop{
   padding:18px 20px;
   background:
-    radial-gradient(circle at 8% 20%, rgba(124,58,237,.16), transparent 24%),
+    radial-gradient(circle at 8% 20%, rgba(74,63,145,.16), transparent 24%),
     linear-gradient(135deg, rgba(255,255,255,.92), rgba(239,246,255,.92));
   border-bottom:1px solid rgba(226,232,240,.82);
 }
@@ -1076,13 +1084,13 @@ button.danger::before{ content:"🗑 "; }
   width:54px;
   height:54px;
   border-radius:999px;
-  background:linear-gradient(135deg,#7c3aed,#2563eb);
+  background:linear-gradient(135deg,#4A3F91,#3D3A87);
   color:#fff;
   display:flex;
   align-items:center;
   justify-content:center;
   font-size:26px;
-  box-shadow:0 12px 28px rgba(79,70,229,.25);
+  box-shadow:0 12px 28px rgba(61,58,135,.25);
   flex:0 0 auto;
 }
 
@@ -1150,8 +1158,8 @@ button.danger::before{ content:"🗑 "; }
   flex:0 0 auto;
 }
 
-.previewStatIcon.purple{ background:linear-gradient(135deg,#7c3aed,#6366f1); }
-.previewStatIcon.blue{ background:linear-gradient(135deg,#2563eb,#06b6d4); }
+.previewStatIcon.purple{ background:linear-gradient(135deg,#4A3F91,#5C58B8); }
+.previewStatIcon.blue{ background:linear-gradient(135deg,#3D3A87,#E8A33D); }
 .previewStatIcon.green{ background:linear-gradient(135deg,#22c55e,#16a34a); }
 
 .previewStatLabel{
@@ -1186,7 +1194,7 @@ button.danger::before{ content:"🗑 "; }
 }
 
 .previewModernTable th{
-  background:linear-gradient(135deg,#6d28d9,#2563eb);
+  background:linear-gradient(135deg,#2C2860,#3D3A87);
   color:#fff;
   padding:12px 10px;
   font-weight:1000;
@@ -1224,8 +1232,8 @@ button.danger::before{ content:"🗑 "; }
   min-width:54px;
   padding:5px 10px;
   border-radius:999px;
-  background:rgba(124,58,237,.10);
-  color:#4f46e5;
+  background:rgba(74,63,145,.10);
+  color:#3D3A87;
   font-weight:1000;
 }
 
@@ -1257,7 +1265,7 @@ button.danger::before{ content:"🗑 "; }
   height:10px;
   border-radius:999px;
   display:inline-block;
-  background:#6366f1;
+  background:#5C58B8;
 }
 
 .previewDot.end{ background:#f43f5e; }
@@ -1265,7 +1273,7 @@ button.danger::before{ content:"🗑 "; }
 
 .previewTotalModern{
   margin-top:14px;
-  background:linear-gradient(135deg, rgba(79,70,229,.10), rgba(6,182,212,.08));
+  background:linear-gradient(135deg, rgba(61,58,135,.10), rgba(232,163,61,.08));
   border:1px solid rgba(226,232,240,.95);
   border-radius:20px;
   padding:13px 14px;
@@ -1282,7 +1290,7 @@ button.danger::before{ content:"🗑 "; }
 }
 
 #exportFromPreview{
-  background:linear-gradient(135deg,#4f46e5,#7c3aed) !important;
+  background:linear-gradient(135deg,#3D3A87,#4A3F91) !important;
   color:#fff !important;
   border:none !important;
   border-radius:18px !important;
@@ -1731,7 +1739,7 @@ button.danger::before{ content:"🗑 "; }
 
 .previewSubTitle{
   font-size:14px !important;
-  color:#4f46e5 !important;
+  color:#3D3A87 !important;
   font-weight:1000 !important;
 }
 
@@ -1755,12 +1763,12 @@ button.danger::before{ content:"🗑 "; }
   font-size:12px;
   font-weight:900;
   margin:2px 0 10px;
-  border-top:2px solid #6d28d9;
+  border-top:2px solid #2C2860;
   padding-top:9px;
 }
 
 .previewMetaLine b{
-  color:#4f46e5;
+  color:#3D3A87;
 }
 
 .previewStats{
@@ -1961,7 +1969,7 @@ button.danger::before{ content:"🗑 "; }
 /* ===== ÜBERSICHT GESAMTZEILE ===== */
 .previewModernTable tfoot th{
   background:#f3e8ff !important;
-  color:#4f46e5 !important;
+  color:#3D3A87 !important;
   font-weight:1000 !important;
   padding:9px 7px !important;
   border-top:1px solid #ddd6fe !important;
@@ -2183,7 +2191,7 @@ button.danger::before{
 
 /* ===== EINGETRAGENE TAGE DEUTLICHER HERVORHEBEN ===== */
 #rows tr.rowFilled td{
-  background:linear-gradient(90deg, rgba(109,40,217,.13), rgba(59,130,246,.08)) !important;
+  background:linear-gradient(90deg, rgba(44,40,96,.13), rgba(74,63,145,.08)) !important;
 }
 
 #rows tr.rowFilled td:first-child{
@@ -2200,21 +2208,21 @@ button.danger::before{
   bottom:8px;
   width:5px;
   border-radius:999px;
-  background:linear-gradient(180deg,#7c3aed,#2563eb);
+  background:linear-gradient(180deg,#4A3F91,#3D3A87);
 }
 
 #rows tr.rowFilled select,
 #rows tr.rowFilled .timeField input,
 #rows tr.rowFilled .entryHours{
-  border-color:rgba(124,58,237,.65) !important;
+  border-color:rgba(74,63,145,.65) !important;
   background:rgba(255,255,255,.88) !important;
   color:#0f172a !important;
   font-weight:800 !important;
-  box-shadow:0 0 0 3px rgba(124,58,237,.06) !important;
+  box-shadow:0 0 0 3px rgba(74,63,145,.06) !important;
 }
 
 #rows tr.rowFilled .timeField input{
-  color:#4f46e5 !important;
+  color:#3D3A87 !important;
   font-weight:900 !important;
 }
 
@@ -2279,7 +2287,7 @@ button.danger::before{
 }
 
 .previewStat:nth-child(1)::after{
-  background:rgba(124,58,237,.12);
+  background:rgba(74,63,145,.12);
 }
 
 .previewStat:nth-child(2){
@@ -2287,7 +2295,7 @@ button.danger::before{
 }
 
 .previewStat:nth-child(2)::after{
-  background:rgba(37,99,235,.12);
+  background:rgba(61,58,135,.12);
 }
 
 .previewStat:nth-child(3){
@@ -2312,11 +2320,11 @@ button.danger::before{
 }
 
 .previewStatIcon.purple{
-  background:linear-gradient(135deg,#7c3aed,#4f46e5) !important;
+  background:linear-gradient(135deg,#4A3F91,#3D3A87) !important;
 }
 
 .previewStatIcon.blue{
-  background:linear-gradient(135deg,#2563eb,#0284c7) !important;
+  background:linear-gradient(135deg,#3D3A87,#0284c7) !important;
 }
 
 .previewStatIcon.green{
@@ -2341,11 +2349,11 @@ button.danger::before{
 }
 
 .previewStat:nth-child(1) .previewStatValue{
-  color:#6d28d9 !important;
+  color:#2C2860 !important;
 }
 
 .previewStat:nth-child(2) .previewStatValue{
-  color:#2563eb !important;
+  color:#3D3A87 !important;
 }
 
 .previewStat:nth-child(3) .previewStatValue{
@@ -2408,7 +2416,7 @@ button.danger::before{
 
 /* ===== TABELLEN HEADER MODERNER ===== */
 .table-header{
-  background: linear-gradient(135deg,#6b46ff,#4f46e5);
+  background: linear-gradient(135deg,#6b46ff,#3D3A87);
   color:#fff;
   font-weight:800;
   letter-spacing:.3px;
@@ -2931,7 +2939,7 @@ label[for="pinInput"]::before{
 .smallIcon.user{
   color:transparent !important;
   font-size:0 !important;
-  background:rgba(109,40,217,.10) !important;
+  background:rgba(44,40,96,.10) !important;
   position:relative !important;
 }
 
@@ -2951,7 +2959,7 @@ label[for="pinInput"]::before{
 .smallIcon.person::before,
 .smallIcon.user::before{
   content:"🔑" !important;
-  color:#6d28d9 !important;
+  color:#2C2860 !important;
   font-size:28px !important;
   line-height:1 !important;
   position:absolute !important;
@@ -2977,7 +2985,7 @@ h2 + .sectionTitle .miniIcon::before,
 .userCard .sectionTitle:first-of-type .miniIcon::before,
 .userCard .sectionTitle:first-of-type .sectionIcon::before{
   content:"🔑" !important;
-  color:#6d28d9 !important;
+  color:#2C2860 !important;
   font-size:28px !important;
 }
 
@@ -3001,13 +3009,13 @@ h2 + .sectionTitle .miniIcon::before,
   margin:14px 0 92px 0 !important;
   padding:14px 16px !important;
   border-radius:18px !important;
-  background:linear-gradient(135deg,rgba(109,40,217,.08),rgba(14,165,233,.08)) !important;
-  border:1px solid rgba(109,40,217,.14) !important;
+  background:linear-gradient(135deg,rgba(44,40,96,.08),rgba(92,88,184,.08)) !important;
+  border:1px solid rgba(44,40,96,.14) !important;
 }
 
 .previewNoteTitle{
   font-weight:900 !important;
-  color:#4c1d95 !important;
+  color:#211E52 !important;
   margin-bottom:6px !important;
   font-size:14px !important;
 }
@@ -3026,14 +3034,14 @@ h2 + .sectionTitle .miniIcon::before,
   margin:14px 0 92px 0 !important;
   padding:14px 16px !important;
   border-radius:18px !important;
-  background:linear-gradient(135deg,rgba(109,40,217,.09),rgba(14,165,233,.09)) !important;
-  border:1px solid rgba(109,40,217,.18) !important;
+  background:linear-gradient(135deg,rgba(44,40,96,.09),rgba(92,88,184,.09)) !important;
+  border:1px solid rgba(44,40,96,.18) !important;
   color:#111827 !important;
 }
 
 .previewNoteTitle{
   font-weight:900 !important;
-  color:#4c1d95 !important;
+  color:#211E52 !important;
   margin-bottom:6px !important;
   font-size:14px !important;
 }
@@ -3393,20 +3401,29 @@ h2 + .sectionTitle .miniIcon::before,
 </div>
 
 <script>
-const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbw3-LIiVd6lG9on22RMTJcMYaMATy2y5Vxm6ep8idY6DWMjc2ThGPTtOHDIutL1pBPVnQ/exec";
-const APP_PIN     = "8558";
+if("serviceWorker" in navigator){
+  window.addEventListener("load", function(){
+    navigator.serviceWorker.register("./sw.js").catch(function(err){
+      console.warn("Service Worker Registrierung fehlgeschlagen:", err);
+    });
+  });
+}
+
+const WEB_APP_URL = "xx";
+const APP_PIN     = "xxx";
 const PIN_BG_FILE = "nr3.jpg";
 
 const STORAGE_PREFIX = "sad_stundenformular_v10:";
 
 const ORTE = [
-  { value: "Niendorf Nord", short: "Niendorf Nord", start: "21:00", end: "06:00" },
-  { value: "Hagenbecks Tierpark", short: "Hagenbecks Tierpark", start: "23:00", end: "08:00" },
-  { value: "Farmsen", short: "Farmsen", start: "22:00", end: "08:00" },
-  { value: "Ochsenzoll", short: "Ochsenzoll", start: "22:00", end: "07:00" },
-  { value: "Volksdorf", short: "Volksdorf", start: "21:00", end: "06:00" },
-  { value: "Großhandsdorf", short: "Großhandsdorf", start: "21:00", end: "06:00" },
-  { value: "Volksdorf/Farmsen", short: "Volksdorf/Farmsen", start: "22:00", end: "08:00" }
+  { value: "Niendorf Nord", short: "Niendorf Nord", start: "21:00", end: "06:00", typ: "Nachtschicht (18 Uhr bis 06 Uhr)" },
+  { value: "Hagenbecks Tierpark", short: "Hagenbecks Tierpark", start: "23:00", end: "08:00", typ: "Nachtschicht (18 Uhr bis 06 Uhr)" },
+  { value: "Farmsen", short: "Farmsen", start: "22:00", end: "08:00", typ: "Nachtschicht (18 Uhr bis 06 Uhr)" },
+  { value: "Ochsenzoll", short: "Ochsenzoll", start: "22:00", end: "07:00", typ: "Nachtschicht (18 Uhr bis 06 Uhr)" },
+  { value: "Volksdorf", short: "Volksdorf", start: "21:00", end: "06:00", typ: "Nachtschicht (18 Uhr bis 06 Uhr)" },
+  { value: "Großhandsdorf", short: "Großhandsdorf", start: "21:00", end: "06:00", typ: "Nachtschicht (18 Uhr bis 06 Uhr)" },
+  { value: "Volksdorf/Farmsen", short: "Volksdorf/Farmsen", start: "22:00", end: "08:00", typ: "Nachtschicht (18 Uhr bis 06 Uhr)" },
+  { value: "Ochsenzoll (Tag)", short: "Ochsenzoll", start: "06:00", end: "18:00", typ: "Tagschicht (06 Uhr bis 18 Uhr)" }
 ];
 
 const START_CHOICES = ["21:00","22:00","23:00"];
@@ -3641,15 +3658,25 @@ function fillMonthYear(){
 }
 
 function buildOrtOptions(){
-  return ORTE.map(o =>
-    `<option 
-      value="${o.value}" 
-      data-short="${o.short}" 
-      data-start="${o.start}" 
-      data-end="${o.end}">
-      ${o.value}
-    </option>`
-  ).join("");
+  const gruppen = {};
+  ORTE.forEach(o=>{
+    const key = o.typ || "Sonstige";
+    if(!gruppen[key]) gruppen[key] = [];
+    gruppen[key].push(o);
+  });
+
+  return Object.keys(gruppen).map(typ=>{
+    const options = gruppen[typ].map(o =>
+      `<option 
+        value="${o.value}" 
+        data-short="${o.short}" 
+        data-start="${o.start}" 
+        data-end="${o.end}">
+        ${o.short}
+      </option>`
+    ).join("");
+    return `<optgroup label="${typ}">${options}</optgroup>`;
+  }).join("");
 }
 
 function applyShortLabel(selectEl){
@@ -4579,7 +4606,7 @@ timeSheetBack.addEventListener("click",(e)=>{ if(e.target===timeSheetBack) close
 
     document.querySelectorAll(".previewHeaderIcon, .previewIcon, .previewCalendar, .overviewCalendar").forEach(el=>{
       el.innerHTML =
-        '<div style="width:54px;height:54px;border-radius:50%;background:linear-gradient(135deg,#6d28d9,#2563eb);color:#fff;display:flex;align-items:center;justify-content:center;box-shadow:0 10px 22px rgba(79,70,229,.20);">' +
+        '<div style="width:54px;height:54px;border-radius:50%;background:linear-gradient(135deg,#2C2860,#3D3A87);color:#fff;display:flex;align-items:center;justify-content:center;box-shadow:0 10px 22px rgba(61,58,135,.20);">' +
           '<div style="width:34px;height:36px;border-radius:6px;background:#fff;color:#111827;overflow:hidden;text-align:center;font-family:Arial,sans-serif;font-weight:900;line-height:1;">' +
             '<div style="background:#ef4444;color:#fff;font-size:8px;padding:3px 0;">' + month + '</div>' +
             '<div style="font-size:18px;padding-top:4px;">' + day + '</div>' +
@@ -4926,7 +4953,7 @@ timeSheetBack.addEventListener("click",(e)=>{ if(e.target===timeSheetBack) close
         const prev = el.previousElementSibling;
         if(prev && prev.children.length <= 2 && prev.offsetWidth <= 80 && prev.offsetHeight <= 80){
           prev.textContent = "🔑";
-          prev.style.color = "#6d28d9";
+          prev.style.color = "#2C2860";
           prev.style.fontSize = "28px";
           prev.style.display = "flex";
           prev.style.alignItems = "center";
@@ -4936,7 +4963,7 @@ timeSheetBack.addEventListener("click",(e)=>{ if(e.target===timeSheetBack) close
         const first = el.querySelector("span, i, .icon, .miniIcon, .sectionIcon");
         if(first){
           first.textContent = "🔑";
-          first.style.color = "#6d28d9";
+          first.style.color = "#2C2860";
           first.style.fontSize = "28px";
         }
       }
@@ -5241,203 +5268,11 @@ timeSheetBack.addEventListener("click",(e)=>{ if(e.target===timeSheetBack) close
 /* =================================================================== */
 
 
-/* ===== FIX: GESAMTSTUNDEN UNTEN LIVE AKTUALISIEREN ===== */
-(function(){
-  function parseHourText(txt){
-    txt = String(txt || "").trim().replace(",", ".");
-    const match = txt.match(/-?\d+(\.\d+)?/);
-    return match ? Number(match[0]) : 0;
-  }
-
-  function getRowHours(tr){
-    const kehreSelect = tr.querySelector("select");
-    const kehreText = kehreSelect ? (kehreSelect.value || kehreSelect.options?.[kehreSelect.selectedIndex]?.text || "") : "";
-    const isEmptyKehre = !kehreText || /kehre wählen|kehre waehlen|^-$/.test(kehreText.toLowerCase());
-
-    if(isEmptyKehre) return 0;
-
-    const h =
-      tr.querySelector(".entryHours") ||
-      tr.querySelector(".hours") ||
-      tr.querySelector("[data-hours]");
-
-    if(!h) return 0;
-
-    return parseHourText(("value" in h ? h.value : h.textContent));
-  }
-
-  function updateBottomTotalLive(){
-    let sum = 0;
-
-    document.querySelectorAll("#rows tr, tbody tr").forEach(tr=>{
-      sum += getRowHours(tr);
-    });
-
-    const rounded = Math.round(sum * 100) / 100;
-    const display = Number.isInteger(rounded)
-      ? String(rounded)
-      : String(rounded).replace(".", ",");
-
-    document.querySelectorAll(".total, #total, .gesamtstunden, .gesamtStunden").forEach(el=>{
-      if(/gesamtstunden/i.test(el.textContent || "") || el.classList.contains("total")){
-        el.textContent = "Gesamtstunden: " + display + " Std";
-      }
-    });
-  }
-
-  function runAll(){
-    if(typeof calc === "function") calc();
-    if(typeof updateTotal === "function") updateTotal();
-    updateBottomTotalLive();
-    if(typeof save === "function") save();
-  }
-
-  document.addEventListener("change", function(e){
-    if(e.target?.closest?.("tr")){
-      setTimeout(runAll, 0);
-      setTimeout(runAll, 100);
-    }
-  });
-
-  document.addEventListener("input", function(e){
-    if(e.target?.closest?.("tr")){
-      setTimeout(runAll, 0);
-      setTimeout(runAll, 100);
-    }
-  });
-
-  document.addEventListener("click", function(e){
-    if(e.target?.closest?.("tr")){
-      setTimeout(runAll, 150);
-    }
-  });
-
-  setTimeout(updateBottomTotalLive, 300);
-})();
-/* ====================================================== */
-
-
-/* ===== FIX: EINZIGE ZENTRALE LIVE-GESAMTBERECHNUNG ===== */
-(function(){
-
-  function parseHours(v){
-    if(v == null) return 0;
-    const txt = String(v).replace(",", ".").trim();
-    const n = parseFloat(txt);
-    return isNaN(n) ? 0 : n;
-  }
-
-  function recalcFullTotal(){
-
-    let total = 0;
-
-    document.querySelectorAll("tbody tr, .tableRow, tr").forEach(tr=>{
-
-      const select = tr.querySelector("select");
-
-      if(select){
-        const val = (
-          select.value ||
-          select.options?.[select.selectedIndex]?.text ||
-          ""
-        ).toLowerCase();
-
-        if(
-          !val ||
-          val.includes("kehre wählen") ||
-          val.includes("kehre waehlen")
-        ){
-          return;
-        }
-      }
-
-      const hourElement =
-        tr.querySelector(".entryHours") ||
-        tr.querySelector(".hours") ||
-        tr.querySelector("[data-hours]") ||
-        tr.querySelector(".std");
-
-      if(!hourElement) return;
-
-      const value =
-        "value" in hourElement
-          ? hourElement.value
-          : hourElement.textContent;
-
-      total += parseHours(value);
-    });
-
-    total = Math.round(total * 100) / 100;
-
-    const totalText =
-      Number.isInteger(total)
-        ? total + " Std"
-        : String(total).replace(".", ",") + " Std";
-
-    document.querySelectorAll("*").forEach(el=>{
-
-      const text = (el.textContent || "").trim();
-
-      if(text.startsWith("Gesamtstunden:")){
-        el.textContent = "Gesamtstunden: " + totalText;
-      }
-
-    });
-
-    return total;
-  }
-
-  function runEverything(){
-    if(typeof calc === "function") calc();
-    if(typeof updateTotal === "function") updateTotal();
-
-    recalcFullTotal();
-
-    if(typeof save === "function") save();
-  }
-
-  document.addEventListener("change", function(e){
-
-    if(
-      e.target.closest("tr") ||
-      e.target.matches("select,input")
-    ){
-      setTimeout(runEverything, 0);
-      setTimeout(runEverything, 60);
-      setTimeout(runEverything, 150);
-    }
-
-  });
-
-  document.addEventListener("input", function(e){
-
-    if(
-      e.target.closest("tr") ||
-      e.target.matches("select,input")
-    ){
-      setTimeout(runEverything, 0);
-      setTimeout(runEverything, 60);
-    }
-
-  });
-
-  document.addEventListener("click", function(e){
-
-    if(e.target.closest("tr")){
-      setTimeout(runEverything, 120);
-    }
-
-  });
-
-  window.addEventListener("load", function(){
-    setTimeout(runEverything, 300);
-  });
-
-})();
-/* ======================================================= */
-
-
-/* ===== FIX: GELOESCHTE KEHRE NICHT ALS ARBEITSTAG ZAEHLEN ===== */
+/* ===== GESAMTSTUNDEN: EINE ZENTRALE, KONSOLIDIERTE FUNKTION =====
+   Ersetzt drei frühere, sich überlappende Patch-Blöcke, die alle
+   unabhängig voneinander bei jedem change/input-Event die Summe neu
+   berechnet und mehrfach mit setTimeout verzögert haben. Jetzt: eine
+   Funktion, ein Event-Listener-Paar, ein Speicherpunkt. */
 (function(){
   function isEmptyKehre(select){
     if(!select) return true;
@@ -5453,93 +5288,99 @@ timeSheetBack.addEventListener("click",(e)=>{ if(e.target===timeSheetBack) close
       txt.includes("kehre waehlen");
   }
 
-  function clearDeletedKehreRows(){
-    document.querySelectorAll("#rows tr, tbody tr").forEach(tr=>{
-      const select = tr.querySelector("select");
-      if(!select || !isEmptyKehre(select)) return;
+  function clearRowIfEmpty(tr){
+    const select = tr.querySelector("select");
+    if(!select || !isEmptyKehre(select)) return;
 
-      tr.querySelectorAll("input").forEach(input=>{
-        input.value = "";
-      });
+    tr.querySelectorAll("input").forEach(input=>{ input.value = ""; });
 
-      const hours = tr.querySelector(".entryHours");
-      if(hours){
-        if("value" in hours) hours.value = "";
-        hours.textContent = "";
-      }
+    const hours = tr.querySelector(".entryHours") || tr.querySelector(".hours");
+    if(hours){
+      if("value" in hours) hours.value = "";
+      hours.textContent = "";
+    }
 
-      tr.classList.remove("rowFilled", "trActive");
-      tr.classList.add("rowEmpty");
-    });
+    tr.classList.remove("rowFilled", "trActive");
+    tr.classList.add("rowEmpty");
   }
 
-  function getCleanTotal(){
-    let sum = 0;
-
-    document.querySelectorAll("#rows tr, tbody tr").forEach(tr=>{
-      const select = tr.querySelector("select");
-      if(!select || isEmptyKehre(select)) return;
-
-      const hours = tr.querySelector(".entryHours");
-      if(!hours) return;
-
-      const raw = ("value" in hours ? hours.value : hours.textContent) || "";
-      const n = parseFloat(String(raw).replace(",", "."));
-      if(!isNaN(n) && n > 0) sum += n;
-    });
-
-    return Math.round(sum * 100) / 100;
+  function parseHours(v){
+    if(v == null) return 0;
+    const txt = String(v).replace(",", ".").trim();
+    const n = parseFloat(txt);
+    return isNaN(n) ? 0 : n;
   }
 
-  function updateCleanTotalDisplay(){
-    clearDeletedKehreRows();
+  function recalcTotal(){
+    let total = 0;
 
-    const total = getCleanTotal();
-    const txt = Number.isInteger(total)
+    document.querySelectorAll("#rows tr, tbody tr").forEach(tr=>{
+      clearRowIfEmpty(tr);
+
+      const select = tr.querySelector("select");
+      if(select && isEmptyKehre(select)) return;
+
+      const hourEl =
+        tr.querySelector(".entryHours") ||
+        tr.querySelector(".hours") ||
+        tr.querySelector("[data-hours]");
+
+      if(!hourEl) return;
+
+      const value = "value" in hourEl ? hourEl.value : hourEl.textContent;
+      total += parseHours(value);
+    });
+
+    total = Math.round(total * 100) / 100;
+    const totalText = Number.isInteger(total)
       ? total + " Std"
       : String(total).replace(".", ",") + " Std";
 
     document.querySelectorAll(".total, #total, .gesamtstunden, .gesamtStunden").forEach(el=>{
       if(el.classList.contains("total") || /gesamtstunden/i.test(el.textContent || "")){
-        el.textContent = "Gesamtstunden: " + txt;
+        el.textContent = "Gesamtstunden: " + totalText;
       }
     });
+
+    return total;
+  }
+
+  function runAll(){
+    if(typeof calc === "function") calc();
+    if(typeof updateTotal === "function") updateTotal();
+
+    recalcTotal();
 
     if(typeof save === "function") save();
   }
 
   document.addEventListener("change", function(e){
-    if(e.target?.tagName === "SELECT" || e.target?.closest?.("tr")){
-      setTimeout(updateCleanTotalDisplay, 0);
-      setTimeout(updateCleanTotalDisplay, 80);
-      setTimeout(updateCleanTotalDisplay, 180);
+    if(e.target?.closest?.("tr") || e.target?.matches?.("select,input")){
+      setTimeout(runAll, 0);
+      setTimeout(runAll, 100);
     }
   });
 
   document.addEventListener("input", function(e){
     if(e.target?.closest?.("tr")){
-      setTimeout(updateCleanTotalDisplay, 0);
-      setTimeout(updateCleanTotalDisplay, 80);
+      setTimeout(runAll, 0);
+      setTimeout(runAll, 100);
     }
   });
 
-  document.getElementById("previewBtn")?.addEventListener("click", function(){
-    updateCleanTotalDisplay();
-  }, true);
-
   const oldOpenPreview = window.openPreview;
-  if(typeof oldOpenPreview === "function" && !oldOpenPreview.__cleanDeletedRowsWrapped){
+  if(typeof oldOpenPreview === "function" && !oldOpenPreview.__recalcWrapped){
     window.openPreview = function(...args){
-      updateCleanTotalDisplay();
+      runAll();
       const result = oldOpenPreview.apply(this, args);
-      setTimeout(updateCleanTotalDisplay, 80);
+      setTimeout(runAll, 80);
       return result;
     };
-    window.openPreview.__cleanDeletedRowsWrapped = true;
+    window.openPreview.__recalcWrapped = true;
   }
 
-  window.addEventListener("load", ()=>{
-    setTimeout(updateCleanTotalDisplay, 300);
+  window.addEventListener("load", function(){
+    setTimeout(runAll, 300);
   });
 })();
 /* ================================================================ */
