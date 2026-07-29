@@ -1,0 +1,5390 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Stundenformular</title>
+  <link rel="manifest" href="manifest.json">
+
+<meta name="theme-color" content="#3D3A87">
+
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Stundenformular">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+
+<link rel="apple-touch-icon" href="icon-192.png">
+
+<style>
+:root{
+  --bg:#f4f6ff;
+  --card:#ffffff;
+  --text:#0f172a;
+  --muted:#64748b;
+  --border:#e2e8f0;
+  --danger:#ef4444;
+
+  --accent:#3D3A87;
+  --accent2:#E8A33D;
+  --shadow: 0 12px 28px rgba(0,0,0,.10);
+
+  --pinBg: none;
+}
+
+*{ box-sizing:border-box; }
+body{
+  margin:0;
+  font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
+  background:linear-gradient(180deg, #eef2ff 0%, var(--bg) 40%);
+  color:var(--text);
+}
+.wrap{
+  max-width:560px;
+  margin:0 auto;
+  padding:12px;
+  padding-top: calc(12px + env(safe-area-inset-top));
+  padding-bottom: calc(12px + env(safe-area-inset-bottom));
+  padding-left: calc(12px + env(safe-area-inset-left));
+  padding-right: calc(12px + env(safe-area-inset-right));
+}
+
+.topbar{
+  position:sticky;
+  top: calc(10px + env(safe-area-inset-top));
+  z-index:60;
+  background:linear-gradient(135deg, rgba(61,58,135,.12), rgba(232,163,61,.10));
+  border:1px solid rgba(226,232,240,.9);
+  border-radius:18px;
+  padding:10px;
+  box-shadow:var(--shadow);
+  backdrop-filter: blur(6px);
+}
+.btnrow{
+  display:grid;
+  grid-template-columns: 1fr 1fr 1fr 1fr;
+  gap:8px;
+}
+button{
+  width:100%;
+  padding:12px;
+  border-radius:14px;
+  border:1px solid var(--border);
+  font-weight:900;
+  font-size:15px;
+  cursor:pointer;
+  background:#fff;
+}
+button.primary{
+  background:linear-gradient(135deg, #111827, #1f2937);
+  color:#fff;
+  border-color:#111827;
+}
+button.danger{
+  color:var(--danger);
+  border-color:rgba(239,68,68,.55);
+  background:#fff;
+}
+button.send{
+  background:linear-gradient(135deg, rgba(61,58,135,.95), rgba(232,163,61,.90));
+  color:#fff;
+  border-color:rgba(61,58,135,.35);
+}
+button:disabled{ opacity:.55; cursor:not-allowed; }
+.small{ font-size:12px; color:var(--muted); margin-top:6px; }
+
+.card{
+  margin-top:10px;
+  background:linear-gradient(135deg, rgba(61,58,135,.18), rgba(232,163,61,.12));
+  border:1px solid rgba(226,232,240,.95);
+  border-radius:18px;
+  padding:14px;
+  box-shadow:0 8px 18px rgba(0,0,0,.06);
+}
+.cardDivider{
+  height:2px;
+  margin:12px 0 6px;
+  background:linear-gradient(90deg, rgba(61,58,135,.55), rgba(232,163,61,.55));
+  border-radius:999px;
+  opacity:.7;
+}
+label{ font-weight:900; }
+input, select{
+  width:100%;
+  padding:12px;
+  border-radius:14px;
+  border:1px solid var(--border);
+  font-size:16px;
+  background:#fff;
+}
+.grid2{ display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+
+.total{
+  margin-top:12px;
+  background:#fff;
+  border:1px solid var(--border);
+  border-radius:18px;
+  padding:14px;
+  font-size:22px;
+  font-weight:1000;
+  text-align:center;
+  box-shadow:0 -10px 22px rgba(0,0,0,.06);
+}
+
+.tableCard{
+  margin-top:10px;
+  background:linear-gradient(135deg, rgba(61,58,135,.10), rgba(232,163,61,.08));
+  border:1px solid rgba(226,232,240,.95);
+  border-radius:18px;
+  padding:12px;
+  box-shadow:0 6px 16px rgba(0,0,0,.05);
+}
+.tableHeadRow{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+  padding:2px 2px 10px;
+}
+.tableHeadRow .title{
+  font-weight:1000;
+  font-size:16px;
+}
+.tableHeadRow .hint{
+  color:var(--muted);
+  font-weight:800;
+  font-size:12px;
+  white-space:nowrap;
+}
+
+.tableScroll{
+  background:#fff;
+  border:1px solid var(--border);
+  border-radius:16px;
+  overflow:auto;
+  -webkit-overflow-scrolling:touch;
+}
+
+.entryTable{
+  width:100%;
+  border-collapse:collapse;
+  table-layout:fixed;
+  min-width: 620px;
+}
+.entryTable th{
+  background: #ede9fe;
+  color: #5b21b6;
+  font-weight: 1000;
+  font-size: 13px;
+  padding: 9px 7px;
+  border-bottom: 1px solid #c4b5fd;
+}
+.entryTable td{
+  padding:9px 7px;
+  border-bottom:1px solid var(--border);
+  vertical-align:middle;
+}
+
+.entryTable th,
+.entryTable td{
+  border-right: 1px solid rgba(44,40,96,.08);
+}
+.entryTable th:last-child,
+.entryTable td:last-child{
+  border-right: none;
+}
+.entryTable td{
+  border-bottom: 1px solid rgba(44,40,96,.06);
+}
+
+.entryTable select{
+  width:100%;
+  padding:9px 10px;
+  border-radius:14px;
+  border:1px solid var(--border);
+  font-size:14px;
+  background:#fff;
+}
+
+/* ===== EIN FELD + RESET IM FELD ===== */
+.timeField{
+  position:relative;
+  width:100%;
+}
+.timeField input{
+  width:100%;
+  padding:9px 10px;
+  border-radius:14px;
+  border:1px solid var(--border);
+  font-size:14px;
+  background:#fff;
+  color:#0f172a;
+}
+.timeField input::placeholder{ color:#0f172a; opacity:.55; }
+/* =================================== */
+
+.entryHours{
+  width:100%;
+  padding:9px 10px;
+  border-radius:14px;
+  border:1px solid var(--border);
+  background:#f8fafc;
+  font-weight:900;
+  font-size:14px;
+  text-align:center;
+}
+.right{ text-align:right; }
+
+.colDay{ width:70px; }
+.colKehre{ width:190px; }
+.colTime{ width:120px; }
+.colStd{ width:120px; }
+
+.trActive td{
+  background: linear-gradient(90deg, rgba(61,58,135,.08), rgba(232,163,61,.06));
+}
+.trActive td:first-child{
+  box-shadow: inset 4px 0 0 rgba(61,58,135,.65);
+}
+
+
+@page{ size:A4 portrait; margin:8mm; }
+#printArea{ display:none; }
+
+@media print{
+  body{ background:#fff; }
+  .topbar, .card, .total, .tableCard, .modalBack, .pinBack, .dlgBack, .timeSheetBack{ display:none !important; }
+  .wrap{ max-width:100% !important; padding:0 !important; }
+  #printArea{ 
+    display:block !important;
+    width:100%;
+    color:#0f172a;
+    font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
+  }
+
+  #printHeader{
+    display:flex;
+    justify-content:space-between;
+    align-items:flex-start;
+    gap:12px;
+    margin:0 0 5mm 0;
+    padding-bottom:3mm;
+    border-bottom:2px solid #2C2860;
+  }
+
+  #printTitle{
+    font-size:22pt;
+    font-weight:1000;
+    margin:0;
+    line-height:1.05;
+  }
+
+  #printSubTitle{
+    font-size:12pt;
+    color:#3D3A87;
+    font-weight:1000;
+    margin-top:2mm;
+  }
+
+  #printIcon{
+    width:14mm;
+    height:14mm;
+    border-radius:4mm;
+    background:#ede9fe;
+    color:#3D3A87;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-size:22pt;
+    font-weight:1000;
+  }
+
+  #printMetaTop{
+    display:flex;
+    justify-content:space-between;
+    gap:10mm;
+    font-size:9pt;
+    font-weight:800;
+    color:#475569;
+    margin:0 0 3mm 0;
+  }
+
+  #printMetaTop b{ color:#3D3A87; }
+
+  #printTable{
+    width:100%;
+    border-collapse:separate;
+    border-spacing:0;
+    table-layout:fixed;
+    font-size:8.2pt;
+    line-height:1.05;
+    border:1px solid #e5e7eb;
+    border-radius:3mm;
+    overflow:hidden;
+  }
+
+  #printTable th{
+    background:linear-gradient(135deg,#2C2860,#3D3A87);
+    color:#fff;
+    font-weight:1000;
+    padding:2.4mm 2mm;
+    border-right:1px solid rgba(255,255,255,.22);
+  }
+
+  #printTable th:last-child{ border-right:none; }
+
+  #printTable td{
+    padding:1.4mm 2mm;
+    border-right:1px solid #e5e7eb;
+    border-bottom:1px solid #e5e7eb;
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
+    vertical-align:middle;
+  }
+
+  #printTable td:last-child{ border-right:none; }
+
+  #printTable tr.empty td{
+    background:#f8fafc;
+    color:#94a3b8;
+  }
+
+  #printTable tr:not(.empty) td{
+    background:#fff;
+  }
+
+  #printTable tfoot th{
+    background:#f3e8ff;
+    color:#3D3A87;
+    font-size:10pt;
+    padding:2.5mm 2mm;
+    border-top:1px solid #ddd6fe;
+  }
+
+  .printHourBadge{
+    display:inline-block;
+    min-width:13mm;
+    text-align:center;
+    border-radius:999px;
+    padding:1mm 2mm;
+    background:#ede9fe;
+    color:#3D3A87;
+    font-weight:1000;
+  }
+
+  .printEmptyBadge{
+    display:inline-block;
+    min-width:13mm;
+    text-align:center;
+    border-radius:999px;
+    padding:1mm 2mm;
+    background:#f8fafc;
+    color:#94a3b8;
+    border:1px dashed #cbd5e1;
+    font-weight:900;
+  }
+
+  .right{ text-align:right; }
+  .center{ text-align:center; }
+
+  #printSummaryCards{
+    margin-top:5mm;
+    display:grid;
+    grid-template-columns:1fr;
+    gap:3mm;
+  }
+
+  .printInfoCard{
+    border:1px solid #e5e7eb;
+    border-radius:4mm;
+    padding:3mm 4mm;
+    display:flex;
+    align-items:center;
+    gap:3mm;
+    min-height:14mm;
+  }
+
+  .printInfoIcon{
+    width:10mm;
+    height:10mm;
+    border-radius:999px;
+    background:linear-gradient(135deg,#8b5cf6,#3D3A87);
+    color:#fff;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-size:12pt;
+    flex:0 0 auto;
+  }
+
+  .printInfoLabel{
+    color:#475569;
+    font-size:9pt;
+    font-weight:900;
+  }
+
+  .printInfoValue{
+    color:#3D3A87;
+    font-size:16pt;
+    font-weight:1000;
+    line-height:1.05;
+  }
+
+  #printMetaBottom{
+    margin-top:5mm;
+  }
+
+  #printThanks{
+    text-align:center;
+    color:#64748b;
+    font-size:9pt;
+    font-weight:800;
+    margin-top:8mm;
+  }
+}
+
+
+.modalBack{
+  display:none;
+  position:fixed;
+  inset:0;
+  background:rgba(15,23,42,.45);
+  z-index:200;
+  padding:14px;
+}
+.modal{
+  max-width:900px;
+  margin:0 auto;
+  background:#fff;
+  border-radius:18px;
+  border:1px solid var(--border);
+  box-shadow:var(--shadow);
+  overflow:hidden;
+}
+.modalTop{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:10px;
+  padding:12px;
+  background:linear-gradient(135deg, rgba(61,58,135,.10), rgba(232,163,61,.08));
+  border-bottom:1px solid var(--border);
+}
+.modalBody{
+  padding:12px;
+  max-height:70vh;
+  overflow:auto;
+}
+.modalBtns{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:8px;
+  padding:12px;
+  border-top:1px solid var(--border);
+}
+
+.pinBack{
+  position:fixed;
+  inset:0;
+  z-index:999;
+  display:none;
+  align-items:center;
+  justify-content:center;
+  padding:16px;
+
+  background:
+    radial-gradient(1200px 600px at 30% 20%, rgba(61,58,135,.28), transparent 55%),
+    radial-gradient(1000px 600px at 70% 80%, rgba(232,163,61,.22), transparent 55%),
+    linear-gradient(rgba(0,0,0,0.72), rgba(0,0,0,0.78)),
+    var(--pinBg);
+  background-position:center;
+  background-size:cover;
+  background-repeat:no-repeat;
+}
+.pinCard{
+  width:min(420px, 100%);
+  border-radius:22px;
+  padding:18px;
+
+  background: rgba(255,255,255,0.10);
+  border:1px solid rgba(255,255,255,0.18);
+  box-shadow: 0 24px 60px rgba(0,0,0,.45);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  color:#fff;
+}
+.pinTitle{ font-weight:1000; font-size:20px; margin:0 0 6px; }
+.pinHint{ color:rgba(255,255,255,.82); font-size:13px; margin:0 0 14px; line-height:1.25; }
+
+.pinRow{ display:flex; gap:10px; align-items:center; }
+.pinRow input{
+  flex:1;
+  padding:12px 14px;
+  border-radius:16px;
+  border:1px solid rgba(255,255,255,0.16);
+  background: rgba(15,23,42,.35);
+  color:#fff;
+  font-size:16px;
+  outline:none;
+}
+.pinRow input::placeholder{ color: rgba(255,255,255,.55); }
+
+.pinOk{
+  width:auto;
+  padding:12px 16px;
+  border-radius:16px;
+  border:1px solid rgba(255,255,255,0.16);
+  background: linear-gradient(135deg, rgba(61,58,135,.92), rgba(232,163,61,.88));
+  color:#fff;
+  font-weight:1000;
+  cursor:pointer;
+}
+.pinError{
+  margin-top:10px;
+  font-weight:900;
+  color:#fecaca;
+  display:none;
+}
+
+.inputError{
+  border-color: rgba(239,68,68,.92) !important;
+  box-shadow: 0 0 0 3px rgba(239,68,68,.18);
+}
+
+.dlgBack{
+  display:none;
+  position:fixed;
+  inset:0;
+  background:rgba(15,23,42,.45);
+  z-index:300;
+  padding:14px;
+}
+.dlg{
+  max-width:520px;
+  margin:20vh auto 0;
+  background:#fff;
+  border-radius:18px;
+  border:1px solid var(--border);
+  box-shadow:var(--shadow);
+  overflow:hidden;
+}
+.dlgTop{
+  padding:12px 14px;
+  background:linear-gradient(135deg, rgba(61,58,135,.10), rgba(232,163,61,.08));
+  border-bottom:1px solid var(--border);
+  font-weight:1000;
+}
+.dlgBody{
+  padding:14px;
+  color:#0f172a;
+  font-weight:800;
+  line-height:1.3;
+}
+.dlgBtns{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:8px;
+  padding:12px;
+  border-top:1px solid var(--border);
+}
+.dlgBtns.one{
+  grid-template-columns:1fr;
+}
+.dlgBtn{
+  width:100%;
+  padding:12px;
+  border-radius:14px;
+  border:1px solid var(--border);
+  font-weight:1000;
+  font-size:15px;
+  cursor:pointer;
+  background:#fff;
+}
+.dlgBtn.primary{
+  background:linear-gradient(135deg, rgba(61,58,135,.95), rgba(232,163,61,.90));
+  color:#fff;
+  border-color:rgba(61,58,135,.35);
+}
+
+
+/* ===== PREMIUM SUCCESS POPUP ===== */
+.successPremium{
+  text-align:center;
+  padding:34px 28px 26px;
+}
+
+.successSparkles{
+  position:relative;
+  width:118px;
+  height:96px;
+  margin:0 auto 4px;
+}
+
+.successCircle{
+  position:absolute;
+  left:50%;
+  top:18px;
+  transform:translateX(-50%);
+  width:82px;
+  height:82px;
+  border-radius:999px;
+  background:rgba(34,197,94,.12);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
+
+.successCircle::before{
+  content:"";
+  width:58px;
+  height:58px;
+  border-radius:999px;
+  background:rgba(34,197,94,.16);
+  position:absolute;
+}
+
+.successCheck{
+  position:relative;
+  z-index:2;
+  color:#16a34a;
+  font-size:48px;
+  font-weight:1000;
+  line-height:1;
+}
+
+.sparkle{
+  position:absolute;
+  color:#86efac;
+  font-size:18px;
+  font-weight:1000;
+  opacity:.95;
+}
+
+.sparkle.s1{ left:12px; top:34px; }
+.sparkle.s2{ left:34px; top:10px; font-size:14px; }
+.sparkle.s3{ right:18px; top:20px; }
+.sparkle.s4{ right:38px; top:56px; font-size:12px; }
+.sparkle.s5{ left:44px; top:62px; font-size:11px; }
+
+.successTitle{
+  margin-top:14px;
+  font-size:30px;
+  line-height:1.15;
+  font-weight:1000;
+  color:#111827;
+}
+
+.successText{
+  margin-top:12px;
+  font-size:17px;
+  line-height:1.45;
+  color:#374151;
+  font-weight:700;
+}
+
+.successDivider{
+  height:1px;
+  background:linear-gradient(90deg, transparent, rgba(34,197,94,.35), transparent);
+  margin:22px 0 18px;
+}
+
+.successNote{
+  display:flex;
+  gap:12px;
+  align-items:flex-start;
+  text-align:left;
+  color:#4b5563;
+  font-weight:700;
+  font-size:15px;
+  line-height:1.45;
+}
+
+.successShield{
+  flex:0 0 auto;
+  width:28px;
+  height:28px;
+  border-radius:999px;
+  border:2px solid rgba(34,197,94,.55);
+  color:#16a34a;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-weight:1000;
+  font-size:15px;
+  margin-top:1px;
+}
+
+.successPremiumBtn{
+  margin-top:26px;
+  width:100%;
+  padding:16px;
+  border:none;
+  border-radius:18px;
+  background:linear-gradient(135deg, #16a34a, #15803d);
+  color:#fff;
+  font-size:18px;
+  font-weight:1000;
+  cursor:pointer;
+  box-shadow:0 12px 24px rgba(22,163,74,.25);
+}
+/* =============================== */
+
+
+/* ===== PREMIUM SEND CONFIRM POPUP ===== */
+.sendConfirmPremium{
+  text-align:center;
+  padding:22px 22px 20px;
+  position:relative;
+}
+
+.sendConfirmClose{
+  position:absolute;
+  top:18px;
+  right:18px;
+  width:44px;
+  height:44px;
+  border-radius:999px;
+  border:none;
+  background:#f3f4f6;
+  color:#6b7280;
+  font-size:30px;
+  line-height:1;
+  cursor:pointer;
+}
+
+.sendConfirmIconWrap{
+  width:90px;
+  height:78px;
+  margin:0 auto 0;
+  position:relative;
+}
+
+.sendConfirmCircle{
+  width:72px;
+  height:72px;
+  border-radius:999px;
+  background:rgba(61,58,135,.10);
+  margin:0 auto;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  color:#3D3A87;
+  font-size:38px;
+  font-weight:1000;
+}
+
+.sendConfirmTitle{
+  font-size:26px;
+  font-weight:1000;
+  color:#111827;
+  margin-top:6px;
+  line-height:1.15;
+}
+
+.sendConfirmText{
+  margin-top:10px;
+  font-size:16px;
+  line-height:1.45;
+  color:#4b5563;
+  font-weight:700;
+}
+
+.sendConfirmNote{
+  margin:18px auto 18px;
+  background:rgba(61,58,135,.08);
+  border-radius:16px;
+  padding:14px;
+  display:flex;
+  gap:10px;
+  align-items:center;
+  text-align:left;
+  color:#1e3a8a;
+  font-size:14px;
+  font-weight:800;
+  line-height:1.4;
+}
+
+.sendConfirmShield{
+  width:34px;
+  height:34px;
+  border-radius:999px;
+  border:2px solid rgba(61,58,135,.65);
+  color:#3D3A87;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  flex:0 0 auto;
+  font-weight:1000;
+  font-size:18px;
+}
+
+.sendConfirmDivider{
+  height:1px;
+  background:#e5e7eb;
+  margin:0 0 22px;
+}
+
+.sendConfirmBtns{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:10px;
+}
+
+.sendConfirmCancel,
+.sendConfirmSend{
+  background:linear-gradient(135deg,#4A3F91,#2C2860);
+  border:none;
+  color:#fff;
+  box-shadow:0 12px 24px rgba(61,58,135,.25);
+}
+
+.sendConfirmCancel{
+  background:#fff;
+  border:1px solid #d1d5db;
+  color:#111827;
+}
+
+.sendConfirmSend{
+  background:linear-gradient(135deg,#4A3F91,#2C2860);
+  border:none;
+  color:#fff;
+  box-shadow:0 12px 24px rgba(61,58,135,.25);
+}
+/* ==================================== */
+
+/* ===== BOTTOM SHEET (A) ===== */
+.timeSheetBack{
+  display:none;
+  position:fixed;
+  inset:0;
+  background:rgba(15,23,42,.45);
+  z-index:400;
+  padding:0;
+}
+.timeSheet{
+  position:absolute;
+  left:0; right:0; bottom:0;
+  background:#fff;
+  border-radius:18px 18px 0 0;
+  border-top:1px solid var(--border);
+  box-shadow:0 -18px 40px rgba(0,0,0,.18);
+  padding:12px;
+  max-height:70vh;
+  overflow:auto;
+  -webkit-overflow-scrolling:touch;
+}
+.timeSheetTitle{
+  font-weight:1000;
+  font-size:18px;
+  margin:4px 2px 10px;
+}
+.timeOpt{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  padding:14px 10px;
+  border-top:1px solid rgba(226,232,240,.85);
+  font-weight:900;
+  cursor:pointer;
+}
+.timeOpt:first-of-type{ border-top:none; }
+.timeOpt .radio{
+  width:18px; height:18px;
+  border-radius:999px;
+  border:2px solid rgba(15,23,42,.25);
+  display:inline-block;
+}
+.timeOpt.active .radio{
+  border-color: rgba(61,58,135,.95);
+  box-shadow: inset 0 0 0 4px rgba(61,58,135,.95);
+}
+.timeSheetFooter{
+  margin-top:12px;
+  padding-top:12px;
+  border-top:1px solid rgba(226,232,240,.85);
+}
+.timeSheetBtn{
+  width:100%;
+  padding:12px;
+  border-radius:14px;
+  border:1px solid var(--border);
+  font-weight:1000;
+  font-size:15px;
+  cursor:pointer;
+  background:#fff;
+}
+.timeSheetBtn.primary{
+  background:linear-gradient(135deg, rgba(61,58,135,.95), rgba(232,163,61,.90));
+  color:#fff;
+  border-color:rgba(61,58,135,.35);
+}
+.timeOpt.dangerOpt{
+  color: var(--danger);
+  font-weight:1000;
+}
+.timeOpt.dangerOpt .radio{
+  border-color: rgba(239,68,68,.35);
+}
+.timeOpt.dangerOpt.active .radio{
+  border-color: rgba(239,68,68,.9);
+  box-shadow: inset 0 0 0 4px rgba(239,68,68,.9);
+}
+/* =========================== */
+
+/* ===== MODERN USER AREA ===== */
+.topbar{
+  background:rgba(255,255,255,.72);
+  border:1px solid rgba(255,255,255,.70);
+  border-radius:26px;
+  padding:10px;
+  box-shadow:0 18px 38px rgba(61,58,135,.12);
+}
+.btnrow{ gap:10px; }
+.btnrow button{
+  min-height:68px;
+  border-radius:22px;
+  font-size:15px;
+  box-shadow:0 10px 22px rgba(15,23,42,.06);
+}
+button.primary::before{ content:"📄 "; }
+button.send::before{ content:"✈ "; }
+button.danger::before{ content:"🗑 "; }
+#prevBtn::before{ content:"📊 "; }
+
+.card.userCard{
+  position:relative;
+  overflow:hidden;
+  margin-top:14px;
+  padding:22px;
+  border-radius:28px;
+  background:
+    radial-gradient(circle at 78% 18%, rgba(92,88,184,.22), transparent 32%),
+    radial-gradient(circle at 90% 35%, rgba(232,163,61,.18), transparent 30%),
+    linear-gradient(135deg, rgba(255,255,255,.78), rgba(219,234,254,.78));
+  border:1px solid rgba(255,255,255,.75);
+  box-shadow:0 18px 42px rgba(61,58,135,.14);
+}
+.userHeader{ display:flex; align-items:center; gap:14px; margin-bottom:18px; }
+.userAvatar{
+  width:62px; height:62px; border-radius:999px;
+  background:linear-gradient(135deg,#4A3F91,#5C58B8);
+  color:#fff; display:flex; align-items:center; justify-content:center;
+  font-size:34px; box-shadow:0 12px 26px rgba(61,58,135,.24); flex:0 0 auto;
+}
+.userTitle{ font-size:26px; line-height:1.05; font-weight:1000; color:#0f172a; }
+.userSub{ margin-top:5px; font-size:15px; font-weight:750; color:#64748b; }
+.fieldTitle{
+  display:flex; align-items:center; gap:9px;
+  font-size:19px; font-weight:1000; margin:14px 0 8px; color:#0f172a;
+}
+.fieldTitle .ico{
+  width:30px; height:30px; border-radius:10px;
+  background:rgba(61,58,135,.12); display:inline-flex;
+  align-items:center; justify-content:center; color:#3D3A87; font-size:17px;
+}
+.pinWrap{ position:relative; }
+.pinWrap input{
+  padding-left:54px; padding-right:54px; min-height:58px;
+  font-size:24px; font-weight:900; border-radius:20px;
+  border:1px solid rgba(147,197,253,.85);
+  box-shadow:0 10px 24px rgba(15,23,42,.04);
+}
+.pinIcon,.pinOkIcon{
+  position:absolute; top:50%; transform:translateY(-50%);
+  width:30px; height:30px; border-radius:999px; display:flex;
+  align-items:center; justify-content:center; pointer-events:none;
+}
+.pinIcon{ left:16px; background:rgba(61,58,135,.12); color:#3D3A87; font-size:17px; }
+.pinOkIcon{ right:16px; border:2px solid rgba(34,197,94,.8); color:#16a34a; font-weight:1000; }
+.periodGrid{ display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+.periodBox{ position:relative; }
+.periodBox select{
+  min-height:58px; padding-left:54px; padding-top:22px;
+  font-size:22px; font-weight:900; border-radius:20px;
+  border:1px solid rgba(147,197,253,.85);
+  box-shadow:0 10px 24px rgba(15,23,42,.04);
+}
+.periodBox .miniLabel{
+  position:absolute; left:54px; top:8px; font-size:11px;
+  font-weight:900; color:#64748b; pointer-events:none;
+}
+.periodIcon{
+  position:absolute; left:16px; top:50%; transform:translateY(-50%);
+  width:30px; height:30px; border-radius:999px;
+  background:rgba(74,63,145,.12); color:#3D3A87;
+  display:flex; align-items:center; justify-content:center;
+  font-size:16px; pointer-events:none;
+}
+.userFooter{
+  margin-top:18px; display:flex; align-items:center; gap:12px;
+  color:#64748b; font-size:13px; font-weight:800;
+}
+.userFooter::before,.userFooter::after{
+  content:""; height:2px; flex:1; border-radius:999px;
+  background:linear-gradient(90deg, rgba(74,63,145,.25), rgba(232,163,61,.35));
+}
+.tableCard{
+  border-radius:28px;
+  background:rgba(255,255,255,.62);
+  border:1px solid rgba(255,255,255,.72);
+  box-shadow:0 18px 42px rgba(61,58,135,.10);
+  padding:12px;
+}
+.tableHeadRow .title::before{ content:"☷ "; color:#3D3A87; }
+.tableHeadRow .hint{
+  background:rgba(61,58,135,.10); color:#3D3A87;
+  padding:7px 12px; border-radius:999px;
+}
+.tableScroll{ border-radius:22px; border:1px solid rgba(226,232,240,.9); }
+.entryTable select,.timeField input,.entryHours{ border-radius:18px; }
+/* ============================ */
+
+
+/* ===== MODERN PREVIEW / ÜBERSICHT ===== */
+.modalBack{
+  background:rgba(15,23,42,.56);
+  backdrop-filter:blur(4px);
+  -webkit-backdrop-filter:blur(4px);
+}
+
+.modal{
+  width:min(94vw,980px);
+  max-width:980px;
+  margin:18px auto;
+  border-radius:28px;
+  border:1px solid rgba(255,255,255,.72);
+  background:rgba(255,255,255,.94);
+  box-shadow:0 28px 70px rgba(15,23,42,.28);
+  overflow:hidden;
+}
+
+.modalTop{
+  padding:18px 20px;
+  background:
+    radial-gradient(circle at 8% 20%, rgba(74,63,145,.16), transparent 24%),
+    linear-gradient(135deg, rgba(255,255,255,.92), rgba(239,246,255,.92));
+  border-bottom:1px solid rgba(226,232,240,.82);
+}
+
+.previewHeader{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:14px;
+  width:100%;
+}
+
+.previewTitleWrap{
+  display:flex;
+  align-items:center;
+  gap:12px;
+  min-width:0;
+}
+
+.previewIcon{
+  width:54px;
+  height:54px;
+  border-radius:999px;
+  background:linear-gradient(135deg,#4A3F91,#3D3A87);
+  color:#fff;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:26px;
+  box-shadow:0 12px 28px rgba(61,58,135,.25);
+  flex:0 0 auto;
+}
+
+.previewMainTitle{
+  font-size:24px;
+  font-weight:1000;
+  color:#0f172a;
+  line-height:1.1;
+}
+
+.previewSubTitle{
+  margin-top:4px;
+  color:#64748b;
+  font-size:14px;
+  font-weight:800;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+
+.previewCloseBtn{
+  width:auto !important;
+  min-width:118px;
+  padding:13px 16px !important;
+  border-radius:999px !important;
+  background:#fff !important;
+  color:#0f172a !important;
+  font-weight:1000 !important;
+  box-shadow:0 8px 18px rgba(15,23,42,.06);
+}
+
+.modalBody{
+  padding:16px;
+  max-height:74vh;
+}
+
+.previewStats{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:10px;
+  margin-bottom:14px;
+}
+
+.previewStat{
+  background:#fff;
+  border:1px solid rgba(226,232,240,.95);
+  border-radius:20px;
+  padding:12px;
+  box-shadow:0 10px 22px rgba(15,23,42,.04);
+  display:flex;
+  align-items:center;
+  gap:10px;
+  min-width:0;
+}
+
+.previewStatIcon{
+  width:42px;
+  height:42px;
+  border-radius:999px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  color:#fff;
+  font-size:20px;
+  flex:0 0 auto;
+}
+
+.previewStatIcon.purple{ background:linear-gradient(135deg,#4A3F91,#5C58B8); }
+.previewStatIcon.blue{ background:linear-gradient(135deg,#3D3A87,#E8A33D); }
+.previewStatIcon.green{ background:linear-gradient(135deg,#22c55e,#16a34a); }
+
+.previewStatLabel{
+  color:#475569;
+  font-size:12px;
+  font-weight:850;
+}
+
+.previewStatValue{
+  color:#0f172a;
+  font-size:22px;
+  line-height:1.1;
+  font-weight:1000;
+  white-space:nowrap;
+}
+
+.previewTableWrap{
+  border:1px solid rgba(226,232,240,.95);
+  border-radius:22px;
+  overflow:auto;
+  background:#fff;
+  -webkit-overflow-scrolling:touch;
+  box-shadow:0 10px 22px rgba(15,23,42,.04);
+}
+
+.previewModernTable{
+  width:100%;
+  border-collapse:collapse;
+  table-layout:fixed;
+  min-width:650px;
+  font-size:14px;
+}
+
+.previewModernTable th{
+  background:linear-gradient(135deg,#2C2860,#3D3A87);
+  color:#fff;
+  padding:12px 10px;
+  font-weight:1000;
+  border:none;
+  text-align:left;
+  white-space:nowrap;
+}
+
+.previewModernTable th:first-child{ border-top-left-radius:18px; }
+.previewModernTable th:last-child{ border-top-right-radius:18px; text-align:center; }
+
+.previewModernTable td{
+  padding:11px 10px;
+  border-bottom:1px solid rgba(226,232,240,.8);
+  border-right:1px solid rgba(226,232,240,.55);
+  color:#0f172a;
+  background:#fff;
+  vertical-align:middle;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+
+.previewModernTable td:last-child{ border-right:none; text-align:center; }
+
+.previewModernTable tr.emptyPreview td{
+  background:#f8fafc;
+  color:#94a3b8;
+}
+
+.previewBadge{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  min-width:54px;
+  padding:5px 10px;
+  border-radius:999px;
+  background:rgba(74,63,145,.10);
+  color:#3D3A87;
+  font-weight:1000;
+}
+
+.previewLegend{
+  display:flex;
+  flex-wrap:wrap;
+  gap:8px;
+  padding:10px;
+  background:#fff;
+  border:1px solid rgba(226,232,240,.95);
+  border-top:none;
+  border-radius:0 0 22px 22px;
+}
+
+.previewLegend span{
+  display:inline-flex;
+  align-items:center;
+  gap:6px;
+  padding:7px 10px;
+  border-radius:999px;
+  background:#f8fafc;
+  color:#475569;
+  font-size:12px;
+  font-weight:800;
+}
+
+.previewDot{
+  width:10px;
+  height:10px;
+  border-radius:999px;
+  display:inline-block;
+  background:#5C58B8;
+}
+
+.previewDot.end{ background:#f43f5e; }
+.previewDot.empty{ background:#cbd5e1; }
+
+.previewTotalModern{
+  margin-top:14px;
+  background:linear-gradient(135deg, rgba(61,58,135,.10), rgba(232,163,61,.08));
+  border:1px solid rgba(226,232,240,.95);
+  border-radius:20px;
+  padding:13px 14px;
+  color:#0f172a;
+  font-weight:900;
+}
+
+.modalBtns{
+  grid-template-columns:1fr 1fr;
+  gap:12px;
+  padding:16px;
+  border-top:1px solid rgba(226,232,240,.85);
+  background:rgba(248,250,252,.78);
+}
+
+#exportFromPreview{
+  background:linear-gradient(135deg,#3D3A87,#4A3F91) !important;
+  color:#fff !important;
+  border:none !important;
+  border-radius:18px !important;
+  font-weight:1000 !important;
+}
+
+#exportFromPreview::before{ content:"📄 "; }
+
+#closePrevBottom{
+  border-radius:18px !important;
+  font-weight:1000 !important;
+}
+
+#closePrevBottom::before{ content:"← "; }
+
+@media(max-width:520px){
+  .modal{ width:94vw; margin:16px auto; border-radius:24px; }
+  .modalTop{ padding:14px; }
+  .previewIcon{ width:46px; height:46px; font-size:22px; }
+  .previewMainTitle{ font-size:21px; }
+  .previewSubTitle{ font-size:12px; }
+  .previewCloseBtn{ min-width:auto; padding:11px 13px !important; }
+  .previewStats{ grid-template-columns:1fr; }
+  .modalBody{ padding:12px; }
+  .previewModernTable{ font-size:13px; min-width:620px; }
+  .previewModernTable th,.previewModernTable td{ padding:10px 8px; }
+}
+/* =================================== */
+
+
+/* ===== KOMPAKTE ÜBERSICHT - EIN SEITEN LOOK ===== */
+.modal{
+  width:min(94vw,900px) !important;
+  max-width:900px !important;
+  margin:18px auto !important;
+  border-radius:24px !important;
+}
+
+.modalTop{
+  padding:14px 18px !important;
+}
+
+.previewIcon{
+  width:46px !important;
+  height:46px !important;
+  font-size:22px !important;
+}
+
+.previewMainTitle{
+  font-size:22px !important;
+}
+
+.previewSubTitle{
+  font-size:13px !important;
+}
+
+.previewCloseBtn{
+  min-width:108px !important;
+  padding:11px 14px !important;
+}
+
+.modalBody{
+  padding:12px 14px !important;
+  max-height:64vh !important;
+  overflow:auto !important;
+}
+
+.previewStats{
+  display:grid !important;
+  grid-template-columns:repeat(3,1fr) !important;
+  gap:8px !important;
+  margin-bottom:10px !important;
+}
+
+.previewStat{
+  border-radius:16px !important;
+  padding:9px 10px !important;
+  gap:8px !important;
+}
+
+.previewStatIcon{
+  width:34px !important;
+  height:34px !important;
+  font-size:16px !important;
+}
+
+.previewStatLabel{
+  font-size:11px !important;
+}
+
+.previewStatValue{
+  font-size:20px !important;
+}
+
+.previewTableWrap{
+  border-radius:18px !important;
+}
+
+.previewModernTable{
+  font-size:13px !important;
+  min-width:620px !important;
+}
+
+.previewModernTable th{
+  padding:9px 8px !important;
+}
+
+.previewModernTable td{
+  padding:8px 8px !important;
+}
+
+.previewBadge{
+  min-width:46px !important;
+  padding:4px 8px !important;
+}
+
+.previewLegend{
+  padding:8px !important;
+  gap:6px !important;
+  border-radius:0 0 18px 18px !important;
+}
+
+.previewLegend span{
+  padding:6px 8px !important;
+  font-size:11px !important;
+}
+
+.previewTotalModern{
+  margin-top:10px !important;
+  padding:10px 12px !important;
+  border-radius:16px !important;
+  font-size:13px !important;
+}
+
+.modalBtns{
+  padding:12px 14px !important;
+  gap:10px !important;
+}
+
+#exportFromPreview,
+#closePrevBottom{
+  padding:13px !important;
+  border-radius:16px !important;
+  font-size:15px !important;
+}
+
+@media(max-width:520px){
+  .modal{
+    width:94vw !important;
+    margin:14px auto !important;
+    border-radius:22px !important;
+  }
+
+  .modalTop{
+    padding:12px !important;
+  }
+
+  .previewIcon{
+    width:42px !important;
+    height:42px !important;
+    font-size:20px !important;
+  }
+
+  .previewMainTitle{
+    font-size:20px !important;
+  }
+
+  .previewSubTitle{
+    font-size:12px !important;
+  }
+
+  .previewCloseBtn{
+    padding:10px 12px !important;
+    font-size:14px !important;
+  }
+
+  .modalBody{
+    max-height:66vh !important;
+    padding:10px !important;
+  }
+
+  .previewStats{
+    grid-template-columns:repeat(3,1fr) !important;
+    gap:6px !important;
+  }
+
+  .previewStat{
+    display:block !important;
+    text-align:center !important;
+    padding:8px 5px !important;
+    border-radius:14px !important;
+  }
+
+  .previewStatIcon{
+    width:30px !important;
+    height:30px !important;
+    font-size:14px !important;
+    margin:0 auto 4px !important;
+  }
+
+  .previewStatLabel{
+    font-size:9px !important;
+    line-height:1.15 !important;
+  }
+
+  .previewStatValue{
+    font-size:18px !important;
+  }
+
+  .previewModernTable{
+    font-size:12px !important;
+    min-width:600px !important;
+  }
+
+  .previewModernTable th,
+  .previewModernTable td{
+    padding:7px 7px !important;
+  }
+
+  .previewLegend{
+    display:none !important;
+  }
+
+  .modalBtns{
+    padding:10px !important;
+  }
+}
+/* ========================================= */
+
+
+/* ===== ULTRA KOMPAKTE ÜBERSICHT - OHNE HORIZONTALES WISCHEN ===== */
+.previewModernTable{
+  width:100% !important;
+  min-width:0 !important;
+  table-layout:fixed !important;
+  font-size:11.5px !important;
+}
+
+.previewModernTable th,
+.previewModernTable td{
+  padding:7px 5px !important;
+}
+
+.previewModernTable th:nth-child(1),
+.previewModernTable td:nth-child(1){
+  width:13% !important;
+}
+
+.previewModernTable th:nth-child(2),
+.previewModernTable td:nth-child(2){
+  width:35% !important;
+}
+
+.previewModernTable th:nth-child(3),
+.previewModernTable td:nth-child(3){
+  width:17% !important;
+}
+
+.previewModernTable th:nth-child(4),
+.previewModernTable td:nth-child(4){
+  width:17% !important;
+}
+
+.previewModernTable th:nth-child(5),
+.previewModernTable td:nth-child(5){
+  width:18% !important;
+}
+
+.previewBadge{
+  min-width:0 !important;
+  padding:3px 6px !important;
+  font-size:11px !important;
+}
+
+.previewStats{
+  grid-template-columns:repeat(3,1fr) !important;
+}
+
+.previewStat{
+  padding:7px 4px !important;
+}
+
+.previewStatIcon{
+  display:none !important;
+}
+
+.previewStatValue{
+  font-size:17px !important;
+}
+
+.previewStatLabel{
+  font-size:9px !important;
+}
+
+.modalBody{
+  max-height:62vh !important;
+}
+
+@media(max-width:520px){
+  .previewModernTable{
+    width:100% !important;
+    min-width:0 !important;
+    font-size:11px !important;
+  }
+
+  .previewModernTable th,
+  .previewModernTable td{
+    padding:7px 4px !important;
+  }
+
+  .previewMainTitle{
+    font-size:19px !important;
+  }
+
+  .previewSubTitle{
+    font-size:11px !important;
+  }
+
+  .previewCloseBtn{
+    font-size:13px !important;
+    padding:9px 11px !important;
+  }
+}
+/* ================================================================ */
+
+
+/* ===== LEERE TAGE DEUTLICHER IN DER ÜBERSICHT ===== */
+.previewModernTable tr.emptyPreview td{
+  background:linear-gradient(180deg,#f8fafc,#f1f5f9) !important;
+  color:#94a3b8 !important;
+}
+
+.previewModernTable tr.emptyPreview td:first-child{
+  font-weight:1000 !important;
+  color:#64748b !important;
+}
+
+.previewModernTable tr.emptyPreview .previewBadge{
+  background:#f8fafc !important;
+  color:#94a3b8 !important;
+  border:1px dashed #cbd5e1 !important;
+  box-shadow:none !important;
+}
+/* ================================================ */
+
+
+/* ===== PDF EINSEITIG KOMPAKT ===== */
+@media print{
+  @page{ size:A4 portrait; margin:7mm; }
+
+  #printHeader{
+    margin:0 0 3mm 0 !important;
+    padding-bottom:2mm !important;
+  }
+
+  #printTitle{
+    font-size:20pt !important;
+  }
+
+  #printSubTitle{
+    font-size:11pt !important;
+    margin-top:1mm !important;
+  }
+
+  #printIcon{
+    width:11mm !important;
+    height:11mm !important;
+    font-size:17pt !important;
+  }
+
+  #printMetaTop{
+    font-size:8pt !important;
+    margin:0 0 2mm 0 !important;
+  }
+
+  #printTable{
+    font-size:7.2pt !important;
+    line-height:1 !important;
+  }
+
+  #printTable th{
+    padding:1.6mm 1.6mm !important;
+  }
+
+  #printTable td{
+    padding:0.95mm 1.6mm !important;
+  }
+
+  #printTable tfoot th{
+    padding:1.8mm 1.6mm !important;
+    font-size:8.5pt !important;
+  }
+
+  .printHourBadge,
+  .printEmptyBadge{
+    min-width:10mm !important;
+    padding:.55mm 1.3mm !important;
+  }
+
+  #printSummaryCards,
+  #printMetaBottom,
+  #printThanks{
+    display:none !important;
+  }
+}
+/* ================================= */
+
+
+
+
+/* ===== PIN ICON NEUTRAL ===== */
+.pinOkIcon{
+  border:none !important;
+  color:#64748b !important;
+  background:rgba(100,116,139,.10) !important;
+  font-size:18px !important;
+}
+/* =========================== */
+
+
+/* ===== ÜBERSICHT KOMPAKT LANG - BIS CA. TAG 16 SICHTBAR ===== */
+.modal{
+  width:min(94vw,920px) !important;
+  max-width:920px !important;
+  margin:12px auto !important;
+  border-radius:24px !important;
+}
+
+.modalTop{
+  padding:14px 18px !important;
+}
+
+.previewHeader{
+  align-items:center !important;
+}
+
+.previewIcon{
+  width:46px !important;
+  height:46px !important;
+  font-size:22px !important;
+}
+
+.previewMainTitle{
+  font-size:22px !important;
+}
+
+.previewSubTitle{
+  font-size:14px !important;
+  color:#3D3A87 !important;
+  font-weight:1000 !important;
+}
+
+.previewCloseBtn{
+  min-width:108px !important;
+  padding:11px 14px !important;
+  border-radius:18px !important;
+}
+
+.modalBody{
+  padding:12px 14px 0 !important;
+  max-height:72vh !important;
+  overflow:auto !important;
+}
+
+.previewMetaLine{
+  display:flex;
+  justify-content:space-between;
+  gap:12px;
+  color:#475569;
+  font-size:12px;
+  font-weight:900;
+  margin:2px 0 10px;
+  border-top:2px solid #2C2860;
+  padding-top:9px;
+}
+
+.previewMetaLine b{
+  color:#3D3A87;
+}
+
+.previewStats{
+  display:grid !important;
+  grid-template-columns:repeat(3,1fr) !important;
+  gap:8px !important;
+  margin-bottom:10px !important;
+}
+
+.previewStat{
+  min-height:56px !important;
+  border-radius:14px !important;
+  padding:8px 10px !important;
+  gap:8px !important;
+  background:#fff !important;
+}
+
+.previewStatIcon{
+  width:34px !important;
+  height:34px !important;
+  font-size:16px !important;
+}
+
+.previewStatLabel{
+  font-size:11px !important;
+  line-height:1.1 !important;
+}
+
+.previewStatValue{
+  font-size:20px !important;
+  line-height:1.05 !important;
+}
+
+.previewTableWrap{
+  border-radius:16px !important;
+  overflow:hidden !important;
+}
+
+.previewModernTable{
+  width:100% !important;
+  min-width:0 !important;
+  table-layout:fixed !important;
+  font-size:12px !important;
+}
+
+.previewModernTable th{
+  padding:8px 7px !important;
+}
+
+.previewModernTable td{
+  padding:7px 7px !important;
+}
+
+.previewModernTable th:nth-child(1),
+.previewModernTable td:nth-child(1){ width:12% !important; }
+
+.previewModernTable th:nth-child(2),
+.previewModernTable td:nth-child(2){ width:37% !important; }
+
+.previewModernTable th:nth-child(3),
+.previewModernTable td:nth-child(3){ width:17% !important; }
+
+.previewModernTable th:nth-child(4),
+.previewModernTable td:nth-child(4){ width:17% !important; }
+
+.previewModernTable th:nth-child(5),
+.previewModernTable td:nth-child(5){ width:17% !important; }
+
+.previewBadge{
+  min-width:42px !important;
+  padding:3px 7px !important;
+  font-size:12px !important;
+}
+
+.previewModernTable tr.emptyPreview td{
+  background:linear-gradient(180deg,#f8fafc,#f1f5f9) !important;
+  color:#94a3b8 !important;
+}
+
+.previewModernTable tr.emptyPreview td:first-child{
+  font-weight:1000 !important;
+  color:#64748b !important;
+}
+
+.previewModernTable tr.emptyPreview .previewBadge{
+  background:#f8fafc !important;
+  color:#94a3b8 !important;
+  border:1px dashed #cbd5e1 !important;
+  box-shadow:none !important;
+}
+
+.previewLegend,
+.previewTotalModern{
+  display:none !important;
+}
+
+.modalBtns{
+  padding:12px 14px !important;
+  gap:12px !important;
+  background:#fff !important;
+}
+
+#exportFromPreview,
+#closePrevBottom{
+  padding:14px !important;
+  border-radius:18px !important;
+  font-size:16px !important;
+}
+
+@media(max-width:520px){
+  .modal{
+    width:94vw !important;
+    margin:12px auto !important;
+    border-radius:22px !important;
+  }
+
+  .modalTop{
+    padding:12px !important;
+  }
+
+  .previewIcon{
+    width:42px !important;
+    height:42px !important;
+    font-size:20px !important;
+  }
+
+  .previewMainTitle{
+    font-size:20px !important;
+  }
+
+  .previewSubTitle{
+    font-size:12px !important;
+  }
+
+  .previewCloseBtn{
+    min-width:96px !important;
+    padding:10px 12px !important;
+    font-size:13px !important;
+  }
+
+  .modalBody{
+    max-height:72vh !important;
+    padding:10px 10px 0 !important;
+  }
+
+  .previewMetaLine{
+    font-size:10px !important;
+    margin-bottom:8px !important;
+    padding-top:7px !important;
+  }
+
+  .previewStats{
+    grid-template-columns:repeat(3,1fr) !important;
+    gap:6px !important;
+  }
+
+  .previewStat{
+    display:block !important;
+    text-align:center !important;
+    padding:7px 4px !important;
+    min-height:58px !important;
+  }
+
+  .previewStatIcon{
+    display:none !important;
+  }
+
+  .previewStatLabel{
+    font-size:9px !important;
+  }
+
+  .previewStatValue{
+    font-size:17px !important;
+  }
+
+  .previewModernTable{
+    font-size:11px !important;
+  }
+
+  .previewModernTable th,
+  .previewModernTable td{
+    padding:7px 5px !important;
+  }
+
+  .previewBadge{
+    min-width:36px !important;
+    padding:3px 5px !important;
+    font-size:11px !important;
+  }
+
+  .modalBtns{
+    padding:10px !important;
+  }
+}
+/* =========================================================== */
+
+
+/* ===== ÜBERSICHT GESAMTZEILE ===== */
+.previewModernTable tfoot th{
+  background:#f3e8ff !important;
+  color:#3D3A87 !important;
+  font-weight:1000 !important;
+  padding:9px 7px !important;
+  border-top:1px solid #ddd6fe !important;
+}
+/* =============================== */
+
+
+/* ===== PIN PLATZHALTER KLEINER ===== */
+.pinWrap input{
+  font-size:18px !important;
+}
+
+.pinWrap input::placeholder{
+  font-size:14px !important;
+  font-weight:750 !important;
+  color:#64748b !important;
+  opacity:.85 !important;
+}
+
+@media(max-width:520px){
+  .pinWrap input{
+    font-size:16px !important;
+  }
+
+  .pinWrap input::placeholder{
+    font-size:13px !important;
+  }
+}
+/* =================================== */
+
+
+/* ===== FIX: OBERE BUTTONS RICHTIG NEBENEINANDER ===== */
+.btnrow{
+  display:grid !important;
+  grid-template-columns:1fr 1fr 1fr !important;
+  gap:10px !important;
+}
+
+.btnrow button{
+  min-height:72px !important;
+  border-radius:22px !important;
+  font-size:14px !important;
+  padding:10px 8px !important;
+  line-height:1.15 !important;
+}
+
+button.send::before{
+  content:"👁 " !important;
+}
+
+button.primary::before{
+  content:"📄 " !important;
+}
+
+button.danger::before{
+  content:"🗑 " !important;
+}
+
+@media(max-width:520px){
+  .btnrow{
+    grid-template-columns:1fr 1fr 1fr !important;
+  }
+
+  .btnrow button{
+    min-height:64px !important;
+    border-radius:20px !important;
+    font-size:13px !important;
+    padding:9px 6px !important;
+  }
+}
+
+/* ===== FIX: PIN TEXT LESBAR ===== */
+.pinWrap input{
+  font-size:16px !important;
+}
+
+.pinWrap input::placeholder{
+  font-size:13px !important;
+  font-weight:750 !important;
+  color:#64748b !important;
+  opacity:.85 !important;
+}
+
+.pinOkIcon{
+  border:none !important;
+  background:rgba(100,116,139,.10) !important;
+  color:#64748b !important;
+}
+
+/* ===== FIX: ÜBERSICHT BUTTONS 3 SPALTEN ===== */
+.modalBtns{
+  grid-template-columns:1fr 1fr 1fr !important;
+}
+
+#sendFromPreview{
+  background:linear-gradient(135deg,#16a34a,#15803d) !important;
+  color:#fff !important;
+  border:none !important;
+  border-radius:18px !important;
+  font-weight:1000 !important;
+}
+
+#sendFromPreview::before{
+  content:"✈ ";
+}
+
+@media(max-width:520px){
+  .modalBtns{
+    grid-template-columns:1fr 1fr 1fr !important;
+    gap:8px !important;
+  }
+
+  #exportFromPreview,
+  #closePrevBottom,
+  #sendFromPreview{
+    font-size:12px !important;
+    padding:11px 6px !important;
+  }
+}
+/* ================================================== */
+
+
+/* ===== PIN-FELD OHNE RECHTES AUGE ===== */
+.pinWrap input{
+  padding-right:18px !important;
+}
+
+.pinWrap input::placeholder{
+  font-size:14px !important;
+  font-weight:750 !important;
+  color:#64748b !important;
+  opacity:.85 !important;
+}
+/* ===================================== */
+
+
+/* ===== PDF LESBARER + FETTER, TROTZDEM 1 SEITE ===== */
+@media print{
+  @page{
+    size:A4 portrait;
+    margin:7mm;
+  }
+
+  #printTitle{
+    font-size:22pt !important;
+    font-weight:1000 !important;
+  }
+
+  #printSubTitle{
+    font-size:12pt !important;
+    font-weight:1000 !important;
+  }
+
+  #printMetaTop{
+    font-size:9pt !important;
+    font-weight:900 !important;
+  }
+
+  #printTable{
+    font-size:8.6pt !important;
+    line-height:1.02 !important;
+  }
+
+  #printTable th{
+    font-size:8.8pt !important;
+    font-weight:1000 !important;
+    padding:1.45mm 1.6mm !important;
+  }
+
+  #printTable td{
+    font-size:8.6pt !important;
+    font-weight:750 !important;
+    padding:0.78mm 1.6mm !important;
+  }
+
+  #printTable td:first-child{
+    font-weight:1000 !important;
+  }
+
+  #printTable tfoot th{
+    font-size:10pt !important;
+    font-weight:1000 !important;
+    padding:1.6mm 1.6mm !important;
+  }
+
+  .printHourBadge{
+    font-size:8.8pt !important;
+    font-weight:1000 !important;
+    min-width:10mm !important;
+    padding:.45mm 1.25mm !important;
+  }
+
+  .printEmptyBadge{
+    font-size:8.4pt !important;
+    font-weight:900 !important;
+    min-width:10mm !important;
+    padding:.45mm 1.25mm !important;
+  }
+
+  #printHeader{
+    margin-bottom:2.5mm !important;
+    padding-bottom:2mm !important;
+  }
+
+  #printIcon{
+    width:11mm !important;
+    height:11mm !important;
+    font-size:17pt !important;
+  }
+
+  #printSummaryCards,
+  #printMetaBottom,
+  #printThanks{
+    display:none !important;
+  }
+}
+/* =================================================== */
+
+
+/* ===== EINGETRAGENE TAGE DEUTLICHER HERVORHEBEN ===== */
+#rows tr.rowFilled td{
+  background:linear-gradient(90deg, rgba(44,40,96,.13), rgba(74,63,145,.08)) !important;
+}
+
+#rows tr.rowFilled td:first-child{
+  position:relative;
+  color:#0f172a !important;
+  font-weight:1000 !important;
+}
+
+#rows tr.rowFilled td:first-child::before{
+  content:"";
+  position:absolute;
+  left:0;
+  top:8px;
+  bottom:8px;
+  width:5px;
+  border-radius:999px;
+  background:linear-gradient(180deg,#4A3F91,#3D3A87);
+}
+
+#rows tr.rowFilled select,
+#rows tr.rowFilled .timeField input,
+#rows tr.rowFilled .entryHours{
+  border-color:rgba(74,63,145,.65) !important;
+  background:rgba(255,255,255,.88) !important;
+  color:#0f172a !important;
+  font-weight:800 !important;
+  box-shadow:0 0 0 3px rgba(74,63,145,.06) !important;
+}
+
+#rows tr.rowFilled .timeField input{
+  color:#3D3A87 !important;
+  font-weight:900 !important;
+}
+
+#rows tr.rowEmpty td{
+  background:rgba(255,255,255,.72) !important;
+}
+
+#rows tr.rowEmpty td:first-child{
+  color:#64748b !important;
+}
+
+#rows tr.rowEmpty select,
+#rows tr.rowEmpty .timeField input,
+#rows tr.rowEmpty .entryHours{
+  border-color:#e2e8f0 !important;
+  color:#64748b !important;
+  background:#fff !important;
+}
+
+#rows tr{
+  transition:background .2s ease, opacity .2s ease;
+}
+/* =================================================== */
+
+
+
+
+
+
+/* ===== ÜBERSICHT-KARTEN MIT SYMBOLEN FINAL ===== */
+.previewStats{
+  display:grid !important;
+  grid-template-columns:repeat(3,1fr) !important;
+  gap:12px !important;
+  margin-bottom:14px !important;
+}
+
+.previewStat{
+  position:relative !important;
+  overflow:hidden !important;
+  border-radius:18px !important;
+  padding:13px 10px 12px !important;
+  min-height:105px !important;
+  border:1px solid rgba(226,232,240,.95) !important;
+  box-shadow:0 10px 24px rgba(15,23,42,.06) !important;
+  text-align:left !important;
+}
+
+.previewStat::after{
+  content:"";
+  position:absolute;
+  right:-18px;
+  top:-22px;
+  width:64px;
+  height:64px;
+  border-radius:999px;
+  opacity:.95;
+}
+
+.previewStat:nth-child(1){
+  background:linear-gradient(135deg,#ffffff,#faf5ff) !important;
+}
+
+.previewStat:nth-child(1)::after{
+  background:rgba(74,63,145,.12);
+}
+
+.previewStat:nth-child(2){
+  background:linear-gradient(135deg,#ffffff,#eff6ff) !important;
+}
+
+.previewStat:nth-child(2)::after{
+  background:rgba(61,58,135,.12);
+}
+
+.previewStat:nth-child(3){
+  background:linear-gradient(135deg,#ffffff,#ecfdf5) !important;
+}
+
+.previewStat:nth-child(3)::after{
+  background:rgba(22,163,74,.12);
+}
+
+.previewStatIcon{
+  display:flex !important;
+  align-items:center !important;
+  justify-content:center !important;
+  width:34px !important;
+  height:34px !important;
+  border-radius:999px !important;
+  margin:0 0 9px 0 !important;
+  font-size:17px !important;
+  color:#fff !important;
+  box-shadow:0 8px 18px rgba(15,23,42,.13) !important;
+}
+
+.previewStatIcon.purple{
+  background:linear-gradient(135deg,#4A3F91,#3D3A87) !important;
+}
+
+.previewStatIcon.blue{
+  background:linear-gradient(135deg,#3D3A87,#0284c7) !important;
+}
+
+.previewStatIcon.green{
+  background:linear-gradient(135deg,#22c55e,#16a34a) !important;
+}
+
+.previewStatLabel{
+  color:#475569 !important;
+  font-size:12px !important;
+  font-weight:1000 !important;
+  line-height:1.12 !important;
+  letter-spacing:-.2px !important;
+}
+
+.previewStatValue{
+  color:#0f172a !important;
+  font-size:23px !important;
+  font-weight:1000 !important;
+  line-height:1.05 !important;
+  letter-spacing:-.7px !important;
+  margin-top:5px !important;
+}
+
+.previewStat:nth-child(1) .previewStatValue{
+  color:#2C2860 !important;
+}
+
+.previewStat:nth-child(2) .previewStatValue{
+  color:#3D3A87 !important;
+}
+
+.previewStat:nth-child(3) .previewStatValue{
+  color:#16a34a !important;
+}
+
+@media(max-width:520px){
+  .previewStats{
+    gap:7px !important;
+    margin-bottom:10px !important;
+  }
+
+  .previewStat{
+    min-height:84px !important;
+    border-radius:15px !important;
+    padding:9px 6px !important;
+  }
+
+  .previewStat::after{
+    width:44px !important;
+    height:44px !important;
+    right:-14px !important;
+    top:-16px !important;
+  }
+
+  .previewStatIcon{
+    width:26px !important;
+    height:26px !important;
+    font-size:13px !important;
+    margin-bottom:6px !important;
+  }
+
+  .previewStatLabel{
+    font-size:9.5px !important;
+  }
+
+  .previewStatValue{
+    font-size:17px !important;
+    margin-top:3px !important;
+  }
+}
+/* ============================================= */
+
+
+/* ===== HAUPTSEITE: NUR ÜBERSICHT + LÖSCHEN ===== */
+.btnrow{
+  grid-template-columns:1fr 1fr !important;
+}
+
+@media(max-width:520px){
+  .btnrow{
+    grid-template-columns:1fr 1fr !important;
+  }
+}
+/* ============================================= */
+
+
+
+
+
+/* ===== TABELLEN HEADER MODERNER ===== */
+.table-header{
+  background: linear-gradient(135deg,#6b46ff,#3D3A87);
+  color:#fff;
+  font-weight:800;
+  letter-spacing:.3px;
+  border-bottom:2px solid rgba(255,255,255,.15);
+}
+
+.table-header th{
+  background: rgba(255,255,255,.04);
+  backdrop-filter: blur(4px);
+}
+
+/* ===== ZEILEN LEICHT ABWECHSELND ===== */
+tbody tr:nth-child(even){
+  background:#fcfbff;
+}
+
+tbody tr:nth-child(odd){
+  background:#f7f3ff;
+}
+
+
+
+
+
+/* ===== FINAL: ÜBERSICHT GRÜN + JAHR WIE MONAT ===== */
+
+/* Übersicht prüfen grün */
+.btnrow button:first-child,
+.btnrow #previewBtn,
+#previewBtn{
+  background:
+    radial-gradient(circle at top left, rgba(255,255,255,.22), transparent 38%),
+    linear-gradient(135deg,#16a34a 0%,#22c55e 48%,#0f9f6e 100%) !important;
+  background-color:#16a34a !important;
+  color:#ffffff !important;
+  border:none !important;
+  box-shadow:
+    0 12px 28px rgba(22,163,74,.26),
+    inset 0 1px 0 rgba(255,255,255,.20) !important;
+}
+
+/* Icon im grünen Button */
+.btnrow button:first-child .btnIcon,
+.btnrow #previewBtn .btnIcon,
+#previewBtn .btnIcon{
+  background:rgba(0,0,0,.16) !important;
+  color:#ffffff !important;
+}
+
+/* Text im grünen Button */
+.btnrow button:first-child span,
+.btnrow #previewBtn span,
+#previewBtn span{
+  color:#ffffff !important;
+}
+
+/* Jahr wie Monat kleiner/ruhiger */
+#year{
+  font-size:15px !important;
+  font-weight:900 !important;
+  letter-spacing:-0.5px !important;
+  padding-right:24px !important;
+  min-width:0 !important;
+}
+
+@media(max-width:520px){
+  #year{
+    font-size:19px !important;
+  }
+}
+
+/* ================================================ */
+
+
+/* ===== EINTRAGEN KOMPAKT WIE VORSCHAU-BILD ===== */
+
+/* Hinweis rechts entfernen */
+.swipeHint,
+.swipe-hint,
+.scrollHint,
+.scroll-hint,
+.hintSwipe,
+.hint-swipe{
+  display:none !important;
+}
+
+.entryHead,
+.entry-head,
+.sectionHead,
+.section-head{
+  justify-content:flex-start !important;
+}
+
+/* Tabelle auf Handybreite passend machen */
+.tableWrap,
+.table-wrap,
+.entriesTableWrap,
+.entries-table-wrap{
+  overflow-x:hidden !important;
+  width:100% !important;
+}
+
+.tableWrap table,
+.table-wrap table,
+.entriesTableWrap table,
+.entries-table-wrap table,
+table.entries,
+.entries table{
+  width:100% !important;
+  min-width:0 !important;
+  table-layout:fixed !important;
+  border-collapse:collapse !important;
+}
+
+/* Spaltenbreiten damit alles sichtbar bleibt */
+table.entries th:nth-child(1),
+table.entries td:nth-child(1){
+  width:19% !important;
+}
+
+table.entries th:nth-child(2),
+table.entries td:nth-child(2){
+  width:26% !important;
+}
+
+table.entries th:nth-child(3),
+table.entries td:nth-child(3){
+  width:16% !important;
+}
+
+table.entries th:nth-child(4),
+table.entries td:nth-child(4){
+  width:16% !important;
+}
+
+table.entries th:nth-child(5),
+table.entries td:nth-child(5){
+  width:13% !important;
+}
+
+table.entries th:nth-child(6),
+table.entries td:nth-child(6){
+  width:10% !important;
+}
+
+/* Header kompakter */
+table.entries th{
+  font-size:11px !important;
+  padding:9px 4px !important;
+  white-space:nowrap !important;
+  text-align:center !important;
+}
+
+/* Zellen kompakter */
+table.entries td{
+  font-size:11px !important;
+  padding:7px 4px !important;
+  text-align:center !important;
+  vertical-align:middle !important;
+}
+
+/* Datum lesbar aber kompakt */
+table.entries td:first-child{
+  font-size:11px !important;
+  font-weight:900 !important;
+  letter-spacing:-.4px !important;
+}
+
+/* Inputs in der Tabelle kompakt */
+table.entries select,
+table.entries input{
+  width:100% !important;
+  min-width:0 !important;
+  height:34px !important;
+  padding:0 6px !important;
+  border-radius:16px !important;
+  font-size:11px !important;
+  font-weight:700 !important;
+  text-align:center !important;
+  box-sizing:border-box !important;
+}
+
+/* Kehre-Feld etwas kleiner, damit Text passt */
+table.entries td:nth-child(2) select{
+  text-align:left !important;
+  padding-left:8px !important;
+  padding-right:16px !important;
+}
+
+/* Stunden rechts kompakt */
+table.entries td:last-child{
+  font-size:11px !important;
+  font-weight:900 !important;
+  color:#64748b !important;
+}
+
+/* Scrollbar/Leiste ausblenden, weil alles sichtbar ist */
+.tableWrap::-webkit-scrollbar,
+.table-wrap::-webkit-scrollbar,
+.entriesTableWrap::-webkit-scrollbar,
+.entries-table-wrap::-webkit-scrollbar{
+  display:none !important;
+}
+
+@media(max-width:520px){
+  table.entries th{
+    font-size:10.5px !important;
+    padding:8px 3px !important;
+  }
+
+  table.entries td{
+    font-size:10.5px !important;
+    padding:6px 3px !important;
+  }
+
+  table.entries select,
+  table.entries input{
+    height:32px !important;
+    font-size:10.5px !important;
+    padding:0 5px !important;
+  }
+
+  table.entries td:first-child{
+    font-size:10.5px !important;
+  }
+}
+
+/* ============================================= */
+
+
+/* ===== FINAL: PIN-SCHLÜSSEL + ÜBERSICHT ZENTRIERT ===== */
+.pinLabel::before,
+.pin-title::before,
+.pinTitle::before,
+label[for="pin"]::before,
+label[for="pinInput"]::before{
+  content:"🔑" !important;
+  margin-right:10px !important;
+  font-size:28px !important;
+  vertical-align:middle !important;
+}
+
+.pinInputIcon,
+.pin-icon,
+.inputIcon.lock,
+.lockIcon,
+.pinWrap .inputIcon,
+.pin-field .inputIcon{
+  visibility:hidden !important;
+}
+
+.pinWrap span:first-child,
+.pin-field span:first-child{
+  visibility:hidden !important;
+}
+
+.previewStat,
+.previewStats .previewStat{
+  text-align:center !important;
+  align-items:center !important;
+  justify-content:center !important;
+}
+
+.previewStatIcon{
+  margin-left:auto !important;
+  margin-right:auto !important;
+}
+
+.previewStatLabel,
+.previewStatValue{
+  text-align:center !important;
+}
+
+.previewStat small,
+.previewStatSub,
+.previewSub,
+.workedDaysSub{
+  display:none !important;
+}
+/* ================================================ */
+
+
+
+
+/* ===== FINAL FIX: SCHLÜSSEL AN LABEL + VON31 WEG ===== */
+
+/* Kopf-Icon neben "Personal-PIN" durch Schlüssel ersetzen */
+.pinLabel .icon,
+.pin-title .icon,
+.pinTitle .icon,
+.pinLabelIcon,
+.pin-title-icon,
+.pinTitleIcon,
+.pinSectionIcon,
+.pin-section-icon,
+.pinLabel > span:first-child,
+.pin-title > span:first-child,
+.pinTitle > span:first-child{
+  font-size:0 !important;
+}
+
+.pinLabel .icon::before,
+.pin-title .icon::before,
+.pinTitle .icon::before,
+.pinLabelIcon::before,
+.pin-title-icon::before,
+.pinTitleIcon::before,
+.pinSectionIcon::before,
+.pin-section-icon::before,
+.pinLabel > span:first-child::before,
+.pin-title > span:first-child::before,
+.pinTitle > span:first-child::before{
+  content:"🔑" !important;
+  font-size:28px !important;
+}
+
+/* Falls das Label kein eigenes Icon hat, Schlüssel direkt vor Text setzen */
+.pinLabel:not(:has(.icon))::before,
+.pin-title:not(:has(.icon))::before,
+.pinTitle:not(:has(.icon))::before,
+label[for="pin"]::before,
+label[for="pinInput"]::before{
+  content:"🔑" !important;
+  margin-right:10px !important;
+  font-size:28px !important;
+  vertical-align:middle !important;
+}
+
+/* Schloss im PIN-Feld komplett ausblenden */
+.pinInputIcon,
+.pin-icon,
+.inputIcon.lock,
+.lockIcon,
+.pinWrap .inputIcon,
+.pin-field .inputIcon,
+.pinWrap span:first-child,
+.pin-field span:first-child{
+  visibility:hidden !important;
+}
+
+/* Gearbeitete Tage: Unterzeile endgültig weg */
+.previewStat small,
+.previewStatSub,
+.previewSub,
+.workedDaysSub,
+.previewStat .sub,
+.previewStat .muted{
+  display:none !important;
+}
+
+/* Übersicht-Karten weiter zentriert */
+.previewStat,
+.previewStats .previewStat{
+  text-align:center !important;
+  align-items:center !important;
+  justify-content:center !important;
+}
+
+.previewStatIcon{
+  margin-left:auto !important;
+  margin-right:auto !important;
+}
+
+.previewStatLabel,
+.previewStatValue{
+  text-align:center !important;
+}
+/* ================================================= */
+
+
+/* ===== FINAL KORREKTUR: PIN NICHT AUTO + SCHLÜSSEL + VON31 WEG ===== */
+.pinLabel .icon,
+.pin-title .icon,
+.pinTitle .icon,
+.pinLabel .miniIcon,
+.pin-title .miniIcon,
+.pinTitle .miniIcon,
+.pinLabelIcon,
+.pin-title-icon,
+.pinTitleIcon,
+.pinSectionIcon,
+.pin-section-icon,
+.pinLabel > span:first-child,
+.pin-title > span:first-child,
+.pinTitle > span:first-child{
+  font-size:0 !important;
+}
+
+.pinLabel .icon::before,
+.pin-title .icon::before,
+.pinTitle .icon::before,
+.pinLabel .miniIcon::before,
+.pin-title .miniIcon::before,
+.pinTitle .miniIcon::before,
+.pinLabelIcon::before,
+.pin-title-icon::before,
+.pinTitleIcon::before,
+.pinSectionIcon::before,
+.pin-section-icon::before,
+.pinLabel > span:first-child::before,
+.pin-title > span:first-child::before,
+.pinTitle > span:first-child::before{
+  content:"🔑" !important;
+  font-size:28px !important;
+}
+
+.pinLabel::before,
+.pin-title::before,
+.pinTitle::before,
+label[for="pin"]::before,
+label[for="pinInput"]::before{
+  content:"🔑" !important;
+  margin-right:10px !important;
+  font-size:28px !important;
+  vertical-align:middle !important;
+}
+
+.pinInputIcon,
+.pin-icon,
+.inputIcon.lock,
+.lockIcon,
+.pinWrap .inputIcon,
+.pin-field .inputIcon,
+.pinWrap span:first-child,
+.pin-field span:first-child{
+  visibility:hidden !important;
+}
+
+.previewStat small,
+.previewStatSub,
+.previewSub,
+.workedDaysSub,
+.previewStat .sub,
+.previewStat .muted{
+  display:none !important;
+}
+
+.previewStat,
+.previewStats .previewStat{
+  text-align:center !important;
+  align-items:center !important;
+  justify-content:center !important;
+}
+
+.previewStatIcon{
+  margin-left:auto !important;
+  margin-right:auto !important;
+}
+
+.previewStatLabel,
+.previewStatValue{
+  text-align:center !important;
+}
+/* ================================================================ */
+
+
+
+
+/* ===== FINAL: KLEINEN KOPF NEBEN PERSONAL-PIN DURCH SCHLÜSSEL ERSETZEN ===== */
+
+/* Der kleine Icon-Kasten links vom Personal-PIN-Titel */
+.userCard .sectionTitle:nth-of-type(1) .sectionIcon,
+.userCard .sectionTitle:first-of-type .sectionIcon,
+.sectionTitle .personIcon,
+.sectionTitle .userIcon,
+.pinTitle .sectionIcon,
+.pinLabel .sectionIcon,
+.pin-title .sectionIcon{
+  font-size:0 !important;
+}
+
+.userCard .sectionTitle:nth-of-type(1) .sectionIcon::before,
+.userCard .sectionTitle:first-of-type .sectionIcon::before,
+.sectionTitle .personIcon::before,
+.sectionTitle .userIcon::before,
+.pinTitle .sectionIcon::before,
+.pinLabel .sectionIcon::before,
+.pin-title .sectionIcon::before{
+  content:"🔑" !important;
+  font-size:28px !important;
+}
+
+/* Falls der Kopf als Emoji/Text in der Überschrift steckt */
+.sectionTitle,
+.pinTitle,
+.pinLabel,
+.pin-title{
+  --pin-key-dummy:0;
+}
+
+/* Schloss im PIN-Eingabefeld leer lassen */
+.pinInputIcon,
+.pin-icon,
+.inputIcon.lock,
+.lockIcon,
+.pinWrap .inputIcon,
+.pin-field .inputIcon{
+  visibility:hidden !important;
+}
+/* =============================================================== */
+
+
+/* ===== FINAL ECHT: PERSONAL-PIN ICON = SCHLÜSSEL ===== */
+
+/* Kleines blaues Kopf-Icon neben "Personal-PIN" wirklich ersetzen */
+.fieldRow .fieldIcon,
+.formRow .fieldIcon,
+.sectionRow .fieldIcon,
+.labelRow .fieldIcon,
+.pinRow .fieldIcon,
+.pinHeader .fieldIcon,
+.pinBlock .fieldIcon,
+.pinSection .fieldIcon,
+.pinLabelBox,
+.pinLabelIcon,
+.pinIconSmall,
+.iconBadge.person,
+.iconBadge.user,
+.smallIcon.person,
+.smallIcon.user{
+  color:transparent !important;
+  font-size:0 !important;
+  background:rgba(44,40,96,.10) !important;
+  position:relative !important;
+}
+
+.fieldRow .fieldIcon::before,
+.formRow .fieldIcon::before,
+.sectionRow .fieldIcon::before,
+.labelRow .fieldIcon::before,
+.pinRow .fieldIcon::before,
+.pinHeader .fieldIcon::before,
+.pinBlock .fieldIcon::before,
+.pinSection .fieldIcon::before,
+.pinLabelBox::before,
+.pinLabelIcon::before,
+.pinIconSmall::before,
+.iconBadge.person::before,
+.iconBadge.user::before,
+.smallIcon.person::before,
+.smallIcon.user::before{
+  content:"🔑" !important;
+  color:#2C2860 !important;
+  font-size:28px !important;
+  line-height:1 !important;
+  position:absolute !important;
+  left:50% !important;
+  top:50% !important;
+  transform:translate(-50%,-50%) !important;
+}
+
+/* Sehr gezielt: Das erste kleine Icon direkt vor dem Personal-PIN-Text */
+h2 + .sectionTitle .icon,
+h2 + .sectionTitle .miniIcon,
+.userCard .sectionTitle:first-of-type .icon,
+.userCard .sectionTitle:first-of-type .miniIcon,
+.userCard .sectionTitle:first-of-type .sectionIcon{
+  color:transparent !important;
+  font-size:0 !important;
+  position:relative !important;
+}
+
+h2 + .sectionTitle .icon::before,
+h2 + .sectionTitle .miniIcon::before,
+.userCard .sectionTitle:first-of-type .icon::before,
+.userCard .sectionTitle:first-of-type .miniIcon::before,
+.userCard .sectionTitle:first-of-type .sectionIcon::before{
+  content:"🔑" !important;
+  color:#2C2860 !important;
+  font-size:28px !important;
+}
+
+/* Schloss im PIN-Eingabefeld leer/unsichtbar lassen */
+.pinInputIcon,
+.pin-input-icon,
+.inputIcon.lock,
+.lockIcon,
+.pinWrap .inputIcon,
+.pin-field .inputIcon,
+.pinWrap span:first-child,
+.pin-field span:first-child{
+  visibility:hidden !important;
+}
+
+/* ================================================= */
+
+
+/* ===== FINAL ECHT: HINWEIS-BOX IN ÜBERSICHT ===== */
+.previewNoteBox{
+  margin:14px 0 92px 0 !important;
+  padding:14px 16px !important;
+  border-radius:18px !important;
+  background:linear-gradient(135deg,rgba(44,40,96,.08),rgba(92,88,184,.08)) !important;
+  border:1px solid rgba(44,40,96,.14) !important;
+}
+
+.previewNoteTitle{
+  font-weight:900 !important;
+  color:#211E52 !important;
+  margin-bottom:6px !important;
+  font-size:14px !important;
+}
+
+.previewNoteText{
+  font-size:14px !important;
+  line-height:1.45 !important;
+  white-space:pre-wrap !important;
+  color:#374151 !important;
+}
+/* =============================================== */
+
+
+/* ===== FINAL FIX: HINWEIS IN ÜBERSICHT SICHTBAR ===== */
+.previewNoteBox{
+  margin:14px 0 92px 0 !important;
+  padding:14px 16px !important;
+  border-radius:18px !important;
+  background:linear-gradient(135deg,rgba(44,40,96,.09),rgba(92,88,184,.09)) !important;
+  border:1px solid rgba(44,40,96,.18) !important;
+  color:#111827 !important;
+}
+
+.previewNoteTitle{
+  font-weight:900 !important;
+  color:#211E52 !important;
+  margin-bottom:6px !important;
+  font-size:14px !important;
+}
+
+.previewNoteText{
+  font-size:14px !important;
+  line-height:1.45 !important;
+  white-space:pre-wrap !important;
+  color:#374151 !important;
+}
+/* ================================================= */
+
+
+
+
+
+
+
+
+
+
+
+/* ===== PERIOD ICONS HTML ENTFERNT - AUSRICHTUNG ===== */
+.periodBox{
+  padding-left:18px !important;
+}
+
+.periodBox .miniLabel,
+.periodBox select{
+  margin-left:0 !important;
+}
+/* ================================================ */
+
+
+
+
+
+
+
+
+
+
+
+/* ===== FINAL FIX: MONAT / JAHR OPTISCH SAUBER ZENTRIERT ===== */
+.periodGrid{
+  display:grid !important;
+  grid-template-columns:1fr 1fr !important;
+  gap:18px !important;
+  width:100% !important;
+  align-items:start !important;
+}
+
+.periodBox{
+  position:relative !important;
+  width:100% !important;
+  min-width:0 !important;
+  height:86px !important;
+  padding:12px 16px 10px 16px !important;
+  box-sizing:border-box !important;
+  display:flex !important;
+  flex-direction:column !important;
+  align-items:center !important;
+  justify-content:center !important;
+  overflow:visible !important;
+}
+
+.periodBox .periodIcon{
+  display:none !important;
+}
+
+.periodBox .miniLabel{
+  position:static !important;
+  display:block !important;
+  width:100% !important;
+  margin:0 0 8px 0 !important;
+  padding:0 !important;
+  text-align:center !important;
+  font-size:14px !important;
+  line-height:1 !important;
+  font-weight:900 !important;
+  color:#6b7280 !important;
+}
+
+.periodBox select{
+  position:static !important;
+  display:block !important;
+  width:100% !important;
+  max-width:100% !important;
+  min-width:0 !important;
+  height:36px !important;
+  margin:0 !important;
+  padding:0 28px 0 10px !important;
+  box-sizing:border-box !important;
+  border:0 !important;
+  background-color:transparent !important;
+  color:#020617 !important;
+  font-weight:900 !important;
+  text-align:center !important;
+  text-align-last:center !important;
+  white-space:nowrap !important;
+  overflow:visible !important;
+  text-overflow:clip !important;
+}
+
+#month{
+  font-size:18px !important;
+  letter-spacing:-0.6px !important;
+}
+
+#year{
+  font-size:18px !important;
+  letter-spacing:-0.4px !important;
+}
+
+@media(max-width:520px){
+  .periodGrid{
+    gap:16px !important;
+  }
+
+  .periodBox{
+    height:84px !important;
+    padding:12px 14px 10px 14px !important;
+  }
+
+  .periodBox .miniLabel{
+    font-size:14px !important;
+    margin-bottom:8px !important;
+  }
+
+  #month{
+    font-size:17px !important;
+  }
+
+  #year{
+    font-size:17px !important;
+  }
+}
+/* ============================================================ */
+
+
+
+/* ===== FINAL FIX: NUR SELECT FELDER WEISS ===== */
+.periodBox{
+  background:transparent !important;
+  border:none !important;
+  box-shadow:none !important;
+}
+
+.periodBox select{
+  background:#ffffff !important;
+  background-color:#ffffff !important;
+  border:1px solid rgba(147,197,253,.85) !important;
+  border-radius:20px !important;
+  box-shadow:0 10px 24px rgba(15,23,42,.04) !important;
+}
+/* ================================================= */
+
+</style>
+</head>
+
+<body>
+
+<!-- PIN Overlay -->
+<div class="pinBack" id="pinBack">
+  <div class="pinCard">
+    <div class="pinTitle">Code erforderlich</div>
+    <p class="pinHint">Bitte Code eingeben, um das Stundenformular zu öffnen.</p>
+    <div class="pinRow">
+      <input id="pinInput" inputmode="numeric" autocomplete="one-time-code" placeholder="Login-Code eingeben">
+      <button class="pinOk" id="pinBtn" type="button">OK</button>
+    </div>
+    <div class="pinError" id="pinError">Falscher Code</div>
+  </div>
+</div>
+
+<div class="dlgBack" id="dlgBack">
+  <div class="dlg" role="dialog" aria-modal="true" aria-labelledby="dlgTitle">
+    <div class="dlgTop" id="dlgTitle">Hinweis</div>
+    <div class="dlgBody" id="dlgMsg"></div>
+    <div class="dlgBtns" id="dlgBtns">
+      <button class="dlgBtn" type="button" id="dlgCancel">Abbrechen</button>
+      <button class="dlgBtn primary" type="button" id="dlgOk">OK</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== BOTTOM SHEET (A) ===== -->
+<div class="timeSheetBack" id="timeSheetBack">
+  <div class="timeSheet" role="dialog" aria-modal="true" aria-labelledby="timeSheetTitle">
+    <div class="timeSheetTitle" id="timeSheetTitle">Uhrzeit</div>
+    <div id="timeSheetList"></div>
+    <div class="timeSheetFooter">
+      <button class="timeSheetBtn" type="button" id="timeSheetClose">Abbrechen</button>
+    </div>
+  </div>
+</div>
+<input id="nativeTime" type="time" style="position:fixed; left:-9999px; width:1px; height:1px; opacity:0;" />
+<!-- =========================== -->
+
+<div class="wrap">
+
+  <div class="topbar">
+    <div class="btnrow">
+      <button class="send" id="sendBtn" type="button">Übersicht prüfen</button>
+      <button class="danger" id="delBtn" type="button">Alles löschen</button>
+    </div>
+  </div>
+
+  <div class="card userCard">
+    <div class="userHeader">
+      <div class="userAvatar">👤</div>
+      <div>
+        <div class="userTitle">Mitarbeiterbereich</div>
+        <div class="userSub">Bitte PIN und Monat auswählen</div>
+      </div>
+    </div>
+
+    <div class="modernPinSection">
+      <div class="fieldTitle"><span class="ico">👤</span>Personal-PIN</div>
+      <div class="pinWrap">
+        <span class="pinIcon">🔒</span>
+        <input id="name" placeholder="PIN eingeben">
+      </div>
+      <div class="small" id="nameError" style="display:none; color:var(--danger); font-weight:900;">
+        Bitte gültige PIN (2 Ziffern) eingeben.
+      </div>
+    </div>
+
+    <div class="modernPeriodSection">
+      <div class="fieldTitle"><span class="ico">📅</span>Zeitraum wählen</div>
+      <div class="periodGrid">
+        <div class="periodBox">
+          
+          <span class="miniLabel">Monat</span>
+          <select id="month"></select>
+        </div>
+        <div class="periodBox">
+          
+          <span class="miniLabel">Jahr</span>
+          <select id="year"></select>
+        </div>
+      </div>
+    </div>
+
+    <div class="userFooter">Digitale Zeiterfassung · Entwickelt von Sedak</div>
+  </div>
+
+  <div class="tableCard">
+    <div class="tableHeadRow">
+      <div class="title">Eintragen</div>
+      <div class="hint">↔ nach rechts wischen</div>
+    </div>
+
+    <div class="tableScroll">
+      <table class="entryTable">
+        <thead>
+          <tr>
+            <th class="colDay">DATUM</th>
+            <th class="colKehre">KEHRE</th>
+            <th class="colTime">BEGINN</th>
+            <th class="colTime">ENDE</th>
+            <th class="colStd">STUNDEN</th>
+          </tr>
+        </thead>
+        <tbody id="rows"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="total">
+    Gesamtstunden: <span id="sum">0 Std</span>
+  </div>
+
+  <div class="card">
+    <label>Bemerkung:</label>
+    <input id="note" placeholder="Optionaler Hinweis eingeben">
+  </div>
+
+  <div class="modalBack" id="modalBack">
+    <div class="modal">
+      <div class="modalTop">
+        <div class="previewHeader">
+          <div class="previewTitleWrap">
+            <div class="previewIcon">📅</div>
+            <div>
+              <div class="previewMainTitle">Übersicht</div>
+              <div class="previewSubTitle" id="previewTitle">Stundenübersicht</div>
+            </div>
+          </div>
+          <button type="button" id="closePrevTop" class="previewCloseBtn">Schließen</button>
+        </div>
+      </div>
+      <div class="modalBody">
+        <div id="previewTable"></div>
+        <div id="previewTotal" class="small" style="margin-top:10px; font-weight:900;"></div>
+      </div>
+      <div class="modalBtns">
+        <button class="primary" type="button" id="exportFromPreview">PDF Export</button>
+        <button type="button" id="closePrevBottom">Zurück</button>
+        <button type="button" id="sendFromPreview">Jetzt absenden</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="printArea">
+    <div id="printHeader">
+      <div>
+        <div id="printTitle"></div>
+        <div id="printSubTitle"></div>
+      </div>
+      <div id="printIcon">📅</div>
+    </div>
+
+    <div id="printMetaTop"></div>
+
+    <table id="printTable">
+      <thead>
+        <tr>
+          <th style="width:10%;">Tag</th>
+          <th style="width:38%;">Kehre</th>
+          <th style="width:18%;">Beginn</th>
+          <th style="width:18%;">Ende</th>
+          <th class="center" style="width:16%;">Stunden</th>
+        </tr>
+      </thead>
+      <tbody id="printBody"></tbody>
+      <tfoot>
+        <tr>
+          <th colspan="4" class="right">Gesamt</th>
+          <th class="center" id="printTotal"></th>
+        </tr>
+      </tfoot>
+    </table>
+
+    <div id="printSummaryCards">
+      <div class="printInfoCard">
+        <div class="printInfoIcon">🕒</div>
+        <div>
+          <div class="printInfoLabel">Gesamtstunden:</div>
+          <div class="printInfoValue" id="printSummaryTotal"></div>
+        </div>
+      </div>
+
+      <div class="printInfoCard" id="printNoteCard" style="display:none;">
+        <div class="printInfoIcon">💬</div>
+        <div>
+          <div class="printInfoLabel">Bemerkung:</div>
+          <div id="printNoteText"></div>
+        </div>
+      </div>
+    </div>
+
+    <div id="printMetaBottom"></div>
+    <div id="printThanks">Vielen Dank für deine Arbeit!</div>
+  </div>
+
+</div>
+
+<script>
+if("serviceWorker" in navigator){
+  window.addEventListener("load", function(){
+    navigator.serviceWorker.register("./sw.js").catch(function(err){
+      console.warn("Service Worker Registrierung fehlgeschlagen:", err);
+    });
+  });
+}
+
+const WEB_APP_URL = "xx";
+const APP_PIN     = "xxx";
+const PIN_BG_FILE = "nr3.jpg";
+
+const STORAGE_PREFIX = "sad_stundenformular_v10:";
+
+const ORTE = [
+  { value: "Niendorf Nord", short: "Niendorf Nord", start: "21:00", end: "06:00", typ: "Nachtschicht (18 Uhr bis 06 Uhr)" },
+  { value: "Hagenbecks Tierpark", short: "Hagenbecks Tierpark", start: "23:00", end: "08:00", typ: "Nachtschicht (18 Uhr bis 06 Uhr)" },
+  { value: "Farmsen", short: "Farmsen", start: "22:00", end: "08:00", typ: "Nachtschicht (18 Uhr bis 06 Uhr)" },
+  { value: "Ochsenzoll", short: "Ochsenzoll", start: "22:00", end: "07:00", typ: "Nachtschicht (18 Uhr bis 06 Uhr)" },
+  { value: "Volksdorf", short: "Volksdorf", start: "21:00", end: "06:00", typ: "Nachtschicht (18 Uhr bis 06 Uhr)" },
+  { value: "Großhandsdorf", short: "Großhandsdorf", start: "21:00", end: "06:00", typ: "Nachtschicht (18 Uhr bis 06 Uhr)" },
+  { value: "Volksdorf/Farmsen", short: "Volksdorf/Farmsen", start: "22:00", end: "08:00", typ: "Nachtschicht (18 Uhr bis 06 Uhr)" },
+  { value: "Ochsenzoll (Tag)", short: "Ochsenzoll", start: "06:00", end: "18:00", typ: "Tagschicht (06 Uhr bis 18 Uhr)" }
+];
+
+const START_CHOICES = ["21:00","22:00","23:00"];
+const END_CHOICES   = ["06:00","07:00","08:00"];
+
+const nameEl = document.getElementById("name");
+const monthEl = document.getElementById("month");
+const yearEl  = document.getElementById("year");
+const rowsEl  = document.getElementById("rows");
+const sumEl   = document.getElementById("sum");
+const noteEl = document.getElementById("note");
+
+const nameErrorEl = document.getElementById("nameError");
+
+const pdfBtn  = document.getElementById("pdfBtn");
+const sendBtn = document.getElementById("sendBtn");
+const delBtn  = document.getElementById("delBtn");
+
+const modalBack = document.getElementById("modalBack");
+const previewTitle = document.getElementById("previewTitle");
+const previewTable = document.getElementById("previewTable");
+const previewTotal = document.getElementById("previewTotal");
+const closePrevTop = document.getElementById("closePrevTop");
+const closePrevBottom = document.getElementById("closePrevBottom");
+const exportFromPreview = document.getElementById("exportFromPreview");
+
+const printTitleEl = document.getElementById("printTitle");
+const printSubTitleEl = document.getElementById("printSubTitle");
+const printMetaTopEl  = document.getElementById("printMetaTop");
+const printMetaBottomEl  = document.getElementById("printMetaBottom");
+const printBodyEl  = document.getElementById("printBody");
+const printTotalEl = document.getElementById("printTotal");
+const printSummaryTotalEl = document.getElementById("printSummaryTotal");
+const printNoteCardEl = document.getElementById("printNoteCard");
+const printNoteTextEl = document.getElementById("printNoteText");
+
+const pinBack = document.getElementById("pinBack");
+const pinInput = document.getElementById("pinInput");
+const pinBtn = document.getElementById("pinBtn");
+const pinError = document.getElementById("pinError");
+
+const dlgBack = document.getElementById("dlgBack");
+const dlgTitleEl = document.getElementById("dlgTitle");
+const dlgMsgEl = document.getElementById("dlgMsg");
+const dlgBtnsEl = document.getElementById("dlgBtns");
+const dlgOkBtn = document.getElementById("dlgOk");
+const dlgCancelBtn = document.getElementById("dlgCancel");
+
+const timeSheetBack = document.getElementById("timeSheetBack");
+const timeSheetTitle = document.getElementById("timeSheetTitle");
+const timeSheetList = document.getElementById("timeSheetList");
+const timeSheetClose = document.getElementById("timeSheetClose");
+const nativeTime = document.getElementById("nativeTime");
+
+let current = new Date(); current.setDate(1);
+
+try{
+  const savedMonth = localStorage.getItem("stundenformular_last_month");
+  const savedYear  = localStorage.getItem("stundenformular_last_year");
+
+  if(savedMonth && savedYear){
+    const m = parseInt(savedMonth, 10);
+    const y = parseInt(savedYear, 10);
+
+    if(!isNaN(m) && !isNaN(y) && m >= 1 && m <= 12){
+      current = new Date(y, m - 1, 1);
+    }
+  }
+}catch(e){}
+let dirty = false;
+let exported = false;
+
+function pad2(n){ return String(n).padStart(2,"0"); }
+function ymKey(d){ return d.getFullYear() + "-" + pad2(d.getMonth()+1); }
+function storageKey(){ return STORAGE_PREFIX + ymKey(current); }
+function daysInMonth(m,y){ return new Date(y, m, 0).getDate(); }
+
+function markDirty(){
+  dirty=true;
+  exported=false;
+  if(pdfBtn) pdfBtn.disabled=false;
+}
+
+function setActiveRow(tr){
+  document.querySelectorAll(".trActive").forEach(x=>x.classList.remove("trActive"));
+  if(tr) tr.classList.add("trActive");
+}
+
+function setNameError(on){
+  if(!nameErrorEl) return;
+  if(on){
+    nameEl.classList.add("inputError");
+    nameErrorEl.style.display = "block";
+  }else{
+    nameEl.classList.remove("inputError");
+    nameErrorEl.style.display = "none";
+  }
+}
+
+function openDialog({ title="Hinweis", message="", mode="confirm", okText="OK", cancelText="Abbrechen" }){
+  return new Promise((resolve)=>{
+    dlgTitleEl.textContent = title;
+    dlgMsgEl.textContent = message;
+
+    if(mode === "alert"){
+      dlgBtnsEl.classList.add("one");
+      dlgCancelBtn.style.display = "none";
+      dlgOkBtn.textContent = okText || "OK";
+    }else{
+      dlgBtnsEl.classList.remove("one");
+      dlgCancelBtn.style.display = "";
+      dlgOkBtn.textContent = okText || "OK";
+      dlgCancelBtn.textContent = cancelText || "Abbrechen";
+    }
+
+    dlgBack.style.display = "block";
+
+    function cleanup(){
+      dlgBack.style.display = "none";
+      dlgOkBtn.onclick = null;
+      dlgCancelBtn.onclick = null;
+      dlgBack.onclick = null;
+      document.removeEventListener("keydown", onKey);
+    }
+
+    function onKey(e){
+      if(e.key === "Escape"){
+        cleanup();
+        resolve(false);
+      }
+      if(e.key === "Enter"){
+        cleanup();
+        resolve(true);
+      }
+    }
+
+    dlgOkBtn.onclick = ()=>{
+      cleanup();
+      resolve(true);
+    };
+    dlgCancelBtn.onclick = ()=>{
+      cleanup();
+      resolve(false);
+    };
+    dlgBack.onclick = (e)=>{
+      if(e.target === dlgBack){
+        cleanup();
+        resolve(false);
+      }
+    };
+
+    document.addEventListener("keydown", onKey);
+  });
+}
+
+function dlgConfirm(message, title="Hinweis"){
+  return openDialog({ title, message, mode:"confirm", okText:"OK", cancelText:"Abbrechen" });
+}
+function dlgAlert(message, title="Hinweis"){
+  return openDialog({ title, message, mode:"alert", okText:"OK" });
+}
+
+function validateRowsBeforeSend(){
+  const errors = [];
+
+  document.querySelectorAll("#rows tr").forEach(tr=>{
+    const dateTxt = (tr.querySelector("td")?.textContent || "").trim();
+    const ort = (tr.querySelector(".ort")?.value || "").trim();
+    const start = (tr.querySelector(".start")?.value || "").trim();
+    const end = (tr.querySelector(".end")?.value || "").trim();
+
+    const any = !!(ort || start || end);
+    if(!any) return;
+
+    const missing = [];
+    if(!ort) missing.push("KEHRE");
+    if(!start) missing.push("BEGINN");
+    if(!end) missing.push("ENDE");
+
+    if(missing.length){
+      errors.push(`• Am ${dateTxt} fehlt ${missing.join(" und ")}.`);
+    }
+  });
+
+  if(errors.length){
+    const msg =
+      "Bitte ergänzen:\n\n" +
+      errors.slice(0, 12).join("\n") +
+      (errors.length > 12 ? `\n\n…und ${errors.length - 12} weitere.` : "");
+    return { ok:false, message: msg };
+  }
+
+  return { ok:true };
+}
+
+function fillMonthYear(){
+  const monthNames = [
+    "Januar",
+    "Februar",
+    "März",
+    "April",
+    "Mai",
+    "Juni",
+    "Juli",
+    "August",
+    "September",
+    "Oktober",
+    "November",
+    "Dezember"
+  ];
+
+  monthEl.innerHTML="";
+  yearEl.innerHTML="";
+
+  monthNames.forEach((name, index)=>{
+    const o=document.createElement("option");
+    o.value=String(index + 1);
+    o.textContent=name;
+    monthEl.appendChild(o);
+  });
+
+  const nowY=new Date().getFullYear();
+  for(let i=nowY-3;i<=nowY+6;i++){
+    const o=document.createElement("option");
+    o.value=String(i);
+    o.textContent=String(i);
+    yearEl.appendChild(o);
+  }
+
+  monthEl.value=String(current.getMonth()+1);
+  yearEl.value=String(current.getFullYear());
+}
+
+function buildOrtOptions(){
+  const gruppen = {};
+  ORTE.forEach(o=>{
+    const key = o.typ || "Sonstige";
+    if(!gruppen[key]) gruppen[key] = [];
+    gruppen[key].push(o);
+  });
+
+  return Object.keys(gruppen).map(typ=>{
+    const options = gruppen[typ].map(o =>
+      `<option 
+        value="${o.value}" 
+        data-short="${o.short}" 
+        data-start="${o.start}" 
+        data-end="${o.end}">
+        ${o.short}
+      </option>`
+    ).join("");
+    return `<optgroup label="${typ}">${options}</optgroup>`;
+  }).join("");
+}
+
+function applyShortLabel(selectEl){
+  const opt = selectEl.selectedOptions && selectEl.selectedOptions[0];
+  if(!opt) return;
+  const short = opt.getAttribute("data-short");
+  const full = opt.getAttribute("data-full") || opt.textContent;
+  opt.setAttribute("data-full", full);
+  if(short) opt.textContent = short;
+}
+function restoreFullLabel(selectEl){
+  const opt = selectEl.selectedOptions && selectEl.selectedOptions[0];
+  if(!opt) return;
+  const full = opt.getAttribute("data-full");
+  if(full) opt.textContent = full;
+}
+
+let sheetTargetInput = null;
+let sheetTargetRow = null;
+let sheetMode = "start";
+
+function closeTimeSheet(){
+  timeSheetBack.style.display = "none";
+  timeSheetList.innerHTML = "";
+  sheetTargetInput = null;
+  sheetTargetRow = null;
+  sheetMode = "start";
+}
+
+function openTimeSheet({ title, list, currentValue, targetInput, targetRow, mode }){
+  sheetTargetInput = targetInput;
+  sheetTargetRow = targetRow;
+  sheetMode = mode;
+
+  timeSheetTitle.textContent = title;
+  timeSheetList.innerHTML = "";
+
+  const addOpt = (label, value, active, danger)=>{
+    const div = document.createElement("div");
+    div.className = "timeOpt" + (active ? " active" : "") + (danger ? " dangerOpt" : "");
+    div.innerHTML = `<span class="radio"></span><span>${label}</span>`;
+    div.addEventListener("click", ()=>{
+      if(value === "__OTHER__"){
+  timeSheetBack.style.display = "none";
+
+  dlgTitleEl.textContent = "Uhrzeit (HH:MM)";
+  dlgBtnsEl.classList.remove("one");
+  dlgCancelBtn.style.display = "";
+  dlgOkBtn.textContent = "OK";
+  dlgCancelBtn.textContent = "Abbrechen";
+
+  dlgMsgEl.innerHTML = `<input id="manualTimeInput" placeholder="HH:MM">`;
+  dlgBack.style.display = "block";
+
+  const manualInput = document.getElementById("manualTimeInput");
+  setTimeout(()=>{ try{ manualInput.focus(); }catch(e){} }, 30);
+
+  function normalizeTime(s){
+    s = (s || "").trim();
+    if(!s) return "";
+
+    let m = s.match(/^(\d{1,2})$/);
+    if(m){
+      let hh = parseInt(m[1],10);
+      if(isNaN(hh) || hh < 0 || hh > 23) return "";
+      return String(hh).padStart(2,"0") + ":00";
+    }
+
+    m = s.match(/^(\d{1,2})\s*:\s*(\d{1,2})$/);
+    if(m){
+      let hh = parseInt(m[1],10);
+      let mm = parseInt(m[2],10);
+      if(isNaN(hh) || isNaN(mm)) return "";
+      if(hh < 0 || hh > 23) return "";
+      if(mm < 0 || mm > 59) return "";
+      return String(hh).padStart(2,"0") + ":" + String(mm).padStart(2,"0");
+    }
+
+    m = s.match(/^([01]\d|2[0-3]):([0-5]\d)$/);
+    if(m) return m[0];
+
+    return "";
+  }
+
+  function cleanup(){
+    dlgBack.style.display = "none";
+    dlgOkBtn.onclick = null;
+    dlgCancelBtn.onclick = null;
+    dlgBack.onclick = null;
+    document.removeEventListener("keydown", onKey);
+    dlgMsgEl.textContent = "";
+  }
+
+  function apply(){
+    const v = normalizeTime(manualInput.value);
+    if(v){
+      sheetTargetInput.value = v;
+      autoHours(sheetTargetRow);
+      markDirty();
+      saveState();
+    }
+    cleanup();
+  }
+
+  function onKey(e){
+    if(e.key === "Escape"){
+      cleanup();
+    }
+    if(e.key === "Enter"){
+      apply();
+    }
+  }
+
+  dlgOkBtn.onclick = apply;
+  dlgCancelBtn.onclick = cleanup;
+  dlgBack.onclick = (e)=>{ if(e.target === dlgBack) cleanup(); };
+  document.addEventListener("keydown", onKey);
+
+  return;
+}
+
+      if(value === "__CLEAR__"){
+        sheetTargetInput.value = "";
+        autoHours(sheetTargetRow);
+        markDirty();
+        saveState();
+        closeTimeSheet();
+        return;
+      }
+
+      sheetTargetInput.value = value;
+      autoHours(sheetTargetRow);
+      markDirty();
+      saveState();
+      closeTimeSheet();
+    });
+    timeSheetList.appendChild(div);
+  };
+
+ 
+  list.forEach(t=>{
+    addOpt(t, t, currentValue === t, false);
+  });
+
+  addOpt("Andere Uhrzeit", "__OTHER__", false, false);
+
+  addOpt("Zeiten löschen", "__CLEAR__", false, true);
+
+  timeSheetBack.style.display = "block";
+}
+
+function build(){
+  fillMonthYear();
+
+  const m=parseInt(monthEl.value,10);
+  const y=parseInt(yearEl.value,10);
+  const days=daysInMonth(m,y);
+
+  rowsEl.innerHTML="";
+
+  for(let d=1; d<=days; d++){
+    const tr = document.createElement("tr");
+    tr.dataset.day = String(d);
+
+    const shortDate = `${pad2(d)}.${pad2(m)}.${String(current.getFullYear()).slice(-2)}`;
+
+    tr.innerHTML = `
+      <td><b>${shortDate}</b></td>
+
+      <td>
+        <select class="ort">
+          <option value="" selected disabled>Kehre wählen</option>
+          ${buildOrtOptions()}
+          <option value="__CLEAR_ORT__" class="dangerOpt">❌Kehre löschen</option>
+        </select>
+      </td>
+
+      <td>
+        <div class="timeField">
+          <input type="text" class="start" placeholder="Uhr" readonly>
+        </div>
+      </td>
+
+      <td>
+        <div class="timeField">
+          <input type="text" class="end" placeholder="Uhr" readonly>
+        </div>
+      </td>
+
+      <td>
+        <input type="text" class="hours entryHours" placeholder="0" readonly>
+      </td>
+    `;
+
+    const ort = tr.querySelector(".ort");
+    const start = tr.querySelector(".start");
+    const end = tr.querySelector(".end");
+    const hours = tr.querySelector(".hours");
+
+    function activate(){ setActiveRow(tr); }
+
+    ort.addEventListener("change", ()=>{
+      activate();
+
+      if(ort.value === "__CLEAR_ORT__"){
+        ort.selectedIndex = 0;
+
+        start.value = "";
+        end.value = "";
+        hours.value = "";
+
+        markDirty();
+        saveState();
+        return;
+      }
+
+      applyShortLabel(ort);
+
+      const opt = ort.selectedOptions[0];
+
+      const autoStart = opt.getAttribute("data-start");
+      const autoEnd = opt.getAttribute("data-end");
+
+      if(autoStart) start.value = autoStart;
+      if(autoEnd) end.value = autoEnd;
+
+      autoHours(tr);
+
+      markDirty();
+      saveState();
+    });
+
+    ort.addEventListener("focus", ()=>{ activate(); restoreFullLabel(ort); });
+    ort.addEventListener("mousedown", ()=>{ restoreFullLabel(ort); });
+    ort.addEventListener("blur", ()=>{ applyShortLabel(ort); });
+
+    start.addEventListener("click", ()=>{
+      activate();
+      openTimeSheet({
+        title: "Uhrzeit festlegen",
+        list: START_CHOICES,
+        currentValue: (start.value || "").trim(),
+        targetInput: start,
+        targetRow: tr,
+        mode: "start"
+      });
+    });
+
+    end.addEventListener("click", ()=>{
+      activate();
+      openTimeSheet({
+        title: "Uhrzeit festlegen",
+        list: END_CHOICES,
+        currentValue: (end.value || "").trim(),
+        targetInput: end,
+        targetRow: tr,
+        mode: "end"
+      });
+    });
+
+    start.addEventListener("focus", activate);
+    end.addEventListener("focus", activate);
+    hours.addEventListener("focus",(e)=>e.target.blur());
+
+    rowsEl.appendChild(tr);
+  }
+
+  loadState();
+
+  document.querySelectorAll(".ort").forEach(sel=>{
+    if(sel.value) applyShortLabel(sel);
+  });
+
+  updateTotal();
+
+  if(exported && !dirty) if(pdfBtn) pdfBtn.disabled=true;
+}
+
+function applyMonthAuto(){
+  const mm=parseInt(monthEl.value,10);
+  const yy=parseInt(yearEl.value,10);
+
+  current=new Date(yy, mm-1, 1);
+
+  try{
+    localStorage.setItem("stundenformular_last_month", String(mm));
+    localStorage.setItem("stundenformular_last_year", String(yy));
+  }catch(e){}
+
+  dirty=false;
+  exported=false;
+  build();
+}
+
+function timeToMinutes(t){
+  if(!t) return null;
+  const m=t.match(/^(\d{2}):(\d{2})$/);
+  if(!m) return null;
+  return parseInt(m[1],10)*60 + parseInt(m[2],10);
+}
+
+function formatHoursSmart(hours){
+  if(hours == null || isNaN(hours)) return "";
+  const rounded = Math.round(hours * 100) / 100;
+  return Number.isInteger(rounded) ? rounded.toString() : rounded.toString();
+}
+function formatHoursWithStd(hours){
+  const v = formatHoursSmart(hours);
+  return v ? (v + " Std") : "";
+}
+
+function autoHours(row){
+  const s=timeToMinutes(row.querySelector(".start").value);
+  const e=timeToMinutes(row.querySelector(".end").value);
+  const out=row.querySelector(".hours");
+
+  if(s==null || e==null){
+    out.value="";
+    updateTotal();
+    return;
+  }
+  let diff=e-s;
+  if(diff<0) diff+=1440;
+  const hours = diff/60;
+
+  out.value = formatHoursSmart(hours);
+  updateTotal();
+}
+
+function parseHoursFromField(v){
+  if(!v) return NaN;
+  const m = String(v).replace(",",".").match(/(\d+(\.\d+)?)/);
+  return m ? parseFloat(m[1]) : NaN;
+}
+
+function updateTotal(){
+  let sum=0;
+  document.querySelectorAll(".hours").forEach(i=>{
+    const v=parseHoursFromField(i.value);
+    if(!isNaN(v)) sum+=v;
+  });
+  sumEl.textContent = formatHoursWithStd(sum) || "0 Std";
+}
+
+function getState(){
+  const rows=[];
+  document.querySelectorAll("#rows tr").forEach(r=>{
+    rows.push({
+      day: pad2(r.dataset.day),
+      ort: r.querySelector(".ort").value||"",
+      start: r.querySelector(".start").value||"",
+      end: r.querySelector(".end").value||"",
+      hours: r.querySelector(".hours").value||""
+    });
+  });
+  return {
+    name: nameEl.value||"",
+    monthKey: ymKey(current),
+    month: pad2(current.getMonth()+1),
+    year: String(current.getFullYear()),
+    rows,
+    total: sumEl.textContent || "",
+    note: noteEl.value || "",
+    dirty,
+    exported
+  };
+}
+
+function saveState(){
+  localStorage.setItem(storageKey(), JSON.stringify(getState()));
+}
+
+function loadState(){
+  const raw=localStorage.getItem(storageKey());
+  if(!raw){ saveState(); return; }
+
+  try{
+    const st=JSON.parse(raw);
+    nameEl.value = (/^\d{2}$/.test(st.name||"")) ? st.name : "";
+
+    const rowEls=document.querySelectorAll("#rows tr");
+    (st.rows||[]).forEach((r, idx)=>{
+      if(!rowEls[idx]) return;
+
+      const ortSel=rowEls[idx].querySelector(".ort");
+      if(r.ort && r.ort !== "__CLEAR_ORT__") ortSel.value=r.ort;
+      else ortSel.selectedIndex=0;
+
+      rowEls[idx].querySelector(".start").value=r.start||"";
+      rowEls[idx].querySelector(".end").value=r.end||"";
+      rowEls[idx].querySelector(".hours").value=r.hours||"";
+    });
+
+    if(noteEl) noteEl.value = st.note || "";
+
+    dirty=!!st.dirty;
+    exported=!!st.exported;
+  }catch(e){
+    saveState();
+  }
+}
+
+function buildPrintTable(){
+  const name=(nameEl.value||"").trim();
+  const mm=pad2(current.getMonth()+1);
+  const yy=current.getFullYear();
+
+  printTitleEl.textContent = "Stundenformular";
+  printSubTitleEl.textContent = `${mm}/${yy}` + (name ? ` – PIN ${name}` : "");
+
+  const today = new Date();
+  printMetaTopEl.innerHTML =
+    `<div>Personal-PIN: <b>${name || "–"}</b></div>` +
+    `<div>Datum: <b>${pad2(today.getDate())}.${pad2(today.getMonth()+1)}.${today.getFullYear()}</b></div>`;
+
+  printBodyEl.innerHTML="";
+  let sum=0;
+
+  document.querySelectorAll("#rows tr").forEach(r=>{
+    const day=pad2(r.dataset.day);
+    const ort=r.querySelector(".ort").value||"";
+    const start=r.querySelector(".start").value||"";
+    const end=r.querySelector(".end").value||"";
+    const hrsTxt=r.querySelector(".hours").value||"";
+    const empty=!ort&&!start&&!end&&!hrsTxt;
+
+    const tr=document.createElement("tr");
+    if(empty) tr.className="empty";
+
+    const hrsNum = parseHoursFromField(hrsTxt);
+    if(!isNaN(hrsNum)) sum+=hrsNum;
+
+    tr.innerHTML=`
+      <td class="center"><b>${day}</b></td>
+      <td>${empty ? "–" : (ort === "__CLEAR_ORT__" ? "" : ort)}</td>
+      <td class="center">${start || "–"}</td>
+      <td class="center">${end || "–"}</td>
+      <td class="center">${
+        hrsTxt
+          ? `<span class="printHourBadge">${hrsTxt} h</span>`
+          : `<span class="printEmptyBadge">–</span>`
+      }</td>
+    `;
+    printBodyEl.appendChild(tr);
+  });
+
+  printTotalEl.innerHTML = `<span class="printHourBadge">${formatHoursSmart(sum) || "0"} h</span>`;
+  if(printSummaryTotalEl) printSummaryTotalEl.textContent = `${formatHoursSmart(sum) || "0"} h`;
+
+  const printNoteText = (noteEl.value || "").trim();
+
+  if(printNoteCardEl && printNoteTextEl){
+    if(printNoteText){
+      printNoteCardEl.style.display = "flex";
+      printNoteTextEl.textContent = printNoteText;
+    }else{
+      printNoteCardEl.style.display = "none";
+      printNoteTextEl.textContent = "";
+    }
+  }
+
+  printMetaBottomEl.innerHTML = "";
+}
+
+function exportPDF(){
+  buildPrintTable();
+  exported=true;
+  dirty=false;
+  if(pdfBtn) pdfBtn.disabled=true;
+  saveState();
+  window.print();
+}
+
+async function allesLoeschen(){
+  const ok = await dlgConfirm("Wirklich ALLES für diesen Monat löschen?", "Bestätigung");
+  if(!ok) return;
+  localStorage.removeItem(storageKey());
+  dirty=false;
+  exported=false;
+  build();
+}
+
+function openPreview(){
+  const name=(nameEl.value||"").trim();
+  const mm=pad2(current.getMonth()+1);
+  const yy=current.getFullYear();
+
+  previewTitle.textContent=`${mm}/${yy}`+(name?` – PIN ${name}`:"");
+
+  let sum=0;
+  let workedDays=0;
+  const rowsHtml=[];
+
+  document.querySelectorAll("#rows tr").forEach(r=>{
+    const day=pad2(r.dataset.day);
+    const ort=r.querySelector(".ort").value||"";
+    const start=r.querySelector(".start").value||"";
+    const end=r.querySelector(".end").value||"";
+    const hrs=r.querySelector(".hours").value||"";
+    const empty=!ort&&!start&&!end&&!hrs;
+
+    const v = parseHoursFromField(hrs);
+    if(!isNaN(v)){
+      sum+=v;
+      workedDays++;
+    }
+
+    rowsHtml.push(`
+      <tr class="${empty ? "emptyPreview" : ""}">
+        <td><b>${day}</b></td>
+        <td>${empty ? "–" : (ort === "__CLEAR_ORT__" ? "" : ort)}</td>
+        <td>${start || "–"}</td>
+        <td>${end || "–"}</td>
+        <td>${hrs ? `<span class="previewBadge">${hrs}h</span>` : `<span class="previewBadge">–</span>`}</td>
+      </tr>
+    `);
+  });
+
+  const days = daysInMonth(current.getMonth()+1, current.getFullYear());
+
+  const routeSet = new Set();
+  document.querySelectorAll("#rows tr").forEach(r=>{
+    const ort = (r.querySelector(".ort")?.value || "").trim();
+    if(ort && ort !== "__CLEAR_ORT__") routeSet.add(ort);
+  });
+  const routeCount = routeSet.size;
+  const routeText = routeCount === 1 ? "1 Route" : routeCount + " Routen";
+
+  const today = new Date();
+
+  previewTable.innerHTML = `
+    <div class="previewMetaLine">
+      <div>PIN: <b>${name || "–"}</b></div>
+      <div>Datum: <b>${pad2(today.getDate())}.${pad2(today.getMonth()+1)}.${today.getFullYear()}</b></div>
+    </div>
+
+    <div class="previewStats">
+      <div class="previewStat">
+        <div class="previewStatIcon purple">◷</div>
+        <div>
+          <div class="previewStatLabel">Gesamtstunden</div>
+          <div class="previewStatValue">${formatHoursSmart(sum) || "0"} h</div>
+        </div>
+      </div>
+      <div class="previewStat">
+        <div class="previewStatIcon blue">☑</div>
+        <div>
+          <div class="previewStatLabel">Gearbeitete Tage</div>
+          <div class="previewStatValue">${workedDays}</div>
+        </div>
+      </div>
+      <div class="previewStat">
+        <div class="previewStatIcon green">⌘</div>
+        <div>
+          <div class="previewStatLabel">Kehren</div>
+          <div class="previewStatValue">${routeText}</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="previewTableWrap">
+      <table class="previewModernTable">
+        <thead>
+          <tr>
+            <th>Tag</th>
+            <th>Kehre</th>
+            <th>Beginn</th>
+            <th>Ende</th>
+            <th>Std.</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${rowsHtml.join("")}
+        </tbody>
+        <tfoot>
+          <tr>
+            <th colspan="4" style="text-align:left;">Gesamt</th>
+            <th><span class="previewBadge">${formatHoursSmart(sum) || "0"}h</span></th>
+          </tr>
+        </tfoot>
+      </table>
+    </div>
+  `;
+
+  const noteText = (noteEl.value || "").trim();
+
+  previewTotal.className = "previewTotalModern";
+  previewTotal.innerHTML =
+    `<div><b>Gesamtstunden:</b> ${formatHoursWithStd(sum) || "0 Std"}</div>` +
+    (noteText ? `<div style="margin-top:6px;"><b>Bemerkung:</b> ${noteText}</div>` : "");
+
+  modalBack.style.display="block";
+}
+function closePreview(){ modalBack.style.display="none"; }
+
+
+function showSuccessPremium(){
+  return new Promise((resolve)=>{
+    dlgBack.style.display = "block";
+    dlgTitleEl.style.display = "none";
+    dlgBtnsEl.style.display = "none";
+
+    dlgMsgEl.innerHTML = `
+      <div class="successPremium">
+        <div class="successSparkles">
+          <div class="successCircle">
+            <div class="successCheck">✓</div>
+          </div>
+          <div class="sparkle s1">✦</div>
+          <div class="sparkle s2">✦</div>
+          <div class="sparkle s3">✦</div>
+          <div class="sparkle s4">•</div>
+          <div class="sparkle s5">•</div>
+        </div>
+
+        <div class="successTitle">Gesendet ✅</div>
+
+        <div class="successText">
+          Dein Stundenformular wurde<br>
+          erfolgreich gesendet.
+        </div>
+
+        <div class="successDivider"></div>
+
+        <div class="successNote">
+          <div class="successShield">✓</div>
+          <div>Bitte nicht erneut senden, außer du hast Änderungen vorgenommen.</div>
+        </div>
+
+        <button class="successPremiumBtn" type="button" id="successPremiumOk">
+          Verstanden
+        </button>
+      </div>
+    `;
+
+    function cleanup(){
+      dlgBack.style.display = "none";
+      dlgTitleEl.style.display = "";
+      dlgBtnsEl.style.display = "";
+      dlgMsgEl.innerHTML = "";
+      dlgBack.onclick = null;
+      document.removeEventListener("keydown", onKey);
+      resolve();
+    }
+
+    function onKey(e){
+      if(e.key === "Escape" || e.key === "Enter") cleanup();
+    }
+
+    document.getElementById("successPremiumOk").onclick = cleanup;
+    dlgBack.onclick = (e)=>{ if(e.target === dlgBack) cleanup(); };
+    document.addEventListener("keydown", onKey);
+  });
+}
+
+
+
+function showSendConfirmPremium(){
+  return new Promise((resolve)=>{
+    dlgBack.style.display = "block";
+    dlgTitleEl.style.display = "none";
+    dlgBtnsEl.style.display = "none";
+
+    dlgMsgEl.innerHTML = `
+      <div class="sendConfirmPremium">
+        <button class="sendConfirmClose" type="button" id="sendConfirmClose">×</button>
+
+        <div class="sendConfirmIconWrap">
+          <div class="sendConfirmCircle">📝</div>
+        </div>
+
+        <div class="sendConfirmTitle">Formular senden?</div>
+
+        <div class="sendConfirmText">
+          Dein Stundenformular wird jetzt<br>
+          übermittelt.
+        </div>
+
+        <div class="sendConfirmNote">
+          <div class="sendConfirmShield">i</div>
+          <div>Bitte sende nur EINMAL im Monat deine Stunden (nicht täglich).</div>
+        </div>
+
+        <div class="sendConfirmDivider"></div>
+
+        <div class="sendConfirmBtns">
+          <button class="sendConfirmCancel" type="button" id="sendConfirmCancel">✕ Abbrechen</button>
+          <button class="sendConfirmSend" type="button" id="sendConfirmOk">✈ Jetzt senden</button>
+        </div>
+      </div>
+    `;
+
+    function cleanup(result){
+      dlgBack.style.display = "none";
+      dlgTitleEl.style.display = "";
+      dlgBtnsEl.style.display = "";
+      dlgMsgEl.innerHTML = "";
+      dlgBack.onclick = null;
+      document.removeEventListener("keydown", onKey);
+      resolve(result);
+    }
+
+    function onKey(e){
+      if(e.key === "Escape") cleanup(false);
+      if(e.key === "Enter") cleanup(true);
+    }
+
+    document.getElementById("sendConfirmClose").onclick = ()=>cleanup(false);
+    document.getElementById("sendConfirmCancel").onclick = ()=>cleanup(false);
+    document.getElementById("sendConfirmOk").onclick = ()=>cleanup(true);
+
+    dlgBack.onclick = (e)=>{ if(e.target === dlgBack) cleanup(false); };
+    document.addEventListener("keydown", onKey);
+  });
+}
+
+
+
+function showPdfDownloadPrompt(){
+  return new Promise((resolve)=>{
+    dlgBack.style.display = "block";
+    dlgTitleEl.style.display = "none";
+    dlgBtnsEl.style.display = "none";
+
+    dlgMsgEl.innerHTML = `
+      <div class="pdfPromptPremium">
+        <div class="pdfPromptIcon">📄</div>
+
+        <div class="pdfPromptTitle">PDF herunterladen?</div>
+
+        <div class="pdfPromptText">
+          Dein Stundenformular wurde gesendet.<br>
+          Möchtest du jetzt eine PDF-Kopie speichern?
+        </div>
+
+        <div class="pdfPromptBtns">
+          <button class="pdfPromptClose" type="button" id="pdfPromptClose">Schließen</button>
+          <button class="pdfPromptDownload" type="button" id="pdfPromptDownload">PDF öffnen</button>
+        </div>
+      </div>
+    `;
+
+    function cleanup(result){
+      dlgBack.style.display = "none";
+      dlgTitleEl.style.display = "";
+      dlgBtnsEl.style.display = "";
+      dlgMsgEl.innerHTML = "";
+      dlgBack.onclick = null;
+      document.removeEventListener("keydown", onKey);
+      resolve(result);
+    }
+
+    function onKey(e){
+      if(e.key === "Escape") cleanup(false);
+      if(e.key === "Enter") cleanup(true);
+    }
+
+    document.getElementById("pdfPromptClose").onclick = ()=>cleanup(false);
+    document.getElementById("pdfPromptDownload").onclick = ()=>cleanup(true);
+
+    dlgBack.onclick = (e)=>{ if(e.target === dlgBack) cleanup(false); };
+    document.addEventListener("keydown", onKey);
+  });
+}
+
+
+async function sendenDirekt(){
+  const nm = (nameEl.value || "").trim();
+
+  if(!/^\d{2}$/.test(nm)){
+    setNameError(true);
+    nameEl.focus();
+    return;
+  }
+
+  const vres = validateRowsBeforeSend();
+  if(!vres.ok){
+    await dlgAlert(vres.message, "Bitte prüfen");
+    return;
+  }
+
+  const ok = await showSendConfirmPremium();
+  if(!ok) return;
+
+  if(!WEB_APP_URL || WEB_APP_URL.includes("HIER_DEIN_EXEC_LINK") || WEB_APP_URL === "leerlassen"){
+    await dlgAlert("Bitte erst den WEB_APP_URL (exec Link) im Code eintragen.", "Fehler");
+    return;
+  }
+
+  const payload = getState();
+
+  sendBtn.disabled = true;
+  const oldText = sendBtn.textContent;
+  sendBtn.textContent = "Sende...";
+
+  try{
+    const res = await fetch(WEB_APP_URL, {
+      method: "POST",
+      headers: { "Content-Type": "text/plain;charset=utf-8" },
+      body: JSON.stringify(payload)
+    });
+
+    if(!res.ok) throw new Error("HTTP " + res.status);
+
+ await showSuccessPremium();
+  }catch(err){
+    console.error(err);
+    await dlgAlert("Fehler: Failed to fetch", "Fehler");
+  }finally{
+    sendBtn.disabled = false;
+    sendBtn.textContent = oldText;
+  }
+}
+
+function requirePin(){
+  if(!APP_PIN || APP_PIN.trim()==="") return;
+
+  const ok = sessionStorage.getItem("sad_pin_ok")==="1";
+  if(ok) return;
+
+  pinBack.style.display="flex";
+  setTimeout(()=>pinInput.focus(), 50);
+
+  function check(){
+    const val=(pinInput.value||"").trim();
+    if(val === APP_PIN){
+      sessionStorage.setItem("sad_pin_ok","1");
+      pinBack.style.display="none";
+      pinError.style.display="none";
+      pinInput.value="";
+    }else{
+      pinError.style.display="block";
+    }
+  }
+
+  pinBtn.onclick = check;
+  pinInput.addEventListener("keydown",(e)=>{
+    if(e.key==="Enter") check();
+  });
+}
+
+
+function updateEntryRowHighlight(){
+  document.querySelectorAll("#rows tr").forEach(tr=>{
+    const ort = (tr.querySelector(".ort")?.value || "").trim();
+    const start = (tr.querySelector(".start")?.value || "").trim();
+    const end = (tr.querySelector(".end")?.value || "").trim();
+    const hrs = (tr.querySelector(".hours")?.value || "").trim();
+
+    const filled = !!(ort || start || end || hrs);
+
+    tr.classList.toggle("rowFilled", filled);
+    tr.classList.toggle("rowEmpty", !filled);
+  });
+}
+
+document.addEventListener("input", updateEntryRowHighlight);
+document.addEventListener("change", updateEntryRowHighlight);
+
+pdfBtn?.addEventListener("click", exportPDF);
+sendBtn.addEventListener("click", openPreview);
+delBtn.addEventListener("click", allesLoeschen);
+
+closePrevTop.addEventListener("click", closePreview);
+closePrevBottom.addEventListener("click", closePreview);
+
+const sendFromPreviewBtn = document.getElementById("sendFromPreview");
+sendFromPreviewBtn?.addEventListener("click", async ()=>{
+  closePreview();
+  await sendenDirekt();
+});
+
+exportFromPreview.addEventListener("click", exportPDF);
+
+modalBack.addEventListener("click",(e)=>{ if(e.target===modalBack) closePreview(); });
+
+monthEl.addEventListener("change", applyMonthAuto);
+yearEl.addEventListener("change", applyMonthAuto);
+
+nameEl.addEventListener("input", ()=>{
+  setNameError(false);
+  markDirty();
+  saveState();
+});
+
+noteEl.addEventListener("input", ()=>{
+  markDirty();
+  saveState();
+});
+
+timeSheetClose.addEventListener("click", closeTimeSheet);
+timeSheetBack.addEventListener("click",(e)=>{ if(e.target===timeSheetBack) closeTimeSheet(); });
+
+(function init(){
+  if(PIN_BG_FILE && PIN_BG_FILE.trim() !== ""){
+    document.documentElement.style.setProperty("--pinBg", `url("${PIN_BG_FILE}")`);
+  }else{
+    document.documentElement.style.setProperty("--pinBg", "none");
+  }
+
+  fillMonthYear();
+  build();
+  requirePin();
+})();
+
+
+
+
+
+
+
+/* ===== FINAL: ÜBERSICHT TEXT + AKTUELLES DATUM ICON ===== */
+(function(){
+  function cleanOverviewTexts(){
+    document.querySelectorAll(".previewStat, .previewStats .previewStat").forEach(card=>{
+      card.innerHTML = card.innerHTML
+        .replace(/<br\s*\/?>\s*von\s+\d+\s*Tagen/gi, "")
+        .replace(/von\s+\d+\s*Tagen/gi, "");
+    });
+  }
+
+  function updateCalendarIcons(){
+    const now = new Date();
+    const day = String(now.getDate()).padStart(2, "0");
+    const months = ["JAN","FEB","MÄR","APR","MAI","JUN","JUL","AUG","SEP","OKT","NOV","DEZ"];
+    const month = months[now.getMonth()];
+
+    document.querySelectorAll(".previewHeaderIcon, .previewIcon, .previewCalendar, .overviewCalendar").forEach(el=>{
+      el.innerHTML =
+        '<div style="width:54px;height:54px;border-radius:50%;background:linear-gradient(135deg,#2C2860,#3D3A87);color:#fff;display:flex;align-items:center;justify-content:center;box-shadow:0 10px 22px rgba(61,58,135,.20);">' +
+          '<div style="width:34px;height:36px;border-radius:6px;background:#fff;color:#111827;overflow:hidden;text-align:center;font-family:Arial,sans-serif;font-weight:900;line-height:1;">' +
+            '<div style="background:#ef4444;color:#fff;font-size:8px;padding:3px 0;">' + month + '</div>' +
+            '<div style="font-size:18px;padding-top:4px;">' + day + '</div>' +
+          '</div>' +
+        '</div>';
+    });
+  }
+
+  cleanOverviewTexts();
+  updateCalendarIcons();
+
+  const oldOpenPreview = window.openPreview;
+  if(typeof oldOpenPreview === "function"){
+    window.openPreview = function(...args){
+      const result = oldOpenPreview.apply(this, args);
+      setTimeout(cleanOverviewTexts, 0);
+      setTimeout(updateCalendarIcons, 0);
+      return result;
+    };
+  }
+
+  document.getElementById("previewBtn")?.addEventListener("click", ()=>{
+    setTimeout(cleanOverviewTexts, 50);
+    setTimeout(updateCalendarIcons, 50);
+  });
+})();
+/* ================================================= */
+
+
+
+
+/* ===== FINAL RUNTIME FIX: VON31 WEG + SCHLÜSSEL LABEL ===== */
+(function(){
+  function removeVon31AndFixKey(){
+    /* "" aus allen Textknoten entfernen */
+    const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
+    const nodes = [];
+    while(walker.nextNode()){
+      nodes.push(walker.currentNode);
+    }
+
+    nodes.forEach(node=>{
+      if(/von\s+\d+\s*Tagen/i.test(node.nodeValue || "")){
+        node.nodeValue = node.nodeValue.replace(/von\s+\d+\s*Tagen/gi, "").trim();
+      }
+    });
+
+    /* Falls es in HTML der Karte steckt */
+    document.querySelectorAll(".previewStat, .previewStats .previewStat").forEach(card=>{
+      card.innerHTML = card.innerHTML
+        .replace(/<br\s*\/?>\s*von\s+\d+\s*Tagen/gi, "")
+        .replace(/<small[^>]*>\s*von\s+\d+\s*Tagen\s*<\/small>/gi, "")
+        .replace(/von\s+\d+\s*Tagen/gi, "");
+    });
+
+    /* Kopf-Icon neben Personal-PIN durch Schlüssel ersetzen */
+    document.querySelectorAll(".pinLabel, .pin-title, .pinTitle, label[for='pin'], label[for='pinInput']").forEach(label=>{
+      label.innerHTML = label.innerHTML.replace(/👤|👥|🧑/g, "🔑");
+    });
+  }
+
+  removeVon31AndFixKey();
+
+  document.getElementById("previewBtn")?.addEventListener("click", ()=>{
+    setTimeout(removeVon31AndFixKey, 0);
+    setTimeout(removeVon31AndFixKey, 100);
+    setTimeout(removeVon31AndFixKey, 300);
+  });
+
+  const oldOpenPreviewFinalFix = window.openPreview;
+  if(typeof oldOpenPreviewFinalFix === "function" && !oldOpenPreviewFinalFix.__finalFixWrapped){
+    const wrapped = function(...args){
+      const result = oldOpenPreviewFinalFix.apply(this, args);
+      setTimeout(removeVon31AndFixKey, 0);
+      setTimeout(removeVon31AndFixKey, 100);
+      setTimeout(removeVon31AndFixKey, 300);
+      return result;
+    };
+    wrapped.__finalFixWrapped = true;
+    window.openPreview = wrapped;
+  }
+})();
+/* ======================================================= */
+
+
+/* ===== FINAL RUNTIME KORREKTUR ===== */
+(function(){
+  function pinInput(){
+    return document.getElementById("pin") ||
+      document.getElementById("pinInput") ||
+      document.getElementById("personalPin") ||
+      document.querySelector('input[name="pin"]') ||
+      document.querySelector('input[type="password"]');
+  }
+
+  let sessionPin = "";
+
+  function rememberPin(){
+    const p = pinInput();
+    if(p) sessionPin = p.value || "";
+  }
+
+  function restorePin(){
+    const p = pinInput();
+    if(p && sessionPin){
+      p.value = sessionPin;
+      p.dispatchEvent(new Event("input",{bubbles:true}));
+      p.dispatchEvent(new Event("change",{bubbles:true}));
+    }
+  }
+
+  function removeStoredPin(){
+    try{
+      localStorage.removeItem("stundenformular_pin");
+      sessionStorage.removeItem("stundenformular_pin");
+      sessionStorage.removeItem("stundenformular_temp_pin");
+    }catch(e){}
+  }
+
+  function removeVon31(){
+    document.querySelectorAll(".previewStat, .previewStats .previewStat").forEach(card=>{
+      card.innerHTML = card.innerHTML
+        .replace(/<br\s*\/?>\s*von\s+\d+\s*Tagen/gi,"")
+        .replace(/<small[^>]*>\s*von\s+\d+\s*Tagen\s*<\/small>/gi,"")
+        .replace(/von\s+\d+\s*Tagen/gi,"");
+    });
+
+    const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
+    const nodes = [];
+    while(walker.nextNode()) nodes.push(walker.currentNode);
+    nodes.forEach(n=>{
+      if(/von\s+\d+\s*Tagen/i.test(n.nodeValue || "")){
+        n.nodeValue = n.nodeValue.replace(/von\s+\d+\s*Tagen/gi,"").trim();
+      }
+    });
+  }
+
+  function keyLabel(){
+    document.querySelectorAll(".pinLabel, .pin-title, .pinTitle, label[for='pin'], label[for='pinInput']").forEach(label=>{
+      label.innerHTML = label.innerHTML.replace(/👤|👥|🧑|👨|👩/g,"🔑");
+    });
+  }
+
+  removeStoredPin();
+  removeVon31();
+  keyLabel();
+
+  pinInput()?.addEventListener("input", rememberPin);
+
+  if(typeof build === "function" && !build.__pinFixWrapped){
+    const oldBuild = build;
+    build = function(...args){
+      rememberPin();
+      const r = oldBuild.apply(this,args);
+      setTimeout(restorePin,0);
+      setTimeout(removeVon31,0);
+      setTimeout(keyLabel,0);
+      return r;
+    };
+    build.__pinFixWrapped = true;
+  }
+
+  if(typeof applyMonthAuto === "function" && !applyMonthAuto.__pinFixWrapped){
+    const oldApply = applyMonthAuto;
+    applyMonthAuto = function(...args){
+      rememberPin();
+      const r = oldApply.apply(this,args);
+      setTimeout(restorePin,0);
+      setTimeout(removeVon31,80);
+      setTimeout(keyLabel,80);
+      return r;
+    };
+    applyMonthAuto.__pinFixWrapped = true;
+  }
+
+  document.getElementById("month")?.addEventListener("change",()=>{rememberPin(); setTimeout(restorePin,80);});
+  document.getElementById("year")?.addEventListener("change",()=>{rememberPin(); setTimeout(restorePin,80);});
+
+  document.getElementById("previewBtn")?.addEventListener("click",()=>{
+    rememberPin();
+    setTimeout(removeVon31,0);
+    setTimeout(removeVon31,100);
+    setTimeout(removeVon31,300);
+    setTimeout(keyLabel,100);
+  });
+
+  if(typeof openPreview === "function" && !openPreview.__finalFixWrapped){
+    const oldPreview = openPreview;
+    openPreview = function(...args){
+      rememberPin();
+      const r = oldPreview.apply(this,args);
+      setTimeout(removeVon31,0);
+      setTimeout(removeVon31,100);
+      setTimeout(removeVon31,300);
+      setTimeout(keyLabel,100);
+      return r;
+    };
+    openPreview.__finalFixWrapped = true;
+  }
+})();
+/* ================================= */
+
+
+/* ===== FINAL: VON 31 TAGEN GARANTIERT ENTFERNEN ===== */
+(function(){
+  function removeWorkedDaysSubText(){
+    document.querySelectorAll(".previewStatLabel").forEach(el=>{
+      const txt = (el.textContent || "").trim();
+      if(/^von\s+\d+\s*Tagen$/i.test(txt)){
+        el.remove();
+      }
+    });
+
+    document.querySelectorAll(".previewStat, .previewStats .previewStat").forEach(card=>{
+      card.innerHTML = card.innerHTML
+        .replace(/<div class="previewStatLabel">\s*von\s+\d+\s*Tagen\s*<\/div>/gi, "")
+        .replace(/von\s+\d+\s*Tagen/gi, "");
+    });
+  }
+
+  removeWorkedDaysSubText();
+
+  document.getElementById("previewBtn")?.addEventListener("click", ()=>{
+    setTimeout(removeWorkedDaysSubText, 0);
+    setTimeout(removeWorkedDaysSubText, 80);
+    setTimeout(removeWorkedDaysSubText, 250);
+  });
+
+  if(typeof openPreview === "function" && !openPreview.__removeWorkedDaysSubWrapped){
+    const oldOpenPreview = openPreview;
+    openPreview = function(...args){
+      const result = oldOpenPreview.apply(this, args);
+      setTimeout(removeWorkedDaysSubText, 0);
+      setTimeout(removeWorkedDaysSubText, 80);
+      setTimeout(removeWorkedDaysSubText, 250);
+      return result;
+    };
+    openPreview.__removeWorkedDaysSubWrapped = true;
+  }
+})();
+/* ================================================= */
+
+
+
+
+/* ===== FINAL ECHT: HINWEIS PRO MONAT + IN ÜBERSICHT ===== */
+(function(){
+  function getPin(){
+    const el =
+      document.getElementById("pin") ||
+      document.getElementById("pinInput") ||
+      document.getElementById("personalPin") ||
+      document.querySelector('input[name="pin"]') ||
+      document.querySelector('input[type="password"]');
+    return (el && el.value ? el.value.trim() : "");
+  }
+
+  function getMonth(){
+    const m = document.getElementById("month");
+    return m ? String(m.value).padStart(2,"0") : "";
+  }
+
+  function getYear(){
+    const y = document.getElementById("year");
+    return y ? String(y.value) : "";
+  }
+
+  function noteKey(){
+    return "stundenformular_note_" + getYear() + "_" + getMonth() + "_" + getPin();
+  }
+
+  function getNoteElement(){
+    return document.getElementById("note") ||
+      document.getElementById("bemerkung") ||
+      document.getElementById("hint") ||
+      document.querySelector('textarea[name="note"]') ||
+      document.querySelector('textarea[name="bemerkung"]') ||
+      document.querySelector('input[name="note"]') ||
+      document.querySelector('input[name="bemerkung"]') ||
+      document.querySelector("textarea");
+  }
+
+  function saveNoteForMonth(){
+    const noteEl = getNoteElement();
+    if(!noteEl) return;
+    try{
+      localStorage.setItem(noteKey(), noteEl.value || "");
+    }catch(e){}
+  }
+
+  function loadNoteForMonth(){
+    const noteEl = getNoteElement();
+    if(!noteEl) return;
+    try{
+      const saved = localStorage.getItem(noteKey()) || "";
+      noteEl.value = saved;
+      noteEl.dispatchEvent(new Event("input", {bubbles:true}));
+      noteEl.dispatchEvent(new Event("change", {bubbles:true}));
+    }catch(e){}
+  }
+
+  function currentNote(){
+    const noteEl = getNoteElement();
+    return noteEl ? (noteEl.value || "").trim() : "";
+  }
+
+  function insertNoteIntoPreview(){
+    saveNoteForMonth();
+
+    const note = currentNote();
+
+    document.querySelectorAll(".previewNoteBox, #previewNoteBox").forEach(el=>el.remove());
+
+    if(!note) return;
+
+    const modal =
+      document.getElementById("previewModal") ||
+      document.querySelector(".previewModal") ||
+      document.querySelector(".modal") ||
+      document.body;
+
+    const table =
+      modal.querySelector("table") ||
+      modal.querySelector(".previewTable") ||
+      modal.querySelector(".overviewTable");
+
+    if(!table) return;
+
+    const box = document.createElement("div");
+    box.id = "previewNoteBox";
+    box.className = "previewNoteBox";
+    box.innerHTML =
+      '<div class="previewNoteTitle">Bemerkung:</div>' +
+      '<div class="previewNoteText"></div>';
+
+    box.querySelector(".previewNoteText").textContent = note;
+    table.insertAdjacentElement("afterend", box);
+  }
+
+  function replacePersonalPinIcon(){
+    /* Direkter DOM-Fallback: suche Text "Personal-PIN" und ersetze Icon davor */
+    document.querySelectorAll("body *").forEach(el=>{
+      if((el.textContent || "").trim().includes("Personal-PIN")){
+        const prev = el.previousElementSibling;
+        if(prev && prev.children.length <= 2 && prev.offsetWidth <= 80 && prev.offsetHeight <= 80){
+          prev.textContent = "🔑";
+          prev.style.color = "#2C2860";
+          prev.style.fontSize = "28px";
+          prev.style.display = "flex";
+          prev.style.alignItems = "center";
+          prev.style.justifyContent = "center";
+        }
+
+        const first = el.querySelector("span, i, .icon, .miniIcon, .sectionIcon");
+        if(first){
+          first.textContent = "🔑";
+          first.style.color = "#2C2860";
+          first.style.fontSize = "28px";
+        }
+      }
+    });
+  }
+
+  function removeVon31(){
+    document.querySelectorAll(".previewStat, .previewStats .previewStat").forEach(card=>{
+      card.innerHTML = card.innerHTML
+        .replace(/<div class="previewStatLabel">\s*von\s+\d+\s*Tagen\s*<\/div>/gi, "")
+        .replace(/<br\s*\/?>\s*von\s+\d+\s*Tagen/gi, "")
+        .replace(/von\s+\d+\s*Tagen/gi, "");
+    });
+  }
+
+  const noteEl = getNoteElement();
+  noteEl?.addEventListener("input", saveNoteForMonth);
+  noteEl?.addEventListener("change", saveNoteForMonth);
+
+  document.getElementById("month")?.addEventListener("change", ()=>{
+    setTimeout(loadNoteForMonth, 0);
+    setTimeout(replacePersonalPinIcon, 50);
+  });
+
+  document.getElementById("year")?.addEventListener("change", ()=>{
+    setTimeout(loadNoteForMonth, 0);
+    setTimeout(replacePersonalPinIcon, 50);
+  });
+
+  document.getElementById("pin")?.addEventListener("input", ()=>{
+    setTimeout(loadNoteForMonth, 0);
+  });
+  document.getElementById("pinInput")?.addEventListener("input", ()=>{
+    setTimeout(loadNoteForMonth, 0);
+  });
+  document.getElementById("personalPin")?.addEventListener("input", ()=>{
+    setTimeout(loadNoteForMonth, 0);
+  });
+
+  document.getElementById("previewBtn")?.addEventListener("click", ()=>{
+    saveNoteForMonth();
+    setTimeout(insertNoteIntoPreview, 50);
+    setTimeout(insertNoteIntoPreview, 200);
+    setTimeout(removeVon31, 50);
+    setTimeout(removeVon31, 200);
+  });
+
+  if(typeof openPreview === "function" && !openPreview.__finalNoteMonthWrapped){
+    const oldOpenPreview = openPreview;
+    openPreview = function(...args){
+      saveNoteForMonth();
+      const result = oldOpenPreview.apply(this,args);
+      setTimeout(insertNoteIntoPreview, 50);
+      setTimeout(insertNoteIntoPreview, 200);
+      setTimeout(removeVon31, 50);
+      setTimeout(removeVon31, 200);
+      return result;
+    };
+    openPreview.__finalNoteMonthWrapped = true;
+  }
+
+  setTimeout(loadNoteForMonth, 0);
+  setTimeout(replacePersonalPinIcon, 100);
+  setInterval(replacePersonalPinIcon, 1000);
+})();
+/* ================================================== */
+
+
+/* ===== FINAL FIX: HINWEIS WIRKLICH IN ÜBERSICHT ===== */
+(function(){
+  function getNoteEl(){
+    const direct =
+      document.getElementById("note") ||
+      document.getElementById("bemerkung") ||
+      document.getElementById("hint") ||
+      document.querySelector('textarea[name="note"]') ||
+      document.querySelector('textarea[name="bemerkung"]') ||
+      document.querySelector('input[name="note"]') ||
+      document.querySelector('input[name="bemerkung"]') ||
+      document.querySelector(".note textarea") ||
+      document.querySelector(".bemerkung textarea") ||
+      document.querySelector(".note input") ||
+      document.querySelector(".bemerkung input");
+
+    if(direct) return direct;
+
+    const labels = Array.from(document.querySelectorAll("label, div, strong, b"));
+    const label = labels.find(el => /bemerkung|hinweis/i.test(el.textContent || ""));
+    if(label){
+      const box = label.closest("div, section, article") || label.parentElement;
+      if(box){
+        return box.querySelector("textarea, input");
+      }
+    }
+
+    return null;
+  }
+
+  function getPin(){
+    const p =
+      document.getElementById("pin") ||
+      document.getElementById("pinInput") ||
+      document.getElementById("personalPin") ||
+      document.querySelector('input[name="pin"]') ||
+      document.querySelector('input[type="password"]');
+    return p ? (p.value || "").trim() : "";
+  }
+
+  function getMonth(){
+    const m = document.getElementById("month");
+    return m ? String(m.value).padStart(2,"0") : "";
+  }
+
+  function getYear(){
+    const y = document.getElementById("year");
+    return y ? String(y.value) : "";
+  }
+
+  function noteKey(){
+    return "stundenformular_note_" + getYear() + "_" + getMonth() + "_" + getPin();
+  }
+
+  function saveNote(){
+    const el = getNoteEl();
+    if(!el) return;
+    try{ localStorage.setItem(noteKey(), el.value || ""); }catch(e){}
+  }
+
+  function loadNote(){
+    const el = getNoteEl();
+    if(!el) return;
+    try{
+      const value = localStorage.getItem(noteKey()) || "";
+      el.value = value;
+      el.dispatchEvent(new Event("input", {bubbles:true}));
+      el.dispatchEvent(new Event("change", {bubbles:true}));
+    }catch(e){}
+  }
+
+  function currentNote(){
+    const el = getNoteEl();
+    const live = el ? (el.value || "").trim() : "";
+    if(live) return live;
+
+    try{
+      return (localStorage.getItem(noteKey()) || "").trim();
+    }catch(e){
+      return "";
+    }
+  }
+
+  function addNoteToPreview(){
+    saveNote();
+
+    const note = currentNote();
+
+    document.querySelectorAll("#previewNoteBox, .previewNoteBox").forEach(el => el.remove());
+
+    if(!note) return;
+
+    const modal =
+      document.getElementById("previewModal") ||
+      document.querySelector(".previewModal") ||
+      document.querySelector(".overviewModal") ||
+      document.querySelector(".modal");
+
+    if(!modal) return;
+
+    const box = document.createElement("div");
+    box.id = "previewNoteBox";
+    box.className = "previewNoteBox";
+    box.innerHTML =
+      '<div class="previewNoteTitle">Bemerkung:</div>' +
+      '<div class="previewNoteText"></div>';
+
+    box.querySelector(".previewNoteText").textContent = note;
+
+    const buttonBar =
+      modal.querySelector(".previewActions") ||
+      modal.querySelector(".modalActions") ||
+      modal.querySelector(".actions") ||
+      modal.querySelector(".bottomActions");
+
+    if(buttonBar){
+      buttonBar.insertAdjacentElement("beforebegin", box);
+      return;
+    }
+
+    const table =
+      modal.querySelector("table") ||
+      modal.querySelector(".previewTable") ||
+      modal.querySelector(".overviewTable");
+
+    if(table){
+      table.insertAdjacentElement("afterend", box);
+      return;
+    }
+
+    modal.appendChild(box);
+  }
+
+  const noteEl = getNoteEl();
+  noteEl?.addEventListener("input", saveNote);
+  noteEl?.addEventListener("change", saveNote);
+
+  document.getElementById("month")?.addEventListener("change", () => {
+    setTimeout(loadNote, 50);
+  });
+
+  document.getElementById("year")?.addEventListener("change", () => {
+    setTimeout(loadNote, 50);
+  });
+
+  document.getElementById("previewBtn")?.addEventListener("click", () => {
+    saveNote();
+    setTimeout(addNoteToPreview, 50);
+    setTimeout(addNoteToPreview, 200);
+    setTimeout(addNoteToPreview, 500);
+  });
+
+  if(typeof openPreview === "function" && !openPreview.__noteReallyVisibleWrapped){
+    const oldOpenPreview = openPreview;
+    openPreview = function(...args){
+      saveNote();
+      const result = oldOpenPreview.apply(this, args);
+      setTimeout(addNoteToPreview, 50);
+      setTimeout(addNoteToPreview, 200);
+      setTimeout(addNoteToPreview, 500);
+      return result;
+    };
+    openPreview.__noteReallyVisibleWrapped = true;
+  }
+
+  setTimeout(loadNote, 100);
+})();
+/* ===================================================== */
+
+
+
+
+
+/* ===== FIX: GESAMTSTUNDEN NACH LÖSCHEN EINER KEHRE AKTUALISIEREN ===== */
+(function(){
+  function isEmptyKehreValue(value){
+    const v = String(value || "").trim().toLowerCase();
+    return !v || v === "-" || v.includes("kehre wählen") || v.includes("kehre waehlen");
+  }
+
+  function recalcNow(){
+    if(typeof calc === "function") calc();
+    if(typeof save === "function") save();
+    if(typeof updateTotal === "function") updateTotal();
+  }
+
+  function clearRowIfKehreEmpty(selectEl){
+    if(!selectEl) return;
+
+    const value = selectEl.value || selectEl.options?.[selectEl.selectedIndex]?.text || "";
+    if(!isEmptyKehreValue(value)) return;
+
+    const tr = selectEl.closest("tr");
+    if(!tr) return;
+
+    tr.querySelectorAll("input").forEach(input=>{
+      input.value = "";
+      input.dispatchEvent(new Event("input", {bubbles:true}));
+      input.dispatchEvent(new Event("change", {bubbles:true}));
+    });
+
+    const hoursEl = tr.querySelector(".entryHours");
+    if(hoursEl){
+      if("value" in hoursEl) hoursEl.value = "0,00";
+      hoursEl.textContent = "0,00";
+    }
+
+    tr.classList.remove("rowFilled", "trActive");
+    tr.classList.add("rowEmpty");
+
+    recalcNow();
+  }
+
+  document.addEventListener("change", function(e){
+    const el = e.target;
+    if(!el || el.tagName !== "SELECT") return;
+
+    const tr = el.closest("tr");
+    if(!tr) return;
+
+    clearRowIfKehreEmpty(el);
+
+    setTimeout(recalcNow, 0);
+    setTimeout(recalcNow, 80);
+  });
+
+  document.addEventListener("input", function(e){
+    const tr = e.target?.closest?.("tr");
+    if(!tr) return;
+
+    setTimeout(recalcNow, 0);
+  });
+})();
+/* =================================================================== */
+
+
+/* ===== GESAMTSTUNDEN: EINE ZENTRALE, KONSOLIDIERTE FUNKTION =====
+   Ersetzt drei frühere, sich überlappende Patch-Blöcke, die alle
+   unabhängig voneinander bei jedem change/input-Event die Summe neu
+   berechnet und mehrfach mit setTimeout verzögert haben. Jetzt: eine
+   Funktion, ein Event-Listener-Paar, ein Speicherpunkt. */
+(function(){
+  function isEmptyKehre(select){
+    if(!select) return true;
+    const txt = (
+      select.value ||
+      select.options?.[select.selectedIndex]?.text ||
+      ""
+    ).trim().toLowerCase();
+
+    return !txt ||
+      txt === "-" ||
+      txt.includes("kehre wählen") ||
+      txt.includes("kehre waehlen");
+  }
+
+  function clearRowIfEmpty(tr){
+    const select = tr.querySelector("select");
+    if(!select || !isEmptyKehre(select)) return;
+
+    tr.querySelectorAll("input").forEach(input=>{ input.value = ""; });
+
+    const hours = tr.querySelector(".entryHours") || tr.querySelector(".hours");
+    if(hours){
+      if("value" in hours) hours.value = "";
+      hours.textContent = "";
+    }
+
+    tr.classList.remove("rowFilled", "trActive");
+    tr.classList.add("rowEmpty");
+  }
+
+  function parseHours(v){
+    if(v == null) return 0;
+    const txt = String(v).replace(",", ".").trim();
+    const n = parseFloat(txt);
+    return isNaN(n) ? 0 : n;
+  }
+
+  function recalcTotal(){
+    let total = 0;
+
+    document.querySelectorAll("#rows tr, tbody tr").forEach(tr=>{
+      clearRowIfEmpty(tr);
+
+      const select = tr.querySelector("select");
+      if(select && isEmptyKehre(select)) return;
+
+      const hourEl =
+        tr.querySelector(".entryHours") ||
+        tr.querySelector(".hours") ||
+        tr.querySelector("[data-hours]");
+
+      if(!hourEl) return;
+
+      const value = "value" in hourEl ? hourEl.value : hourEl.textContent;
+      total += parseHours(value);
+    });
+
+    total = Math.round(total * 100) / 100;
+    const totalText = Number.isInteger(total)
+      ? total + " Std"
+      : String(total).replace(".", ",") + " Std";
+
+    document.querySelectorAll(".total, #total, .gesamtstunden, .gesamtStunden").forEach(el=>{
+      if(el.classList.contains("total") || /gesamtstunden/i.test(el.textContent || "")){
+        el.textContent = "Gesamtstunden: " + totalText;
+      }
+    });
+
+    return total;
+  }
+
+  function runAll(){
+    if(typeof calc === "function") calc();
+    if(typeof updateTotal === "function") updateTotal();
+
+    recalcTotal();
+
+    if(typeof save === "function") save();
+  }
+
+  document.addEventListener("change", function(e){
+    if(e.target?.closest?.("tr") || e.target?.matches?.("select,input")){
+      setTimeout(runAll, 0);
+      setTimeout(runAll, 100);
+    }
+  });
+
+  document.addEventListener("input", function(e){
+    if(e.target?.closest?.("tr")){
+      setTimeout(runAll, 0);
+      setTimeout(runAll, 100);
+    }
+  });
+
+  const oldOpenPreview = window.openPreview;
+  if(typeof oldOpenPreview === "function" && !oldOpenPreview.__recalcWrapped){
+    window.openPreview = function(...args){
+      runAll();
+      const result = oldOpenPreview.apply(this, args);
+      setTimeout(runAll, 80);
+      return result;
+    };
+    window.openPreview.__recalcWrapped = true;
+  }
+
+  window.addEventListener("load", function(){
+    setTimeout(runAll, 300);
+  });
+})();
+/* ================================================================ */
+
+</script>
+</body>
+</html>
