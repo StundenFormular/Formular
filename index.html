@@ -3400,13 +3400,80 @@ const PIN_BG_FILE = "nr3.jpg";
 const STORAGE_PREFIX = "sad_stundenformular_v10:";
 
 const ORTE = [
-  { value: "Niendorf Nord", short: "Niendorf Nord", start: "21:00", end: "06:00" },
-  { value: "Hagenbecks Tierpark", short: "Hagenbecks Tierpark", start: "23:00", end: "08:00" },
-  { value: "Farmsen", short: "Farmsen", start: "22:00", end: "08:00" },
-  { value: "Ochsenzoll", short: "Ochsenzoll", start: "22:00", end: "07:00" },
-  { value: "Volksdorf", short: "Volksdorf", start: "21:00", end: "06:00" },
-  { value: "Großhandsdorf", short: "Großhandsdorf", start: "21:00", end: "06:00" },
-  { value: "Volksdorf/Farmsen", short: "Volksdorf/Farmsen", start: "22:00", end: "08:00" }
+  // ===== NACHTSCHICHTEN =====
+  {
+    gruppe: "Nachtschicht",
+    value: "Niendorf Nord",
+    short: "Niendorf Nord",
+    start: "21:00",
+    end: "06:00"
+  },
+  {
+    gruppe: "Nachtschicht",
+    value: "Hagenbecks Tierpark",
+    short: "Hagenbecks Tierpark",
+    start: "23:00",
+    end: "08:00"
+  },
+  {
+    gruppe: "Nachtschicht",
+    value: "Farmsen",
+    short: "Farmsen",
+    start: "22:00",
+    end: "08:00"
+  },
+  {
+    gruppe: "Nachtschicht",
+    value: "Ochsenzoll",
+    short: "Ochsenzoll",
+    start: "22:00",
+    end: "07:00"
+  },
+  {
+    gruppe: "Nachtschicht",
+    value: "Volksdorf",
+    short: "Volksdorf",
+    start: "21:00",
+    end: "06:00"
+  },
+  {
+    gruppe: "Nachtschicht",
+    value: "Großhansdorf",
+    short: "Großhansdorf",
+    start: "21:00",
+    end: "06:00"
+  },
+  {
+    gruppe: "Nachtschicht",
+    value: "Volksdorf/Farmsen",
+    short: "Volksdorf/Farmsen",
+    start: "22:00",
+    end: "08:00"
+  },
+
+
+  // ===== TAGSCHICHTEN =====
+  {
+    gruppe: "Tagschicht",
+    value: "Ochsenzoll Tag",
+    short: "Ochsenzoll",
+    start: "06:00",
+    end: "18:00"
+  },
+  {
+    gruppe: "Tagschicht",
+    value: "Farmsen Tag",
+    short: "Farmsen",
+    start: "06:00",
+    end: "18:00"
+  },
+  {
+    gruppe: "Tagschicht",
+    value: "Volksdorf Tag",
+    short: "Volksdorf",
+    start: "06:00",
+    end: "18:00"
+  }
 ];
 
 const START_CHOICES = ["21:00","22:00","23:00"];
