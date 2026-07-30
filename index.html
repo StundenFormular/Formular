@@ -172,7 +172,7 @@ input, select{
   width:100%;
   border-collapse:collapse;
   table-layout:fixed;
-  min-width: 440px;
+  min-width: 428px;
 }
 .entryTable th{
   background: var(--accent);
@@ -202,7 +202,7 @@ input, select{
 
 .entryTable select{
   width:100%;
-  padding:5px 5px;
+  padding:5px 3px;
   border-radius:10px;
   border:1px solid var(--border);
   font-size:12px;
@@ -212,7 +212,7 @@ input, select{
 /* Nachtschicht/Tagschicht-Überschriften im Kehre-Dropdown hervorheben.
    Hinweis: native Auswahlmenüs (Android/iOS) werden vom Betriebssystem
    gerendert - wie stark diese Regel greift, hängt vom Browser ab. */
-select.ort optgroup{
+select.ort option:disabled{
   font-weight:900;
   font-style:normal;
   color:var(--accent);
@@ -252,7 +252,7 @@ select.ort option{
 .right{ text-align:right; }
 
 .colDay{ width:62px; }
-.colKehre{ width:166px; }
+.colKehre{ width:154px; }
 .colTime{ width:68px; }
 .colStd{ width:76px; }
 
@@ -3002,7 +3002,7 @@ tbody tr:nth-child(odd){
         <div class="periodBox">
           
           <span class="miniLabel">Jahr</span>
-          <select id="year"></select>
+          <select id="year" tabindex="-1"></select>
         </div>
       </div>
     </div>
@@ -3429,6 +3429,7 @@ function buildOrtOptions(){
   });
 
   return Object.keys(gruppen).map(typ=>{
+    const headerLabel = `${typ.includes("Nacht") ? "🌙" : "☀️"} ${typ}`;
     const options = gruppen[typ].map(o =>
       `<option 
         value="${o.value}" 
@@ -3438,7 +3439,7 @@ function buildOrtOptions(){
         ${o.short} (${o.start.replace(":00","")}–${o.end.replace(":00","")})
       </option>`
     ).join("");
-    return `<optgroup label="${typ.includes("Nacht") ? "🌙 " : "☀️ "}${typ}">${options}</optgroup>`;
+    return `<option value="" disabled>── ${headerLabel} ──</option>${options}`;
   }).join("");
 }
 
