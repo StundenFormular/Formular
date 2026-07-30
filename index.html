@@ -79,9 +79,14 @@ button.primary{
   border-color:#111827;
 }
 button.danger{
-  color:var(--danger);
-  border-color:rgba(239,68,68,.55);
-  background:#fff;
+  background:
+    radial-gradient(circle at top left, rgba(255,255,255,.22), transparent 38%),
+    linear-gradient(135deg, #e0524a 0%, #ef6b63 100%);
+  color:#fff;
+  border:none;
+  box-shadow:
+    0 12px 28px rgba(224,82,74,.26),
+    inset 0 1px 0 rgba(255,255,255,.20);
 }
 button.send{
   background:linear-gradient(135deg, rgba(61,58,135,.95), rgba(232,163,61,.90));
@@ -92,11 +97,11 @@ button:disabled{ opacity:.55; cursor:not-allowed; }
 .small{ font-size:12px; color:var(--muted); margin-top:6px; }
 
 .card{
-  margin-top:10px;
+  margin-top:8px;
   background:linear-gradient(135deg, rgba(61,58,135,.18), rgba(232,163,61,.12));
   border:1px solid rgba(226,232,240,.95);
   border-radius:18px;
-  padding:14px;
+  padding:12px;
   box-shadow:0 8px 18px rgba(0,0,0,.06);
 }
 .cardDivider{
@@ -170,12 +175,12 @@ input, select{
   min-width: 620px;
 }
 .entryTable th{
-  background: #ede9fe;
-  color: #5b21b6;
+  background: var(--accent);
+  color: #ffffff;
   font-weight: 1000;
   font-size: 13px;
   padding: 9px 7px;
-  border-bottom: 1px solid #c4b5fd;
+  border-bottom: 1px solid var(--accent);
 }
 .entryTable td{
   padding:9px 7px;
@@ -958,10 +963,10 @@ select.ort option{
   font-size:15px;
   box-shadow:0 10px 22px rgba(15,23,42,.06);
 }
-button.primary::before{ content:"📄 "; }
-button.send::before{ content:"✈ "; }
-button.danger::before{ content:"🗑 "; }
-#prevBtn::before{ content:"📊 "; }
+button.primary::before{ content:""; }
+button.send::before{ content:""; }
+button.danger::before{ content:""; }
+#prevBtn::before{ content:""; }
 
 .card.userCard{
   position:relative;
@@ -976,7 +981,7 @@ button.danger::before{ content:"🗑 "; }
   border:1px solid rgba(255,255,255,.75);
   box-shadow:0 18px 42px rgba(61,58,135,.14);
 }
-.userHeader{ display:flex; align-items:center; gap:14px; margin-bottom:18px; }
+.userHeader{ display:flex; align-items:center; gap:12px; margin-bottom:14px; }
 .userAvatar{
   width:62px; height:62px; border-radius:999px;
   background:linear-gradient(135deg,#4A3F91,#5C58B8);
@@ -987,7 +992,7 @@ button.danger::before{ content:"🗑 "; }
 .userSub{ margin-top:5px; font-size:15px; font-weight:750; color:#64748b; }
 .fieldTitle{
   display:flex; align-items:center; gap:9px;
-  font-size:19px; font-weight:1000; margin:14px 0 8px; color:#0f172a;
+  font-size:19px; font-weight:1000; margin:10px 0 6px; color:#0f172a;
 }
 .fieldTitle .ico{
   width:30px; height:30px; border-radius:10px;
@@ -2030,15 +2035,15 @@ button.danger::before{ content:"🗑 "; }
 }
 
 button.send::before{
-  content:"👁 " !important;
+  content:"" !important;
 }
 
 button.primary::before{
-  content:"📄 " !important;
+  content:"" !important;
 }
 
 button.danger::before{
-  content:"🗑 " !important;
+  content:"" !important;
 }
 
 @media(max-width:520px){
@@ -2660,32 +2665,10 @@ table.entries td:last-child{
 /* ============================================= */
 
 
-/* ===== FINAL: PIN-SCHLÜSSEL + ÜBERSICHT ZENTRIERT ===== */
-.pinLabel::before,
-.pin-title::before,
-.pinTitle::before,
-label[for="pin"]::before,
-label[for="pinInput"]::before{
-  content:"🔑" !important;
-  margin-right:10px !important;
-  font-size:28px !important;
-  vertical-align:middle !important;
-}
-
-.pinInputIcon,
-.pin-icon,
-.inputIcon.lock,
-.lockIcon,
-.pinWrap .inputIcon,
-.pin-field .inputIcon{
-  visibility:hidden !important;
-}
-
-.pinWrap span:first-child,
-.pin-field span:first-child{
-  visibility:hidden !important;
-}
-
+/* ===== ÜBERSICHT-KARTEN: ZENTRIERT, OHNE UNTERZEILE =====
+   Konsolidiert - ersetzt 5 sich wiederholende "FINAL/FINAL FIX/FINAL KORREKTUR"-
+   Blöcke, die alle denselben Effekt anstrebten. Das Schlüssel-Icon selbst wird
+   jetzt direkt im HTML gesetzt (kein CSS-content-Hack mehr nötig). */
 .previewStat,
 .previewStats .previewStat{
   text-align:center !important;
@@ -2709,143 +2692,6 @@ label[for="pinInput"]::before{
 .workedDaysSub{
   display:none !important;
 }
-/* ================================================ */
-
-
-
-
-/* ===== FINAL FIX: SCHLÜSSEL AN LABEL + VON31 WEG ===== */
-
-/* Kopf-Icon neben "Personal-PIN" durch Schlüssel ersetzen */
-.pinLabel .icon,
-.pin-title .icon,
-.pinTitle .icon,
-.pinLabelIcon,
-.pin-title-icon,
-.pinTitleIcon,
-.pinSectionIcon,
-.pin-section-icon,
-.pinLabel > span:first-child,
-.pin-title > span:first-child,
-.pinTitle > span:first-child{
-  font-size:0 !important;
-}
-
-.pinLabel .icon::before,
-.pin-title .icon::before,
-.pinTitle .icon::before,
-.pinLabelIcon::before,
-.pin-title-icon::before,
-.pinTitleIcon::before,
-.pinSectionIcon::before,
-.pin-section-icon::before,
-.pinLabel > span:first-child::before,
-.pin-title > span:first-child::before,
-.pinTitle > span:first-child::before{
-  content:"🔑" !important;
-  font-size:28px !important;
-}
-
-/* Falls das Label kein eigenes Icon hat, Schlüssel direkt vor Text setzen */
-.pinLabel:not(:has(.icon))::before,
-.pin-title:not(:has(.icon))::before,
-.pinTitle:not(:has(.icon))::before,
-label[for="pin"]::before,
-label[for="pinInput"]::before{
-  content:"🔑" !important;
-  margin-right:10px !important;
-  font-size:28px !important;
-  vertical-align:middle !important;
-}
-
-/* Schloss im PIN-Feld komplett ausblenden */
-.pinInputIcon,
-.pin-icon,
-.inputIcon.lock,
-.lockIcon,
-.pinWrap .inputIcon,
-.pin-field .inputIcon,
-.pinWrap span:first-child,
-.pin-field span:first-child{
-  visibility:hidden !important;
-}
-
-/* Gearbeitete Tage: Unterzeile endgültig weg */
-.previewStat small,
-.previewStatSub,
-.previewSub,
-.workedDaysSub,
-.previewStat .sub,
-.previewStat .muted{
-  display:none !important;
-}
-
-/* Übersicht-Karten weiter zentriert */
-.previewStat,
-.previewStats .previewStat{
-  text-align:center !important;
-  align-items:center !important;
-  justify-content:center !important;
-}
-
-.previewStatIcon{
-  margin-left:auto !important;
-  margin-right:auto !important;
-}
-
-.previewStatLabel,
-.previewStatValue{
-  text-align:center !important;
-}
-/* ================================================= */
-
-
-/* ===== FINAL KORREKTUR: PIN NICHT AUTO + SCHLÜSSEL + VON31 WEG ===== */
-.pinLabel .icon,
-.pin-title .icon,
-.pinTitle .icon,
-.pinLabel .miniIcon,
-.pin-title .miniIcon,
-.pinTitle .miniIcon,
-.pinLabelIcon,
-.pin-title-icon,
-.pinTitleIcon,
-.pinSectionIcon,
-.pin-section-icon,
-.pinLabel > span:first-child,
-.pin-title > span:first-child,
-.pinTitle > span:first-child{
-  font-size:0 !important;
-}
-
-.pinLabel .icon::before,
-.pin-title .icon::before,
-.pinTitle .icon::before,
-.pinLabel .miniIcon::before,
-.pin-title .miniIcon::before,
-.pinTitle .miniIcon::before,
-.pinLabelIcon::before,
-.pin-title-icon::before,
-.pinTitleIcon::before,
-.pinSectionIcon::before,
-.pin-section-icon::before,
-.pinLabel > span:first-child::before,
-.pin-title > span:first-child::before,
-.pinTitle > span:first-child::before{
-  content:"🔑" !important;
-  font-size:28px !important;
-}
-
-.pinLabel::before,
-.pin-title::before,
-.pinTitle::before,
-label[for="pin"]::before,
-label[for="pinInput"]::before{
-  content:"🔑" !important;
-  margin-right:10px !important;
-  font-size:28px !important;
-  vertical-align:middle !important;
-}
 
 .pinInputIcon,
 .pin-icon,
@@ -2857,163 +2703,6 @@ label[for="pinInput"]::before{
 .pin-field span:first-child{
   visibility:hidden !important;
 }
-
-.previewStat small,
-.previewStatSub,
-.previewSub,
-.workedDaysSub,
-.previewStat .sub,
-.previewStat .muted{
-  display:none !important;
-}
-
-.previewStat,
-.previewStats .previewStat{
-  text-align:center !important;
-  align-items:center !important;
-  justify-content:center !important;
-}
-
-.previewStatIcon{
-  margin-left:auto !important;
-  margin-right:auto !important;
-}
-
-.previewStatLabel,
-.previewStatValue{
-  text-align:center !important;
-}
-/* ================================================================ */
-
-
-
-
-/* ===== FINAL: KLEINEN KOPF NEBEN PERSONAL-PIN DURCH SCHLÜSSEL ERSETZEN ===== */
-
-/* Der kleine Icon-Kasten links vom Personal-PIN-Titel */
-.userCard .sectionTitle:nth-of-type(1) .sectionIcon,
-.userCard .sectionTitle:first-of-type .sectionIcon,
-.sectionTitle .personIcon,
-.sectionTitle .userIcon,
-.pinTitle .sectionIcon,
-.pinLabel .sectionIcon,
-.pin-title .sectionIcon{
-  font-size:0 !important;
-}
-
-.userCard .sectionTitle:nth-of-type(1) .sectionIcon::before,
-.userCard .sectionTitle:first-of-type .sectionIcon::before,
-.sectionTitle .personIcon::before,
-.sectionTitle .userIcon::before,
-.pinTitle .sectionIcon::before,
-.pinLabel .sectionIcon::before,
-.pin-title .sectionIcon::before{
-  content:"🔑" !important;
-  font-size:28px !important;
-}
-
-/* Falls der Kopf als Emoji/Text in der Überschrift steckt */
-.sectionTitle,
-.pinTitle,
-.pinLabel,
-.pin-title{
-  --pin-key-dummy:0;
-}
-
-/* Schloss im PIN-Eingabefeld leer lassen */
-.pinInputIcon,
-.pin-icon,
-.inputIcon.lock,
-.lockIcon,
-.pinWrap .inputIcon,
-.pin-field .inputIcon{
-  visibility:hidden !important;
-}
-/* =============================================================== */
-
-
-/* ===== FINAL ECHT: PERSONAL-PIN ICON = SCHLÜSSEL ===== */
-
-/* Kleines blaues Kopf-Icon neben "Personal-PIN" wirklich ersetzen */
-.fieldRow .fieldIcon,
-.formRow .fieldIcon,
-.sectionRow .fieldIcon,
-.labelRow .fieldIcon,
-.pinRow .fieldIcon,
-.pinHeader .fieldIcon,
-.pinBlock .fieldIcon,
-.pinSection .fieldIcon,
-.pinLabelBox,
-.pinLabelIcon,
-.pinIconSmall,
-.iconBadge.person,
-.iconBadge.user,
-.smallIcon.person,
-.smallIcon.user{
-  color:transparent !important;
-  font-size:0 !important;
-  background:rgba(44,40,96,.10) !important;
-  position:relative !important;
-}
-
-.fieldRow .fieldIcon::before,
-.formRow .fieldIcon::before,
-.sectionRow .fieldIcon::before,
-.labelRow .fieldIcon::before,
-.pinRow .fieldIcon::before,
-.pinHeader .fieldIcon::before,
-.pinBlock .fieldIcon::before,
-.pinSection .fieldIcon::before,
-.pinLabelBox::before,
-.pinLabelIcon::before,
-.pinIconSmall::before,
-.iconBadge.person::before,
-.iconBadge.user::before,
-.smallIcon.person::before,
-.smallIcon.user::before{
-  content:"🔑" !important;
-  color:#2C2860 !important;
-  font-size:28px !important;
-  line-height:1 !important;
-  position:absolute !important;
-  left:50% !important;
-  top:50% !important;
-  transform:translate(-50%,-50%) !important;
-}
-
-/* Sehr gezielt: Das erste kleine Icon direkt vor dem Personal-PIN-Text */
-h2 + .sectionTitle .icon,
-h2 + .sectionTitle .miniIcon,
-.userCard .sectionTitle:first-of-type .icon,
-.userCard .sectionTitle:first-of-type .miniIcon,
-.userCard .sectionTitle:first-of-type .sectionIcon{
-  color:transparent !important;
-  font-size:0 !important;
-  position:relative !important;
-}
-
-h2 + .sectionTitle .icon::before,
-h2 + .sectionTitle .miniIcon::before,
-.userCard .sectionTitle:first-of-type .icon::before,
-.userCard .sectionTitle:first-of-type .miniIcon::before,
-.userCard .sectionTitle:first-of-type .sectionIcon::before{
-  content:"🔑" !important;
-  color:#2C2860 !important;
-  font-size:28px !important;
-}
-
-/* Schloss im PIN-Eingabefeld leer/unsichtbar lassen */
-.pinInputIcon,
-.pin-input-icon,
-.inputIcon.lock,
-.lockIcon,
-.pinWrap .inputIcon,
-.pin-field .inputIcon,
-.pinWrap span:first-child,
-.pin-field span:first-child{
-  visibility:hidden !important;
-}
-
 /* ================================================= */
 
 
@@ -3265,7 +2954,7 @@ h2 + .sectionTitle .miniIcon::before,
 
   <div class="card userCard">
     <div class="userHeader">
-      <div class="userAvatar">👤</div>
+      <div class="userAvatar"><svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"></circle><path d="M4 20c0-4.4 3.6-7 8-7s8 2.6 8 7"></path></svg></div>
       <div>
         <div class="userTitle">Mitarbeiterbereich</div>
         <div class="userSub">Bitte PIN und Monat auswählen</div>
@@ -3273,9 +2962,9 @@ h2 + .sectionTitle .miniIcon::before,
     </div>
 
     <div class="modernPinSection">
-      <div class="fieldTitle"><span class="ico">👤</span>Personal-PIN</div>
+      <div class="fieldTitle"><span class="ico"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="15" r="4"></circle><path d="M10.5 12.5L20 3M17 6l3 3M14 9l3 3"></path></svg></span>Personal-PIN</div>
       <div class="pinWrap">
-        <span class="pinIcon">🔒</span>
+        <span class="pinIcon"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="9" rx="2"></rect><path d="M8 11V7a4 4 0 0 1 8 0v4"></path></svg></span>
         <input id="name" placeholder="PIN eingeben">
       </div>
       <div class="small" id="nameError" style="display:none; color:var(--danger); font-weight:900;">
@@ -3284,7 +2973,7 @@ h2 + .sectionTitle .miniIcon::before,
     </div>
 
     <div class="modernPeriodSection">
-      <div class="fieldTitle"><span class="ico">📅</span>Zeitraum wählen</div>
+      <div class="fieldTitle"><span class="ico"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="3"></rect><path d="M3 10h18M8 3v4M16 3v4"></path></svg></span>Zeitraum wählen</div>
       <div class="periodGrid">
         <div class="periodBox">
           
@@ -3338,7 +3027,7 @@ h2 + .sectionTitle .miniIcon::before,
       <div class="modalTop">
         <div class="previewHeader">
           <div class="previewTitleWrap">
-            <div class="previewIcon">📅</div>
+            <div class="previewIcon"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="3"></rect><path d="M3 10h18M8 3v4M16 3v4"></path></svg></div>
             <div>
               <div class="previewMainTitle">Übersicht</div>
               <div class="previewSubTitle" id="previewTitle">Stundenübersicht</div>
@@ -3391,7 +3080,7 @@ h2 + .sectionTitle .miniIcon::before,
 
     <div id="printSummaryCards">
       <div class="printInfoCard">
-        <div class="printInfoIcon">🕒</div>
+        <div class="printInfoIcon"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"></circle><path d="M12 7v5l3 3"></path></svg></div>
         <div>
           <div class="printInfoLabel">Gesamtstunden:</div>
           <div class="printInfoValue" id="printSummaryTotal"></div>
@@ -3399,7 +3088,7 @@ h2 + .sectionTitle .miniIcon::before,
       </div>
 
       <div class="printInfoCard" id="printNoteCard" style="display:none;">
-        <div class="printInfoIcon">💬</div>
+        <div class="printInfoIcon"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16v12H8l-4 4V4z"></path></svg></div>
         <div>
           <div class="printInfoLabel">Bemerkung:</div>
           <div id="printNoteText"></div>
@@ -3429,12 +3118,12 @@ const PIN_BG_FILE = "nr3.jpg";
 const STORAGE_PREFIX = "sad_stundenformular_v10:";
 
 const ORTE = [
+  
   { value: "H.Tierpark", short: "H.Tierpark", start: "23:00", end: "08:00", typ: "Nachtschicht" },
   { value: "Farmsen", short: "Farmsen", start: "22:00", end: "08:00", typ: "Nachtschicht" },
   { value: "Ochsenzoll", short: "Ochsenzoll", start: "22:00", end: "07:00", typ: "Nachtschicht" },
   { value: "Volksdorf", short: "Volksdorf", start: "21:00", end: "06:00", typ: "Nachtschicht" },
   { value: "Großhandsdorf", short: "Großhandsdorf", start: "21:00", end: "06:00", typ: "Nachtschicht" },
-  { value: "Ochsenzoll", short: "Ochsenzoll", start: "18:00", end: "06:00", typ: "Nachtschicht" },
   { value: "Volksdorf/Farmsen", short: "Volksdorf/Farmsen", start: "22:00", end: "08:00", typ: "Nachtschicht" },
   { value: "Ochsenzoll (Tag)", short: "Ochsenzoll", start: "06:00", end: "18:00", typ: "Tagschicht" },
   { value: "Ochsenzoll (Tag)", short: "Ochsenzoll", start: "07:00", end: "18:00", typ: "Tagschicht" }
@@ -4417,7 +4106,7 @@ function showPdfDownloadPrompt(){
 
     dlgMsgEl.innerHTML = `
       <div class="pdfPromptPremium">
-        <div class="pdfPromptIcon">📄</div>
+        <div class="pdfPromptIcon"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2h9l5 5v15H6z"></path><path d="M15 2v5h5"></path></svg></div>
 
         <div class="pdfPromptTitle">PDF herunterladen?</div>
 
