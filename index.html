@@ -241,7 +241,7 @@ select.ort option{
 
 .entryHours{
   width:100%;
-  padding:5px 6px;
+  padding:5px 4px 5px 8px;
   border-radius:10px;
   border:1px solid var(--border);
   background:#f8fafc;
@@ -5048,67 +5048,12 @@ timeSheetBack.addEventListener("click",(e)=>{ if(e.target===timeSheetBack) close
 
 
 
-/* ===== FIX: GESAMTSTUNDEN NACH LÖSCHEN EINER KEHRE AKTUALISIEREN ===== */
-(function(){
-  function isEmptyKehreValue(value){
-    const v = String(value || "").trim().toLowerCase();
-    return !v || v === "-" || v.includes("kehre wählen") || v.includes("kehre waehlen");
-  }
-
-  function recalcNow(){
-    if(typeof calc === "function") calc();
-    if(typeof save === "function") save();
-    if(typeof updateTotal === "function") updateTotal();
-  }
-
-  function clearRowIfKehreEmpty(selectEl){
-    if(!selectEl) return;
-
-    const value = selectEl.value || selectEl.options?.[selectEl.selectedIndex]?.text || "";
-    if(!isEmptyKehreValue(value)) return;
-
-    const tr = selectEl.closest("tr");
-    if(!tr) return;
-
-    tr.querySelectorAll("input").forEach(input=>{
-      input.value = "";
-      input.dispatchEvent(new Event("input", {bubbles:true}));
-      input.dispatchEvent(new Event("change", {bubbles:true}));
-    });
-
-    const hoursEl = tr.querySelector(".entryHours");
-    if(hoursEl){
-      if("value" in hoursEl) hoursEl.value = "0,00";
-      hoursEl.textContent = "0,00";
-    }
-
-    tr.classList.remove("rowFilled", "trActive");
-    tr.classList.add("rowEmpty");
-
-    recalcNow();
-  }
-
-  document.addEventListener("change", function(e){
-    const el = e.target;
-    if(!el || el.tagName !== "SELECT") return;
-
-    const tr = el.closest("tr");
-    if(!tr) return;
-
-    clearRowIfKehreEmpty(el);
-
-    setTimeout(recalcNow, 0);
-    setTimeout(recalcNow, 80);
-  });
-
-  document.addEventListener("input", function(e){
-    const tr = e.target?.closest?.("tr");
-    if(!tr) return;
-
-    setTimeout(recalcNow, 0);
-  });
-})();
-/* =================================================================== */
+/* Alte Code-Leiche entfernt ("FIX: GESAMTSTUNDEN NACH LÖSCHEN EINER KEHRE
+   AKTUALISIEREN"): sie hat bei jeder Kehre-Auswahl das Stunden-Feld leerer
+   Zeilen zwangsweise auf "0,00" gesetzt statt es leer zu lassen - dadurch
+   wurden gelöschte Tage in der Übersicht fälschlich als "0,00h" und als
+   gearbeiteter Tag gezählt. Die Zeilen-Handler setzen das Feld bereits
+   korrekt selbst leer (siehe ort.addEventListener("change") weiter oben). */
 
 
 /* Alter, doppelter Berechnungs-Code entfernt: er überschrieb den kompletten
