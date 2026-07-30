@@ -2901,6 +2901,200 @@ table.entries td:last-child{
 }
 /* ================================================= */
 
+/* ===== KARTEN-ANSICHT STATT QUERSCROLL-TABELLE (Mobile-First) =====
+   Die Tabelle bleibt technisch eine <table>, wird aber wie eine Liste
+   aus Tages-Karten dargestellt - kein "nach rechts wischen" mehr nötig. */
+.tableScroll{ overflow:visible !important; border:none !important; background:none !important; }
+.entryTable{ min-width:0 !important; }
+.entryTable thead{ display:none !important; }
+.entryTable, .entryTable tbody{ display:block !important; width:100% !important; }
+.entryTable tr{
+  display:block !important;
+  width:100% !important;
+  background:#fff !important;
+  border:1px solid var(--border) !important;
+  border-radius:16px !important;
+  margin-bottom:10px !important;
+  padding:6px 12px !important;
+  box-shadow:0 4px 12px rgba(44,40,96,.05) !important;
+}
+.entryTable td{
+  display:flex !important;
+  align-items:center !important;
+  justify-content:space-between !important;
+  gap:10px !important;
+  width:100% !important;
+  padding:7px 0 !important;
+  border:none !important;
+  text-align:right !important;
+  font-size:14px !important;
+}
+.entryTable td::before{
+  content:attr(data-label);
+  font-weight:1000;
+  color:var(--accent);
+  font-size:11px;
+  text-transform:uppercase;
+  letter-spacing:.4px;
+  flex:0 0 auto;
+}
+.entryTable td:first-child{
+  border-bottom:1px solid var(--border) !important;
+  margin-bottom:2px;
+}
+.entryTable td select,
+.entryTable td input{
+  width:auto !important;
+  max-width:62% !important;
+  min-width:0 !important;
+  text-align:right !important;
+  flex:1 1 auto;
+}
+
+/* Zeilenfarbe je nach Nacht-/Tagschicht dezent markieren */
+.entryTable tr.rowNight{ border-left:4px solid var(--accent) !important; }
+.entryTable tr.rowDay{ border-left:4px solid var(--accent2) !important; }
+
+/* "Letzten Eintrag übernehmen"-Button */
+.reuseLastBtn{
+  border:1px solid rgba(61,58,135,.3);
+  background:rgba(61,58,135,.08);
+  color:var(--accent);
+  font-weight:900;
+  font-size:12.5px;
+  padding:8px 12px;
+  border-radius:999px;
+  cursor:pointer;
+  white-space:nowrap;
+}
+.reuseLastBtn:active{ background:rgba(61,58,135,.16); }
+
+/* Undo-Toast nach "Alles löschen" */
+.undoToast{
+  position:fixed;
+  left:16px;
+  right:16px;
+  bottom: calc(16px + env(safe-area-inset-bottom));
+  z-index:999;
+  background:#211E52;
+  color:#fff;
+  border-radius:16px;
+  padding:12px 14px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  box-shadow:0 12px 28px rgba(0,0,0,.28);
+  animation: undoToastIn .2s ease-out;
+}
+@keyframes undoToastIn{
+  from{ transform:translateY(12px); opacity:0; }
+  to{ transform:translateY(0); opacity:1; }
+}
+.undoToast span{ font-size:14px; font-weight:700; }
+.undoToast .undoBtn{
+  background:var(--accent2);
+  color:#211E52;
+  border:none;
+  border-radius:999px;
+  padding:8px 14px;
+  font-weight:1000;
+  font-size:13px;
+  cursor:pointer;
+  white-space:nowrap;
+}
+
+/* ===== DARK MODE =====
+   Deckt die zentralen, sichtbaren Oberflächen ab (Karten, Eingabefelder,
+   Tabellen-Karten, Dialoge, Übersicht). Ältere, sehr tief verschachtelte
+   Sonderfälle in den historischen Patch-Blöcken sind nicht garantiert
+   abgedeckt - bei Bedarf gezielt nachbessern. */
+[data-theme="dark"]{
+  --bg:#14162b;
+  --card:#1e2140;
+  --text:#e9eaf6;
+  --muted:#a3a6c8;
+  --border:#34386a;
+  --danger:#f2726b;
+  --shadow: 0 12px 28px rgba(0,0,0,.5);
+}
+[data-theme="dark"] body{
+  background:#14162b !important;
+  color:var(--text) !important;
+}
+[data-theme="dark"] .card,
+[data-theme="dark"] .userCard,
+[data-theme="dark"] .tableCard,
+[data-theme="dark"] .tableScroll,
+[data-theme="dark"] .entryTable tr,
+[data-theme="dark"] .dlg,
+[data-theme="dark"] .timeSheet,
+[data-theme="dark"] .previewStat{
+  background:#1e2140 !important;
+  border-color:#34386a !important;
+  color:#e9eaf6 !important;
+}
+[data-theme="dark"] input,
+[data-theme="dark"] select,
+[data-theme="dark"] .entryTable select,
+[data-theme="dark"] .timeField input,
+[data-theme="dark"] .entryHours{
+  background:#262a4d !important;
+  color:#e9eaf6 !important;
+  border-color:#3c4074 !important;
+}
+[data-theme="dark"] .userTitle,
+[data-theme="dark"] .fieldTitle,
+[data-theme="dark"] .title,
+[data-theme="dark"] .dlgBody,
+[data-theme="dark"] .timeSheetTitle,
+[data-theme="dark"] .previewStatValue,
+[data-theme="dark"] .previewTitle,
+[data-theme="dark"] .previewMainTitle{
+  color:#f1f2fb !important;
+}
+[data-theme="dark"] .userSub,
+[data-theme="dark"] .small,
+[data-theme="dark"] .miniLabel,
+[data-theme="dark"] .previewStatLabel,
+[data-theme="dark"] .userFooter{
+  color:#a3a6c8 !important;
+}
+[data-theme="dark"] .fieldTitle .ico{
+  background:rgba(232,163,61,.16) !important;
+  color:var(--accent2) !important;
+}
+[data-theme="dark"] .timeOpt{
+  border-top-color:#34386a !important;
+  color:#e9eaf6 !important;
+}
+[data-theme="dark"] .previewModernTable td{
+  color:#e9eaf6 !important;
+  border-color:#34386a !important;
+}
+[data-theme="dark"] .dlgTop,
+[data-theme="dark"] .dlgBtns{
+  border-color:#34386a !important;
+}
+
+/* Theme-Umschalter-Button */
+.themeToggle{
+  position:fixed;
+  right:14px;
+  bottom: calc(14px + env(safe-area-inset-bottom));
+  z-index:80;
+  width:48px;
+  height:48px;
+  border-radius:999px;
+  border:1px solid var(--border);
+  background:var(--card);
+  color:var(--accent);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  box-shadow:0 8px 20px rgba(0,0,0,.18);
+  cursor:pointer;
+}
 </style>
 </head>
 
@@ -2994,7 +3188,7 @@ table.entries td:last-child{
   <div class="tableCard">
     <div class="tableHeadRow">
       <div class="title">Eintragen</div>
-      <div class="hint">↔ nach rechts wischen</div>
+      <button type="button" id="reuseLastBtn" class="reuseLastBtn">Letzten Eintrag übernehmen</button>
     </div>
 
     <div class="tableScroll">
@@ -3102,6 +3296,10 @@ table.entries td:last-child{
 
 </div>
 
+<button type="button" id="themeToggle" class="themeToggle" aria-label="Dunkles/helles Design umschalten">
+  <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.6A9 9 0 1 1 11.4 3 7 7 0 0 0 21 12.6z"></path></svg>
+</button>
+
 <script>
 if("serviceWorker" in navigator){
   window.addEventListener("load", function(){
@@ -3111,6 +3309,35 @@ if("serviceWorker" in navigator){
   });
 }
 
+(function(){
+  const STORAGE_THEME_KEY = "stundenformular_theme";
+  const toggleBtn = document.getElementById("themeToggle");
+
+  function applyTheme(theme){
+    if(theme === "dark"){
+      document.documentElement.setAttribute("data-theme", "dark");
+    } else {
+      document.documentElement.removeAttribute("data-theme");
+    }
+  }
+
+  let saved = null;
+  try{ saved = localStorage.getItem(STORAGE_THEME_KEY); }catch(e){}
+
+  if(saved){
+    applyTheme(saved);
+  } else if(window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches){
+    applyTheme("dark");
+  }
+
+  toggleBtn?.addEventListener("click", function(){
+    const isDark = document.documentElement.getAttribute("data-theme") === "dark";
+    const next = isDark ? "light" : "dark";
+    applyTheme(next);
+    try{ localStorage.setItem(STORAGE_THEME_KEY, next); }catch(e){}
+  });
+})();
+
 const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbw3-LIiVd6lG9on22RMTJcMYaMATy2y5Vxm6ep8idY6DWMjc2ThGPTtOHDIutL1pBPVnQ/exec";
 const APP_PIN     = "8558";
 const PIN_BG_FILE = "nr3.jpg";
@@ -3118,15 +3345,14 @@ const PIN_BG_FILE = "nr3.jpg";
 const STORAGE_PREFIX = "sad_stundenformular_v10:";
 
 const ORTE = [
-  
-  { value: "H.Tierpark", short: "H.Tierpark", start: "23:00", end: "08:00", typ: "Nachtschicht" },
+  { value: "Niendorf Nord", short: "Niendorf Nord", start: "21:00", end: "06:00", typ: "Nachtschicht" },
+  { value: "Hagenbecks Tierpark", short: "Hagenbecks Tierpark", start: "23:00", end: "08:00", typ: "Nachtschicht" },
   { value: "Farmsen", short: "Farmsen", start: "22:00", end: "08:00", typ: "Nachtschicht" },
   { value: "Ochsenzoll", short: "Ochsenzoll", start: "22:00", end: "07:00", typ: "Nachtschicht" },
   { value: "Volksdorf", short: "Volksdorf", start: "21:00", end: "06:00", typ: "Nachtschicht" },
   { value: "Großhandsdorf", short: "Großhandsdorf", start: "21:00", end: "06:00", typ: "Nachtschicht" },
-  { value: "Volksdorf/Farmsen", short: "Volksdorf/Farmsen", start: "21:00", end: "08:00", typ: "Nachtschicht" },
-  { value: "Ochsenzoll (Tag)", short: "Ochsenzoll", start: "06:00", end: "18:00", typ: "Tagschicht" },
-  { value: "Ochsenzoll (Tag)", short: "Ochsenzoll", start: "07:00", end: "18:00", typ: "Tagschicht" }
+  { value: "Volksdorf/Farmsen", short: "Volksdorf/Farmsen", start: "22:00", end: "08:00", typ: "Nachtschicht" },
+  { value: "Ochsenzoll (Tag)", short: "Ochsenzoll", start: "06:00", end: "18:00", typ: "Tagschicht" }
 ];
 
 const START_CHOICES = ["21:00","22:00","23:00"];
@@ -3144,6 +3370,7 @@ const nameErrorEl = document.getElementById("nameError");
 const pdfBtn  = document.getElementById("pdfBtn");
 const sendBtn = document.getElementById("sendBtn");
 const delBtn  = document.getElementById("delBtn");
+const reuseLastBtn = document.getElementById("reuseLastBtn");
 
 const modalBack = document.getElementById("modalBack");
 const previewTitle = document.getElementById("previewTitle");
@@ -3382,6 +3609,19 @@ function buildOrtOptions(){
   }).join("");
 }
 
+function getOrtTyp(value){
+  const found = ORTE.find(o => o.value === value);
+  return found ? found.typ : null;
+}
+
+function updateRowShiftClass(tr){
+  const ortVal = tr.querySelector(".ort")?.value || "";
+  const typ = getOrtTyp(ortVal);
+  tr.classList.remove("rowNight", "rowDay");
+  if(typ === "Nachtschicht") tr.classList.add("rowNight");
+  else if(typ === "Tagschicht") tr.classList.add("rowDay");
+}
+
 function applyShortLabel(selectEl){
   const opt = selectEl.selectedOptions && selectEl.selectedOptions[0];
   if(!opt) return;
@@ -3547,9 +3787,9 @@ function build(){
     const shortDate = `${pad2(d)}.${pad2(m)}.${String(current.getFullYear()).slice(-2)}`;
 
     tr.innerHTML = `
-      <td><b>${shortDate}</b></td>
+      <td data-label="Datum"><b>${shortDate}</b></td>
 
-      <td>
+      <td data-label="Kehre">
         <select class="ort">
           <option value="" selected disabled>Kehre wählen</option>
           ${buildOrtOptions()}
@@ -3557,19 +3797,19 @@ function build(){
         </select>
       </td>
 
-      <td>
+      <td data-label="Beginn">
         <div class="timeField">
           <input type="text" class="start" placeholder="Uhr" readonly>
         </div>
       </td>
 
-      <td>
+      <td data-label="Ende">
         <div class="timeField">
           <input type="text" class="end" placeholder="Uhr" readonly>
         </div>
       </td>
 
-      <td>
+      <td data-label="Stunden">
         <input type="text" class="hours entryHours" placeholder="0" readonly>
       </td>
     `;
@@ -3591,6 +3831,7 @@ function build(){
         end.value = "";
         hours.value = "";
 
+        updateRowShiftClass(tr);
         markDirty();
         saveState();
         return;
@@ -3607,6 +3848,7 @@ function build(){
       if(autoEnd) end.value = autoEnd;
 
       autoHours(tr);
+      updateRowShiftClass(tr);
 
       markDirty();
       saveState();
@@ -3771,6 +4013,7 @@ function loadState(){
       rowEls[idx].querySelector(".start").value=r.start||"";
       rowEls[idx].querySelector(".end").value=r.end||"";
       rowEls[idx].querySelector(".hours").value=r.hours||"";
+      updateRowShiftClass(rowEls[idx]);
     });
 
     if(noteEl) noteEl.value = st.note || "";
@@ -3856,10 +4099,34 @@ function exportPDF(){
 async function allesLoeschen(){
   const ok = await dlgConfirm("Wirklich ALLES für diesen Monat löschen?", "Bestätigung");
   if(!ok) return;
-  localStorage.removeItem(storageKey());
+  const snapshot = localStorage.getItem(storageKey());
+  const key = storageKey();
+  localStorage.removeItem(key);
   dirty=false;
   exported=false;
   build();
+  zeigeUndoToast(key, snapshot);
+}
+
+function zeigeUndoToast(key, snapshot){
+  if(!snapshot) return;
+
+  document.querySelectorAll(".undoToast").forEach(t=>t.remove());
+
+  const toast = document.createElement("div");
+  toast.className = "undoToast";
+  toast.innerHTML = `<span>Alle Einträge gelöscht.</span><button type="button" class="undoBtn">Rückgängig</button>`;
+  document.body.appendChild(toast);
+
+  const timer = setTimeout(()=>{ toast.remove(); }, 6000);
+
+  toast.querySelector(".undoBtn").addEventListener("click", ()=>{
+    clearTimeout(timer);
+    localStorage.setItem(key, snapshot);
+    dirty = true;
+    build();
+    toast.remove();
+  });
 }
 
 function openPreview(){
@@ -3870,6 +4137,8 @@ function openPreview(){
   previewTitle.textContent=`${mm}/${yy}`+(name?` – PIN ${name}`:"");
 
   let sum=0;
+  let nightSum=0;
+  let daySum=0;
   let workedDays=0;
   const rowsHtml=[];
 
@@ -3885,6 +4154,10 @@ function openPreview(){
     if(!isNaN(v)){
       sum+=v;
       workedDays++;
+
+      const typ = getOrtTyp(ort);
+      if(typ === "Nachtschicht") nightSum+=v;
+      else if(typ === "Tagschicht") daySum+=v;
     }
 
     rowsHtml.push(`
@@ -3936,6 +4209,20 @@ function openPreview(){
         <div>
           <div class="previewStatLabel">Kehren</div>
           <div class="previewStatValue">${routeText}</div>
+        </div>
+      </div>
+      <div class="previewStat">
+        <div class="previewStatIcon" style="background:linear-gradient(135deg,#2C2860,#3D3A87);">🌙</div>
+        <div>
+          <div class="previewStatLabel">Nachtschicht</div>
+          <div class="previewStatValue">${formatHoursSmart(nightSum) || "0"} h</div>
+        </div>
+      </div>
+      <div class="previewStat">
+        <div class="previewStatIcon" style="background:linear-gradient(135deg,#E8A33D,#c97f1b);">☀️</div>
+        <div>
+          <div class="previewStatLabel">Tagschicht</div>
+          <div class="previewStatValue">${formatHoursSmart(daySum) || "0"} h</div>
         </div>
       </div>
     </div>
@@ -4242,6 +4529,57 @@ document.addEventListener("change", updateEntryRowHighlight);
 pdfBtn?.addEventListener("click", exportPDF);
 sendBtn.addEventListener("click", openPreview);
 delBtn.addEventListener("click", allesLoeschen);
+
+function letztenEintragUebernehmen(){
+  const rows = Array.from(document.querySelectorAll("#rows tr"));
+
+  let lastFilled = null;
+  rows.forEach(r=>{
+    const ortVal = r.querySelector(".ort").value;
+    if(ortVal && ortVal !== "__CLEAR_ORT__") lastFilled = r;
+  });
+
+  if(!lastFilled){
+    dlgAlert("Es gibt noch keinen ausgefüllten Eintrag zum Übernehmen.", "Kein Eintrag vorhanden");
+    return;
+  }
+
+  const active = document.querySelector(".trActive");
+  let target = null;
+
+  if(active && active !== lastFilled && !active.querySelector(".ort").value){
+    target = active;
+  } else {
+    const idx = rows.indexOf(lastFilled);
+    for(let i=idx+1; i<rows.length; i++){
+      if(!rows[i].querySelector(".ort").value){ target = rows[i]; break; }
+    }
+  }
+
+  if(!target){
+    dlgAlert("Es gibt keinen leeren Tag danach zum Übernehmen.", "Kein freier Tag");
+    return;
+  }
+
+  const srcOrt = lastFilled.querySelector(".ort").value;
+  const srcStart = lastFilled.querySelector(".start").value;
+  const srcEnd = lastFilled.querySelector(".end").value;
+
+  const targetOrt = target.querySelector(".ort");
+  targetOrt.value = srcOrt;
+  applyShortLabel(targetOrt);
+  target.querySelector(".start").value = srcStart;
+  target.querySelector(".end").value = srcEnd;
+
+  autoHours(target);
+  updateRowShiftClass(target);
+  markDirty();
+  saveState();
+  setActiveRow(target);
+  target.scrollIntoView({ behavior:"smooth", block:"center" });
+}
+
+reuseLastBtn?.addEventListener("click", letztenEintragUebernehmen);
 
 closePrevTop.addEventListener("click", closePreview);
 closePrevBottom.addEventListener("click", closePreview);
