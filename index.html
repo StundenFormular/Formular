@@ -1,4 +1,3 @@
-
 <!doctype html>
 <html lang="de">
 <head>
@@ -203,10 +202,10 @@ input, select{
 
 .entryTable select{
   width:100%;
-  padding:7px 8px;
-  border-radius:12px;
+  padding:6px 6px;
+  border-radius:11px;
   border:1px solid var(--border);
-  font-size:13.5px;
+  font-size:12.5px;
   background:#fff;
 }
 
@@ -252,8 +251,8 @@ select.ort option{
 }
 .right{ text-align:right; }
 
-.colDay{ width:70px; }
-.colKehre{ width:190px; }
+.colDay{ width:64px; }
+.colKehre{ width:168px; }
 .colTime{ width:92px; }
 .colStd{ width:80px; }
 
@@ -2713,7 +2712,7 @@ tbody tr:nth-child(odd){
   padding-left:10px !important;
 }
 .entryTable td:first-child b{
-  font-size:12.5px;
+  font-size:12px;
   font-weight:900;
 }
 [data-theme="dark"] .entryTable td:first-child{
@@ -3032,7 +3031,7 @@ tbody tr:nth-child(odd){
     </div>
   </div>
 
-  <div class="total">
+  <div class="total" style="display:none;">
     Gesamtstunden: <span id="sum">0 Std</span>
   </div>
 
@@ -5111,123 +5110,11 @@ timeSheetBack.addEventListener("click",(e)=>{ if(e.target===timeSheetBack) close
 /* =================================================================== */
 
 
-/* ===== GESAMTSTUNDEN: EINE ZENTRALE, KONSOLIDIERTE FUNKTION =====
-   Ersetzt drei frühere, sich überlappende Patch-Blöcke, die alle
-   unabhängig voneinander bei jedem change/input-Event die Summe neu
-   berechnet und mehrfach mit setTimeout verzögert haben. Jetzt: eine
-   Funktion, ein Event-Listener-Paar, ein Speicherpunkt. */
-(function(){
-  function isEmptyKehre(select){
-    if(!select) return true;
-    const txt = (
-      select.value ||
-      select.options?.[select.selectedIndex]?.text ||
-      ""
-    ).trim().toLowerCase();
-
-    return !txt ||
-      txt === "-" ||
-      txt.includes("kehre wählen") ||
-      txt.includes("kehre waehlen");
-  }
-
-  function clearRowIfEmpty(tr){
-    const select = tr.querySelector("select");
-    if(!select || !isEmptyKehre(select)) return;
-
-    tr.querySelectorAll("input").forEach(input=>{ input.value = ""; });
-
-    const hours = tr.querySelector(".entryHours") || tr.querySelector(".hours");
-    if(hours){
-      if("value" in hours) hours.value = "";
-      hours.textContent = "";
-    }
-
-    tr.classList.remove("rowFilled", "trActive");
-    tr.classList.add("rowEmpty");
-  }
-
-  function parseHours(v){
-    if(v == null) return 0;
-    const txt = String(v).replace(",", ".").trim();
-    const n = parseFloat(txt);
-    return isNaN(n) ? 0 : n;
-  }
-
-  function recalcTotal(){
-    let total = 0;
-
-    document.querySelectorAll("#rows tr, tbody tr").forEach(tr=>{
-      clearRowIfEmpty(tr);
-
-      const select = tr.querySelector("select");
-      if(select && isEmptyKehre(select)) return;
-
-      const hourEl =
-        tr.querySelector(".entryHours") ||
-        tr.querySelector(".hours") ||
-        tr.querySelector("[data-hours]");
-
-      if(!hourEl) return;
-
-      const value = "value" in hourEl ? hourEl.value : hourEl.textContent;
-      total += parseHours(value);
-    });
-
-    total = Math.round(total * 100) / 100;
-    const totalText = Number.isInteger(total)
-      ? total + " Std"
-      : String(total).replace(".", ",") + " Std";
-
-    document.querySelectorAll(".total, #total, .gesamtstunden, .gesamtStunden").forEach(el=>{
-      if(el.classList.contains("total") || /gesamtstunden/i.test(el.textContent || "")){
-        el.textContent = "Gesamtstunden: " + totalText;
-      }
-    });
-
-    return total;
-  }
-
-  function runAll(){
-    if(typeof calc === "function") calc();
-    if(typeof updateTotal === "function") updateTotal();
-
-    recalcTotal();
-
-    if(typeof save === "function") save();
-  }
-
-  document.addEventListener("change", function(e){
-    if(e.target?.closest?.("tr") || e.target?.matches?.("select,input")){
-      setTimeout(runAll, 0);
-      setTimeout(runAll, 100);
-    }
-  });
-
-  document.addEventListener("input", function(e){
-    if(e.target?.closest?.("tr")){
-      setTimeout(runAll, 0);
-      setTimeout(runAll, 100);
-    }
-  });
-
-  const oldOpenPreview = window.openPreview;
-  if(typeof oldOpenPreview === "function" && !oldOpenPreview.__recalcWrapped){
-    window.openPreview = function(...args){
-      runAll();
-      const result = oldOpenPreview.apply(this, args);
-      setTimeout(runAll, 80);
-      return result;
-    };
-    window.openPreview.__recalcWrapped = true;
-  }
-
-  window.addEventListener("load", function(){
-    setTimeout(runAll, 300);
-  });
-})();
-/* ================================================================ */
-
+/* Alter, doppelter Berechnungs-Code entfernt: er überschrieb den kompletten
+   Inhalt von .total (inkl. dem darin verschachtelten #sum-Element) und riss
+   dadurch dessen Verbindung zu updateTotal() ab. updateTotal() ist jetzt die
+   einzige Stelle, die Gesamtstunden berechnet - wird u.a. von autoHours()
+   nach jeder Änderung automatisch aufgerufen. */
 </script>
 </body>
 </html>
