@@ -182,6 +182,11 @@ input, select{
   padding: 9px 7px;
   border-bottom: 1px solid var(--accent);
 }
+.entryTable th:first-child{
+  position:sticky;
+  left:0;
+  z-index:6;
+}
 .entryTable td{
   padding:9px 7px;
   border-bottom:1px solid var(--border);
@@ -251,7 +256,7 @@ select.ort option{
 }
 .right{ text-align:right; }
 
-.colDay{ width:70px; }
+.colDay{ width:92px; }
 .colKehre{ width:190px; }
 .colTime{ width:120px; }
 .colStd{ width:120px; }
@@ -1145,13 +1150,6 @@ button.danger::before{ content:""; }
   max-height:74vh;
 }
 
-.previewStats{
-  display:grid;
-  grid-template-columns:repeat(3,1fr);
-  gap:10px;
-  margin-bottom:14px;
-}
-
 .previewStat{
   background:#fff;
   border:1px solid rgba(226,232,240,.95);
@@ -1376,13 +1374,6 @@ button.danger::before{ content:""; }
   overflow:auto !important;
 }
 
-.previewStats{
-  display:grid !important;
-  grid-template-columns:repeat(3,1fr) !important;
-  gap:8px !important;
-  margin-bottom:10px !important;
-}
-
 .previewStat{
   border-radius:16px !important;
   padding:9px 10px !important;
@@ -1581,10 +1572,6 @@ button.danger::before{ content:""; }
   min-width:0 !important;
   padding:3px 6px !important;
   font-size:11px !important;
-}
-
-.previewStats{
-  grid-template-columns:repeat(3,1fr) !important;
 }
 
 .previewStat{
@@ -1787,13 +1774,6 @@ button.danger::before{ content:""; }
 
 .previewMetaLine b{
   color:#3D3A87;
-}
-
-.previewStats{
-  display:grid !important;
-  grid-template-columns:repeat(3,1fr) !important;
-  gap:8px !important;
-  margin-bottom:10px !important;
 }
 
 .previewStat{
@@ -2467,160 +2447,7 @@ tbody tr:nth-child(odd){
 /* ================================================ */
 
 
-/* ===== EINTRAGEN KOMPAKT WIE VORSCHAU-BILD ===== */
-
-/* Hinweis rechts entfernen */
-.swipeHint,
-.swipe-hint,
-.scrollHint,
-.scroll-hint,
-.hintSwipe,
-.hint-swipe{
-  display:none !important;
-}
-
-.entryHead,
-.entry-head,
-.sectionHead,
-.section-head{
-  justify-content:flex-start !important;
-}
-
-/* Tabelle auf Handybreite passend machen */
-.tableWrap,
-.table-wrap,
-.entriesTableWrap,
-.entries-table-wrap{
-  overflow-x:hidden !important;
-  width:100% !important;
-}
-
-.tableWrap table,
-.table-wrap table,
-.entriesTableWrap table,
-.entries-table-wrap table,
-table.entries,
-.entries table{
-  width:100% !important;
-  min-width:0 !important;
-  table-layout:fixed !important;
-  border-collapse:collapse !important;
-}
-
-/* Spaltenbreiten damit alles sichtbar bleibt */
-table.entries th:nth-child(1),
-table.entries td:nth-child(1){
-  width:19% !important;
-}
-
-table.entries th:nth-child(2),
-table.entries td:nth-child(2){
-  width:26% !important;
-}
-
-table.entries th:nth-child(3),
-table.entries td:nth-child(3){
-  width:16% !important;
-}
-
-table.entries th:nth-child(4),
-table.entries td:nth-child(4){
-  width:16% !important;
-}
-
-table.entries th:nth-child(5),
-table.entries td:nth-child(5){
-  width:13% !important;
-}
-
-table.entries th:nth-child(6),
-table.entries td:nth-child(6){
-  width:10% !important;
-}
-
-/* Header kompakter */
-table.entries th{
-  font-size:11px !important;
-  padding:9px 4px !important;
-  white-space:nowrap !important;
-  text-align:center !important;
-}
-
-/* Zellen kompakter */
-table.entries td{
-  font-size:11px !important;
-  padding:7px 4px !important;
-  text-align:center !important;
-  vertical-align:middle !important;
-}
-
-/* Datum lesbar aber kompakt */
-table.entries td:first-child{
-  font-size:11px !important;
-  font-weight:900 !important;
-  letter-spacing:-.4px !important;
-}
-
-/* Inputs in der Tabelle kompakt */
-table.entries select,
-table.entries input{
-  width:100% !important;
-  min-width:0 !important;
-  height:34px !important;
-  padding:0 6px !important;
-  border-radius:16px !important;
-  font-size:11px !important;
-  font-weight:700 !important;
-  text-align:center !important;
-  box-sizing:border-box !important;
-}
-
-/* Kehre-Feld etwas kleiner, damit Text passt */
-table.entries td:nth-child(2) select{
-  text-align:left !important;
-  padding-left:8px !important;
-  padding-right:16px !important;
-}
-
-/* Stunden rechts kompakt */
-table.entries td:last-child{
-  font-size:11px !important;
-  font-weight:900 !important;
-  color:#64748b !important;
-}
-
-/* Scrollbar/Leiste ausblenden, weil alles sichtbar ist */
-.tableWrap::-webkit-scrollbar,
-.table-wrap::-webkit-scrollbar,
-.entriesTableWrap::-webkit-scrollbar,
-.entries-table-wrap::-webkit-scrollbar{
-  display:none !important;
-}
-
-@media(max-width:520px){
-  table.entries th{
-    font-size:10.5px !important;
-    padding:8px 3px !important;
-  }
-
-  table.entries td{
-    font-size:10.5px !important;
-    padding:6px 3px !important;
-  }
-
-  table.entries select,
-  table.entries input{
-    height:32px !important;
-    font-size:10.5px !important;
-    padding:0 5px !important;
-  }
-
-  table.entries td:first-child{
-    font-size:10.5px !important;
-  }
-}
-
-/* ============================================= */
+/* toter Code entfernt: table.entries / tableWrap Selektoren trafen nie auf reales Markup zu (echte Klasse ist .entryTable) */
 
 
 /* ===== ÜBERSICHT-KARTEN: ZENTRIERT, OHNE UNTERZEILE =====
@@ -2859,70 +2686,75 @@ table.entries td:last-child{
 }
 /* ================================================= */
 
-/* ===== KARTEN-ANSICHT STATT QUERSCROLL-TABELLE (Mobile-First) =====
-   Die Tabelle bleibt technisch eine <table>, wird aber wie eine Liste
-   aus Tages-Karten dargestellt - kein "nach rechts wischen" mehr nötig. */
-.tableScroll{ overflow:visible !important; border:none !important; background:none !important; }
-.entryTable{ min-width:0 !important; }
-.entryTable thead{ display:none !important; }
-.entryTable, .entryTable tbody{ display:block !important; width:100% !important; }
-.entryTable tr{
-  display:block !important;
-  width:100% !important;
-  background:#fff !important;
-  border:1px solid var(--border) !important;
-  border-radius:16px !important;
-  margin-bottom:10px !important;
-  padding:6px 12px !important;
-  box-shadow:0 4px 12px rgba(44,40,96,.05) !important;
+/* ===== ZURÜCK ZUR TABELLEN-ANSICHT (auf Wunsch, Karten kamen nicht gut an) =====
+   Verbesserungen gegenüber der ursprünglichen Tabelle:
+   - Datums-Spalte bleibt beim Wischen sichtbar (position:sticky)
+   - Zebra-Streifen für bessere Lesbarkeit langer Listen
+   - Nacht-/Tagschicht-Farbbalken direkt in der Datums-Zelle
+   - Kleiner ✕-Button zum Schnell-Löschen direkt in der Datums-Zelle */
+.swipeHintText{
+  font-size:11.5px;
+  font-weight:800;
+  color:var(--muted);
+  margin:2px 0 8px;
 }
-.entryTable td{
-  display:flex !important;
-  align-items:center !important;
-  justify-content:space-between !important;
-  gap:10px !important;
-  width:100% !important;
-  padding:7px 0 !important;
-  border:none !important;
-  text-align:right !important;
-  font-size:14px !important;
-}
-.entryTable td::before{
-  content:attr(data-label);
-  font-weight:1000;
-  color:var(--accent);
-  font-size:11px;
-  text-transform:uppercase;
-  letter-spacing:.4px;
-  flex:0 0 auto;
+.entryTable tbody tr:nth-child(even){
+  background:rgba(61,58,135,.035);
 }
 .entryTable td:first-child{
-  border-bottom:1px solid var(--border) !important;
-  margin:-6px -12px 6px -12px !important;
-  padding:10px 12px !important;
-  background:linear-gradient(135deg, rgba(61,58,135,.12), rgba(232,163,61,.08)) !important;
-  border-radius:15px 15px 0 0 !important;
+  position:sticky;
+  left:0;
+  z-index:5;
+  background:#fff;
+  box-shadow:2px 0 6px rgba(0,0,0,.05);
 }
-.entryTable td:first-child::before{
-  font-size:13px;
-  font-weight:1000;
-  color:var(--accent);
-  text-transform:uppercase;
-  letter-spacing:.4px;
+.entryTable tbody tr:nth-child(even) td:first-child{
+  background:#f7f7fc;
+}
+.entryTable tr.rowNight td:first-child{
+  box-shadow: inset 4px 0 0 var(--accent), 2px 0 6px rgba(0,0,0,.05);
+}
+.entryTable tr.rowDay td:first-child{
+  box-shadow: inset 4px 0 0 var(--accent2), 2px 0 6px rgba(0,0,0,.05);
+}
+.entryTable td:first-child{
+  display:flex !important;
+  align-items:center;
+  justify-content:space-between;
+  gap:6px;
+  padding-left:10px !important;
 }
 .entryTable td:first-child b{
-  font-size:18px;
-  color:var(--accent);
-  font-weight:1000;
-  letter-spacing:.2px;
+  font-size:12.5px;
+  font-weight:900;
 }
-.entryTable td select,
-.entryTable td input{
-  width:auto !important;
-  max-width:62% !important;
-  min-width:0 !important;
-  text-align:right !important;
-  flex:1 1 auto;
+.quickClearBtn{
+  border:none;
+  background:rgba(224,82,74,.12);
+  color:#e0524a;
+  width:20px;
+  height:20px;
+  min-width:20px;
+  border-radius:999px;
+  font-size:10px;
+  font-weight:900;
+  line-height:1;
+  cursor:pointer;
+  flex:0 0 auto;
+}
+.quickClearBtn:active{ background:rgba(224,82,74,.24); }
+[data-theme="dark"] .quickClearBtn{
+  background:rgba(242,114,107,.18) !important;
+  color:#f2726b !important;
+}
+[data-theme="dark"] .entryTable td:first-child{
+  background:#1e2140 !important;
+}
+[data-theme="dark"] .entryTable tbody tr:nth-child(even) td:first-child{
+  background:#242749 !important;
+}
+[data-theme="dark"] .entryTable tbody tr:nth-child(even){
+  background:rgba(255,255,255,.03) !important;
 }
 
 /* Zeilenfarbe je nach Nacht-/Tagschicht dezent markieren */
@@ -3055,7 +2887,7 @@ table.entries td:last-child{
 .themeToggle{
   position:fixed;
   right:14px;
-  bottom: calc(14px + env(safe-area-inset-bottom));
+  bottom: calc(78px + env(safe-area-inset-bottom));
   z-index:80;
   width:48px;
   height:48px;
@@ -3069,6 +2901,56 @@ table.entries td:last-child{
   box-shadow:0 8px 20px rgba(0,0,0,.18);
   cursor:pointer;
 }
+
+/* Fortschrittsanzeige + Monats-Muster-Button */
+.tableSubRow{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+  margin:8px 0 10px;
+  flex-wrap:wrap;
+}
+.progressText{
+  font-size:12.5px;
+  font-weight:900;
+  color:var(--muted);
+}
+.fillMonthBtn{
+  border:1px solid rgba(232,163,61,.45);
+  background:rgba(232,163,61,.12);
+  color:#b9701e;
+  font-weight:900;
+  font-size:12px;
+  padding:7px 11px;
+  border-radius:999px;
+  cursor:pointer;
+  white-space:nowrap;
+}
+.fillMonthBtn:active{ background:rgba(232,163,61,.22); }
+[data-theme="dark"] .fillMonthBtn{ color:var(--accent2); }
+[data-theme="dark"] .progressText{ color:#a3a6c8 !important; }
+
+/* Sticky-Gesamtstunden-Leiste am unteren Bildschirmrand */
+.stickyTotalBar{
+  position:fixed;
+  left:0; right:0; bottom:0;
+  z-index:70;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  padding: 10px 18px calc(10px + env(safe-area-inset-bottom));
+  background: var(--accent);
+  color:#fff;
+  font-weight:900;
+  font-size:14px;
+  box-shadow: 0 -8px 20px rgba(0,0,0,.18);
+}
+.stickyTotalValue{
+  font-size:18px;
+  font-weight:1000;
+}
+.wrap{ padding-bottom: 64px !important; }
 </style>
 </head>
 
@@ -3164,6 +3046,12 @@ table.entries td:last-child{
       <div class="title">Eintragen</div>
       <button type="button" id="reuseLastBtn" class="reuseLastBtn">Letzten Eintrag übernehmen</button>
     </div>
+
+    <div class="tableSubRow">
+      <div id="progressText" class="progressText">0 von 0 Tagen ausgefüllt</div>
+      <button type="button" id="fillMonthBtn" class="fillMonthBtn">Muster für Monat übernehmen</button>
+    </div>
+    <div class="swipeHintText">↔ nach rechts wischen für Beginn/Ende/Stunden</div>
 
     <div class="tableScroll">
       <table class="entryTable">
@@ -3270,6 +3158,11 @@ table.entries td:last-child{
 
 </div>
 
+<div class="stickyTotalBar" id="stickyTotalBar">
+  <span>Gesamtstunden</span>
+  <span id="stickySum" class="stickyTotalValue">0 Std</span>
+</div>
+
 <button type="button" id="themeToggle" class="themeToggle" aria-label="Dunkles/helles Design umschalten">
   <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.6A9 9 0 1 1 11.4 3 7 7 0 0 0 21 12.6z"></path></svg>
 </button>
@@ -3319,13 +3212,13 @@ const PIN_BG_FILE = "nr3.jpg";
 const STORAGE_PREFIX = "sad_stundenformular_v10:";
 
 const ORTE = [
-  { value: "H.Tierpark", short: "H.Tierpark", start: "23:00", end: "08:00", typ: "Nachtschicht" },
+  { value: "Niendorf Nord", short: "Niendorf Nord", start: "21:00", end: "06:00", typ: "Nachtschicht" },
+  { value: "Hagenbecks Tierpark", short: "Hagenbecks Tierpark", start: "23:00", end: "08:00", typ: "Nachtschicht" },
   { value: "Farmsen", short: "Farmsen", start: "22:00", end: "08:00", typ: "Nachtschicht" },
   { value: "Ochsenzoll", short: "Ochsenzoll", start: "22:00", end: "07:00", typ: "Nachtschicht" },
   { value: "Volksdorf", short: "Volksdorf", start: "21:00", end: "06:00", typ: "Nachtschicht" },
   { value: "Großhandsdorf", short: "Großhandsdorf", start: "21:00", end: "06:00", typ: "Nachtschicht" },
-  { value: "Volksdorf/Farmsen", short: "Volksdorf/Farmsen", start: "21:00", end: "08:00", typ: "Nachtschicht" },
-  { value: "Ochsenzoll (Tag)", short: "Ochsenzoll", start: "06:00", end: "18:00", typ: "Tagschicht" },
+  { value: "Volksdorf/Farmsen", short: "Volksdorf/Farmsen", start: "22:00", end: "08:00", typ: "Nachtschicht" },
   { value: "Ochsenzoll (Tag)", short: "Ochsenzoll", start: "06:00", end: "18:00", typ: "Tagschicht" }
 ];
 
@@ -3337,6 +3230,9 @@ const monthEl = document.getElementById("month");
 const yearEl  = document.getElementById("year");
 const rowsEl  = document.getElementById("rows");
 const sumEl   = document.getElementById("sum");
+const stickySumEl = document.getElementById("stickySum");
+const progressEl = document.getElementById("progressText");
+const fillMonthBtn = document.getElementById("fillMonthBtn");
 const noteEl = document.getElementById("note");
 
 const nameErrorEl = document.getElementById("nameError");
@@ -3761,7 +3657,7 @@ function build(){
     const shortDate = `${pad2(d)}.${pad2(m)}.${String(current.getFullYear()).slice(-2)}`;
 
     tr.innerHTML = `
-      <td data-label="Datum"><b>${shortDate}</b></td>
+      <td data-label="Datum"><b>${shortDate}</b><button type="button" class="quickClearBtn" title="Diesen Tag löschen">✕</button></td>
 
       <td data-label="Kehre">
         <select class="ort">
@@ -3792,8 +3688,26 @@ function build(){
     const start = tr.querySelector(".start");
     const end = tr.querySelector(".end");
     const hours = tr.querySelector(".hours");
+    const quickClear = tr.querySelector(".quickClearBtn");
 
     function activate(){ setActiveRow(tr); }
+
+    quickClear?.addEventListener("click", async (e)=>{
+      e.stopPropagation();
+      if(!ort.value && !start.value && !end.value && !hours.value) return;
+
+      const ok = await dlgConfirm(`Eintrag für ${shortDate} wirklich löschen?`, "Bestätigung");
+      if(!ok) return;
+
+      ort.selectedIndex = 0;
+      start.value = "";
+      end.value = "";
+      hours.value = "";
+      updateRowShiftClass(tr);
+      updateTotal();
+      markDirty();
+      saveState();
+    });
 
     ort.addEventListener("change", ()=>{
       activate();
@@ -3933,11 +3847,26 @@ function parseHoursFromField(v){
 
 function updateTotal(){
   let sum=0;
-  document.querySelectorAll(".hours").forEach(i=>{
-    const v=parseHoursFromField(i.value);
+  let filledDays=0;
+  const allRows = document.querySelectorAll("#rows tr");
+
+  allRows.forEach(tr=>{
+    const hrsEl = tr.querySelector(".hours");
+    const v = hrsEl ? parseHoursFromField(hrsEl.value) : NaN;
     if(!isNaN(v)) sum+=v;
+
+    const ortVal = tr.querySelector(".ort")?.value || "";
+    if(ortVal && ortVal !== "__CLEAR_ORT__") filledDays++;
   });
-  sumEl.textContent = formatHoursWithStd(sum) || "0 Std";
+
+  const totalText = formatHoursWithStd(sum) || "0 Std";
+  sumEl.textContent = totalText;
+  if(stickySumEl) stickySumEl.textContent = totalText;
+
+  if(progressEl){
+    const totalDays = allRows.length;
+    progressEl.textContent = `${filledDays} von ${totalDays} Tagen ausgefüllt`;
+  }
 }
 
 function getState(){
@@ -4540,6 +4469,54 @@ function letztenEintragUebernehmen(){
 }
 
 reuseLastBtn?.addEventListener("click", letztenEintragUebernehmen);
+
+async function musterFuerMonatUebernehmen(){
+  const rows = Array.from(document.querySelectorAll("#rows tr"));
+
+  let lastFilled = null;
+  rows.forEach(r=>{
+    const ortVal = r.querySelector(".ort").value;
+    if(ortVal && ortVal !== "__CLEAR_ORT__") lastFilled = r;
+  });
+
+  if(!lastFilled){
+    dlgAlert("Es gibt noch keinen ausgefüllten Eintrag, der als Muster dienen könnte.", "Kein Muster vorhanden");
+    return;
+  }
+
+  const emptyRows = rows.filter(r => !r.querySelector(".ort").value);
+  if(!emptyRows.length){
+    dlgAlert("Es gibt keine leeren Tage mehr in diesem Monat.", "Alles schon ausgefüllt");
+    return;
+  }
+
+  const srcOrt = lastFilled.querySelector(".ort").value;
+  const srcShort = lastFilled.querySelector(".ort").selectedOptions[0]?.getAttribute("data-short") || srcOrt;
+  const srcStart = lastFilled.querySelector(".start").value;
+  const srcEnd = lastFilled.querySelector(".end").value;
+
+  const ok = await dlgConfirm(
+    `"${srcShort}" (${srcStart}–${srcEnd}) auf alle ${emptyRows.length} leeren Tage in diesem Monat übertragen?`,
+    "Muster übernehmen"
+  );
+  if(!ok) return;
+
+  emptyRows.forEach(target=>{
+    const targetOrt = target.querySelector(".ort");
+    targetOrt.value = srcOrt;
+    applyShortLabel(targetOrt);
+    target.querySelector(".start").value = srcStart;
+    target.querySelector(".end").value = srcEnd;
+    autoHours(target);
+    updateRowShiftClass(target);
+  });
+
+  markDirty();
+  saveState();
+  updateTotal();
+}
+
+fillMonthBtn?.addEventListener("click", musterFuerMonatUebernehmen);
 
 closePrevTop.addEventListener("click", closePreview);
 closePrevBottom.addEventListener("click", closePreview);
