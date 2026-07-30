@@ -3186,7 +3186,6 @@ const ORTE = [
   { value: "Ochsenzoll (Tag)", short: "Ochsenzoll", start: "06:00", end: "18:00", typ: "Tagschicht" },
   { value: "Ochsenzoll (Tag)", short: "Ochsenzoll", start: "07:00", end: "18:00", typ: "Tagschicht" }
 ];
-
 const START_CHOICES = ["21:00","22:00","23:00"];
 const END_CHOICES   = ["06:00","07:00","08:00"];
 
@@ -3667,6 +3666,7 @@ function build(){
         hours.value = "";
 
         updateRowShiftClass(tr);
+        updateTotal();
         markDirty();
         saveState();
         return;
