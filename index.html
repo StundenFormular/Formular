@@ -2207,57 +2207,15 @@ button.danger::before{
 /* =================================================== */
 
 
-/* ===== EINGETRAGENE TAGE DEUTLICHER HERVORHEBEN ===== */
-#rows tr.rowFilled td{
-  background:linear-gradient(90deg, rgba(44,40,96,.13), rgba(74,63,145,.08)) !important;
-}
-
-#rows tr.rowFilled td:first-child{
-  position:relative;
-  color:#0f172a !important;
-  font-weight:1000 !important;
-}
-
-#rows tr.rowFilled td:first-child::before{
-  content:"";
-  position:absolute;
-  left:0;
-  top:8px;
-  bottom:8px;
-  width:5px;
-  border-radius:999px;
-  background:linear-gradient(180deg,#4A3F91,#3D3A87);
-}
-
-#rows tr.rowFilled select,
-#rows tr.rowFilled .timeField input,
-#rows tr.rowFilled .entryHours{
-  border-color:rgba(74,63,145,.65) !important;
-  background:rgba(255,255,255,.88) !important;
-  color:#0f172a !important;
-  font-weight:800 !important;
-  box-shadow:0 0 0 3px rgba(74,63,145,.06) !important;
-}
+/* ===== EINGETRAGENE TAGE DEUTLICHER HERVORHEBEN =====
+   Alte Regeln für die frühere Quer-Tabelle entfernt (der absolut
+   positionierte Balken überlappte in der Kartenansicht das Datum).
+   Die Hervorhebung von ausgefüllten/leeren Tagen übernimmt jetzt
+   die Kartenansicht weiter unten im Stylesheet. */
 
 #rows tr.rowFilled .timeField input{
   color:#3D3A87 !important;
   font-weight:900 !important;
-}
-
-#rows tr.rowEmpty td{
-  background:rgba(255,255,255,.72) !important;
-}
-
-#rows tr.rowEmpty td:first-child{
-  color:#64748b !important;
-}
-
-#rows tr.rowEmpty select,
-#rows tr.rowEmpty .timeField input,
-#rows tr.rowEmpty .entryHours{
-  border-color:#e2e8f0 !important;
-  color:#64748b !important;
-  background:#fff !important;
 }
 
 #rows tr{
@@ -2940,7 +2898,23 @@ table.entries td:last-child{
 }
 .entryTable td:first-child{
   border-bottom:1px solid var(--border) !important;
-  margin-bottom:2px;
+  margin:-6px -12px 6px -12px !important;
+  padding:10px 12px !important;
+  background:linear-gradient(135deg, rgba(61,58,135,.12), rgba(232,163,61,.08)) !important;
+  border-radius:15px 15px 0 0 !important;
+}
+.entryTable td:first-child::before{
+  font-size:13px;
+  font-weight:1000;
+  color:var(--accent);
+  text-transform:uppercase;
+  letter-spacing:.4px;
+}
+.entryTable td:first-child b{
+  font-size:18px;
+  color:var(--accent);
+  font-weight:1000;
+  letter-spacing:.2px;
 }
 .entryTable td select,
 .entryTable td input{
@@ -3345,13 +3319,13 @@ const PIN_BG_FILE = "nr3.jpg";
 const STORAGE_PREFIX = "sad_stundenformular_v10:";
 
 const ORTE = [
-  { value: "Niendorf Nord", short: "Niendorf Nord", start: "21:00", end: "06:00", typ: "Nachtschicht" },
-  { value: "Hagenbecks Tierpark", short: "Hagenbecks Tierpark", start: "23:00", end: "08:00", typ: "Nachtschicht" },
+  { value: "H.Tierpark", short: "H.Tierpark", start: "23:00", end: "08:00", typ: "Nachtschicht" },
   { value: "Farmsen", short: "Farmsen", start: "22:00", end: "08:00", typ: "Nachtschicht" },
   { value: "Ochsenzoll", short: "Ochsenzoll", start: "22:00", end: "07:00", typ: "Nachtschicht" },
   { value: "Volksdorf", short: "Volksdorf", start: "21:00", end: "06:00", typ: "Nachtschicht" },
   { value: "Großhandsdorf", short: "Großhandsdorf", start: "21:00", end: "06:00", typ: "Nachtschicht" },
-  { value: "Volksdorf/Farmsen", short: "Volksdorf/Farmsen", start: "22:00", end: "08:00", typ: "Nachtschicht" },
+  { value: "Volksdorf/Farmsen", short: "Volksdorf/Farmsen", start: "21:00", end: "08:00", typ: "Nachtschicht" },
+  { value: "Ochsenzoll (Tag)", short: "Ochsenzoll", start: "06:00", end: "18:00", typ: "Tagschicht" },
   { value: "Ochsenzoll (Tag)", short: "Ochsenzoll", start: "06:00", end: "18:00", typ: "Tagschicht" }
 ];
 
@@ -4209,20 +4183,6 @@ function openPreview(){
         <div>
           <div class="previewStatLabel">Kehren</div>
           <div class="previewStatValue">${routeText}</div>
-        </div>
-      </div>
-      <div class="previewStat">
-        <div class="previewStatIcon" style="background:linear-gradient(135deg,#2C2860,#3D3A87);">🌙</div>
-        <div>
-          <div class="previewStatLabel">Nachtschicht</div>
-          <div class="previewStatValue">${formatHoursSmart(nightSum) || "0"} h</div>
-        </div>
-      </div>
-      <div class="previewStat">
-        <div class="previewStatIcon" style="background:linear-gradient(135deg,#E8A33D,#c97f1b);">☀️</div>
-        <div>
-          <div class="previewStatLabel">Tagschicht</div>
-          <div class="previewStatValue">${formatHoursSmart(daySum) || "0"} h</div>
         </div>
       </div>
     </div>
