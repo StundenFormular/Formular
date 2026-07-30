@@ -182,11 +182,6 @@ input, select{
   padding: 9px 7px;
   border-bottom: 1px solid var(--accent);
 }
-.entryTable th:first-child{
-  position:sticky;
-  left:0;
-  z-index:6;
-}
 .entryTable td{
   padding:9px 7px;
   border-bottom:1px solid var(--border);
@@ -256,7 +251,7 @@ select.ort option{
 }
 .right{ text-align:right; }
 
-.colDay{ width:92px; }
+.colDay{ width:70px; }
 .colKehre{ width:190px; }
 .colTime{ width:120px; }
 .colStd{ width:120px; }
@@ -2702,50 +2697,23 @@ tbody tr:nth-child(odd){
   background:rgba(61,58,135,.035);
 }
 .entryTable td:first-child{
-  position:sticky;
-  left:0;
-  z-index:5;
   background:#fff;
-  box-shadow:2px 0 6px rgba(0,0,0,.05);
 }
 .entryTable tbody tr:nth-child(even) td:first-child{
   background:#f7f7fc;
 }
 .entryTable tr.rowNight td:first-child{
-  box-shadow: inset 4px 0 0 var(--accent), 2px 0 6px rgba(0,0,0,.05);
+  box-shadow: inset 4px 0 0 var(--accent);
 }
 .entryTable tr.rowDay td:first-child{
-  box-shadow: inset 4px 0 0 var(--accent2), 2px 0 6px rgba(0,0,0,.05);
+  box-shadow: inset 4px 0 0 var(--accent2);
 }
 .entryTable td:first-child{
-  display:flex !important;
-  align-items:center;
-  justify-content:space-between;
-  gap:6px;
   padding-left:10px !important;
 }
 .entryTable td:first-child b{
   font-size:12.5px;
   font-weight:900;
-}
-.quickClearBtn{
-  border:none;
-  background:rgba(224,82,74,.12);
-  color:#e0524a;
-  width:20px;
-  height:20px;
-  min-width:20px;
-  border-radius:999px;
-  font-size:10px;
-  font-weight:900;
-  line-height:1;
-  cursor:pointer;
-  flex:0 0 auto;
-}
-.quickClearBtn:active{ background:rgba(224,82,74,.24); }
-[data-theme="dark"] .quickClearBtn{
-  background:rgba(242,114,107,.18) !important;
-  color:#f2726b !important;
 }
 [data-theme="dark"] .entryTable td:first-child{
   background:#1e2140 !important;
@@ -2760,20 +2728,6 @@ tbody tr:nth-child(odd){
 /* Zeilenfarbe je nach Nacht-/Tagschicht dezent markieren */
 .entryTable tr.rowNight{ border-left:4px solid var(--accent) !important; }
 .entryTable tr.rowDay{ border-left:4px solid var(--accent2) !important; }
-
-/* "Letzten Eintrag übernehmen"-Button */
-.reuseLastBtn{
-  border:1px solid rgba(61,58,135,.3);
-  background:rgba(61,58,135,.08);
-  color:var(--accent);
-  font-weight:900;
-  font-size:12.5px;
-  padding:8px 12px;
-  border-radius:999px;
-  cursor:pointer;
-  white-space:nowrap;
-}
-.reuseLastBtn:active{ background:rgba(61,58,135,.16); }
 
 /* Undo-Toast nach "Alles löschen" */
 .undoToast{
@@ -2887,10 +2841,10 @@ tbody tr:nth-child(odd){
 .themeToggle{
   position:fixed;
   right:14px;
-  bottom: calc(78px + env(safe-area-inset-bottom));
+  bottom: calc(70px + env(safe-area-inset-bottom));
   z-index:80;
-  width:48px;
-  height:48px;
+  width:36px;
+  height:36px;
   border-radius:999px;
   border:1px solid var(--border);
   background:var(--card);
@@ -2898,7 +2852,7 @@ tbody tr:nth-child(odd){
   display:flex;
   align-items:center;
   justify-content:center;
-  box-shadow:0 8px 20px rgba(0,0,0,.18);
+  box-shadow:0 6px 14px rgba(0,0,0,.16);
   cursor:pointer;
 }
 
@@ -2951,6 +2905,15 @@ tbody tr:nth-child(odd){
   font-weight:1000;
 }
 .wrap{ padding-bottom: 64px !important; }
+/* Monatsspalte breiter als Jahresspalte, damit lange Monatsnamen passen */
+.periodGrid{
+  grid-template-columns: 1.35fr 1fr !important;
+}
+#month{
+  font-size:15px !important;
+  padding-left:10px !important;
+  padding-right:6px !important;
+}
 </style>
 </head>
 
@@ -3044,7 +3007,6 @@ tbody tr:nth-child(odd){
   <div class="tableCard">
     <div class="tableHeadRow">
       <div class="title">Eintragen</div>
-      <button type="button" id="reuseLastBtn" class="reuseLastBtn">Letzten Eintrag übernehmen</button>
     </div>
 
     <div class="tableSubRow">
@@ -3164,7 +3126,7 @@ tbody tr:nth-child(odd){
 </div>
 
 <button type="button" id="themeToggle" class="themeToggle" aria-label="Dunkles/helles Design umschalten">
-  <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.6A9 9 0 1 1 11.4 3 7 7 0 0 0 21 12.6z"></path></svg>
+  <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.8-7 10-7 10 7 10 7-3.8 7-10 7-10-7-10-7z"></path><circle cx="12" cy="12" r="3"></circle></svg>
 </button>
 
 <script>
@@ -3240,7 +3202,6 @@ const nameErrorEl = document.getElementById("nameError");
 const pdfBtn  = document.getElementById("pdfBtn");
 const sendBtn = document.getElementById("sendBtn");
 const delBtn  = document.getElementById("delBtn");
-const reuseLastBtn = document.getElementById("reuseLastBtn");
 
 const modalBack = document.getElementById("modalBack");
 const previewTitle = document.getElementById("previewTitle");
@@ -3657,7 +3618,7 @@ function build(){
     const shortDate = `${pad2(d)}.${pad2(m)}.${String(current.getFullYear()).slice(-2)}`;
 
     tr.innerHTML = `
-      <td data-label="Datum"><b>${shortDate}</b><button type="button" class="quickClearBtn" title="Diesen Tag löschen">✕</button></td>
+      <td data-label="Datum"><b>${shortDate}</b></td>
 
       <td data-label="Kehre">
         <select class="ort">
@@ -3688,26 +3649,8 @@ function build(){
     const start = tr.querySelector(".start");
     const end = tr.querySelector(".end");
     const hours = tr.querySelector(".hours");
-    const quickClear = tr.querySelector(".quickClearBtn");
 
     function activate(){ setActiveRow(tr); }
-
-    quickClear?.addEventListener("click", async (e)=>{
-      e.stopPropagation();
-      if(!ort.value && !start.value && !end.value && !hours.value) return;
-
-      const ok = await dlgConfirm(`Eintrag für ${shortDate} wirklich löschen?`, "Bestätigung");
-      if(!ok) return;
-
-      ort.selectedIndex = 0;
-      start.value = "";
-      end.value = "";
-      hours.value = "";
-      updateRowShiftClass(tr);
-      updateTotal();
-      markDirty();
-      saveState();
-    });
 
     ort.addEventListener("change", ()=>{
       activate();
@@ -4419,57 +4362,6 @@ pdfBtn?.addEventListener("click", exportPDF);
 sendBtn.addEventListener("click", openPreview);
 delBtn.addEventListener("click", allesLoeschen);
 
-function letztenEintragUebernehmen(){
-  const rows = Array.from(document.querySelectorAll("#rows tr"));
-
-  let lastFilled = null;
-  rows.forEach(r=>{
-    const ortVal = r.querySelector(".ort").value;
-    if(ortVal && ortVal !== "__CLEAR_ORT__") lastFilled = r;
-  });
-
-  if(!lastFilled){
-    dlgAlert("Es gibt noch keinen ausgefüllten Eintrag zum Übernehmen.", "Kein Eintrag vorhanden");
-    return;
-  }
-
-  const active = document.querySelector(".trActive");
-  let target = null;
-
-  if(active && active !== lastFilled && !active.querySelector(".ort").value){
-    target = active;
-  } else {
-    const idx = rows.indexOf(lastFilled);
-    for(let i=idx+1; i<rows.length; i++){
-      if(!rows[i].querySelector(".ort").value){ target = rows[i]; break; }
-    }
-  }
-
-  if(!target){
-    dlgAlert("Es gibt keinen leeren Tag danach zum Übernehmen.", "Kein freier Tag");
-    return;
-  }
-
-  const srcOrt = lastFilled.querySelector(".ort").value;
-  const srcStart = lastFilled.querySelector(".start").value;
-  const srcEnd = lastFilled.querySelector(".end").value;
-
-  const targetOrt = target.querySelector(".ort");
-  targetOrt.value = srcOrt;
-  applyShortLabel(targetOrt);
-  target.querySelector(".start").value = srcStart;
-  target.querySelector(".end").value = srcEnd;
-
-  autoHours(target);
-  updateRowShiftClass(target);
-  markDirty();
-  saveState();
-  setActiveRow(target);
-  target.scrollIntoView({ behavior:"smooth", block:"center" });
-}
-
-reuseLastBtn?.addEventListener("click", letztenEintragUebernehmen);
-
 async function musterFuerMonatUebernehmen(){
   const rows = Array.from(document.querySelectorAll("#rows tr"));
 
@@ -4924,30 +4816,6 @@ timeSheetBack.addEventListener("click",(e)=>{ if(e.target===timeSheetBack) close
     table.insertAdjacentElement("afterend", box);
   }
 
-  function replacePersonalPinIcon(){
-    /* Direkter DOM-Fallback: suche Text "Personal-PIN" und ersetze Icon davor */
-    document.querySelectorAll("body *").forEach(el=>{
-      if((el.textContent || "").trim().includes("Personal-PIN")){
-        const prev = el.previousElementSibling;
-        if(prev && prev.children.length <= 2 && prev.offsetWidth <= 80 && prev.offsetHeight <= 80){
-          prev.textContent = "🔑";
-          prev.style.color = "#2C2860";
-          prev.style.fontSize = "28px";
-          prev.style.display = "flex";
-          prev.style.alignItems = "center";
-          prev.style.justifyContent = "center";
-        }
-
-        const first = el.querySelector("span, i, .icon, .miniIcon, .sectionIcon");
-        if(first){
-          first.textContent = "🔑";
-          first.style.color = "#2C2860";
-          first.style.fontSize = "28px";
-        }
-      }
-    });
-  }
-
   function removeVon31(){
     document.querySelectorAll(".previewStat, .previewStats .previewStat").forEach(card=>{
       card.innerHTML = card.innerHTML
@@ -4963,12 +4831,10 @@ timeSheetBack.addEventListener("click",(e)=>{ if(e.target===timeSheetBack) close
 
   document.getElementById("month")?.addEventListener("change", ()=>{
     setTimeout(loadNoteForMonth, 0);
-    setTimeout(replacePersonalPinIcon, 50);
   });
 
   document.getElementById("year")?.addEventListener("change", ()=>{
     setTimeout(loadNoteForMonth, 0);
-    setTimeout(replacePersonalPinIcon, 50);
   });
 
   document.getElementById("pin")?.addEventListener("input", ()=>{
@@ -5004,8 +4870,6 @@ timeSheetBack.addEventListener("click",(e)=>{ if(e.target===timeSheetBack) close
   }
 
   setTimeout(loadNoteForMonth, 0);
-  setTimeout(replacePersonalPinIcon, 100);
-  setInterval(replacePersonalPinIcon, 1000);
 })();
 /* ================================================== */
 
