@@ -3101,21 +3101,6 @@ const ORTE = [
 const START_CHOICES = ["21:00","22:00","23:00"];
 const END_CHOICES   = ["06:00","07:00","08:00"];
 
-// Eindeutige Standorte aus ORTE für den Ausrüstungs-Check-Dropdown
-// (ORTE enthält je Standort mehrere Einträge für Nacht-/Tagschicht-Zeiten)
-(function fillEquipStandorte(){
-  if(!equipStandortEl) return;
-  const seen = new Set();
-  ORTE.forEach(o=>{
-    if(seen.has(o.short)) return;
-    seen.add(o.short);
-    const opt = document.createElement("option");
-    opt.value = o.short;
-    opt.textContent = o.short;
-    equipStandortEl.appendChild(opt);
-  });
-})();
-
 const nameEl = document.getElementById("name");
 const monthEl = document.getElementById("month");
 const yearEl  = document.getElementById("year");
@@ -3172,6 +3157,21 @@ const equipErrorEl = document.getElementById("equipError");
 const equipStatusEl = document.getElementById("equipStatus");
 
 let equipSelectedFile = null;
+
+// Eindeutige Standorte aus ORTE für den Ausrüstungs-Check-Dropdown
+// (ORTE enthält je Standort mehrere Einträge für Nacht-/Tagschicht-Zeiten)
+(function fillEquipStandorte(){
+  if(!equipStandortEl) return;
+  const seen = new Set();
+  ORTE.forEach(o=>{
+    if(seen.has(o.short)) return;
+    seen.add(o.short);
+    const opt = document.createElement("option");
+    opt.value = o.short;
+    opt.textContent = o.short;
+    equipStandortEl.appendChild(opt);
+  });
+})();
 
 const dlgBack = document.getElementById("dlgBack");
 const dlgTitleEl = document.getElementById("dlgTitle");
