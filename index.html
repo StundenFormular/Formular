@@ -2838,6 +2838,45 @@ tbody tr:nth-child(odd){
   </div>
 </div>
 
+<!-- Ausrüstungs-Check Overlay -->
+<div class="pinBack" id="equipBack">
+  <div class="pinCard">
+    <div class="pinTitle">Ausrüstungs-Check</div>
+    <p class="pinHint">Bitte Namen, Standort wählen und ein Foto eurer Ausrüstung (Stiefel, Warnweste) hochladen, um fortzufahren.</p>
+
+    <div class="pinRow" style="margin-bottom:10px;">
+      <input id="equipMitarbeiter" type="text" autocomplete="off" placeholder="Dein Name">
+    </div>
+
+    <div class="pinRow" style="margin-bottom:10px;">
+      <select id="equipStandort" style="flex:1; padding:12px 14px; border-radius:16px; border:1px solid rgba(255,255,255,.16); background:rgba(15,23,42,.35); color:#fff; font-size:16px;"></select>
+    </div>
+
+    <input type="file" id="equipFoto" accept="image/*" capture="environment" style="display:none;">
+    <button class="pinOk" id="equipFotoBtn" type="button" style="width:100%; margin-bottom:8px;">📷 Foto aufnehmen</button>
+    <button class="pinOk" id="equipUploadBtn" type="button" style="width:100%; opacity:.55;" disabled>Hochladen &amp; weiter</button>
+
+    <div class="pinError" id="equipError">Fehler beim Hochladen.</div>
+    <div id="equipStatus" style="margin-top:10px; font-size:13px; color:rgba(255,255,255,.85);"></div>
+    <button class="pinOk" id="equipBackBtn" type="button" style="width:100%; margin-top:10px; background:rgba(255,255,255,.12);">← Zurück zur Auswahl</button>
+  </div>
+</div>
+
+<!-- Auswahlbildschirm: Stundenformular (monatlich) vs. Ausrüstungs-Check (täglich) -->
+<div class="pinBack" id="chooserBack">
+  <div class="pinCard">
+    <div class="pinTitle">Was möchtest du tun?</div>
+    <p class="pinHint">Stundenformular wird einmal im Monat ausgefüllt, der Ausrüstungs-Check jeden Tag.</p>
+
+    <button class="pinOk" id="chooserFormularBtn" type="button" style="width:100%; margin-bottom:10px; text-align:left; padding:16px;">
+      📋 Stundenformular<br><span style="font-weight:400; font-size:12px; opacity:.8;">Monatliche Zeiterfassung</span>
+    </button>
+    <button class="pinOk" id="chooserEquipBtn" type="button" style="width:100%; text-align:left; padding:16px;">
+      📷 Ausrüstungs-Check<br><span style="font-weight:400; font-size:12px; opacity:.8;" id="chooserEquipSub">Tägliche Foto-Kontrolle</span>
+    </button>
+  </div>
+</div>
+
 <div class="dlgBack" id="dlgBack">
   <div class="dlg" role="dialog" aria-modal="true" aria-labelledby="dlgTitle">
     <div class="dlgTop" id="dlgTitle">Hinweis</div>
@@ -2862,13 +2901,14 @@ tbody tr:nth-child(odd){
 <input id="nativeTime" type="time" style="position:fixed; left:-9999px; width:1px; height:1px; opacity:0;" />
 <!-- =========================== -->
 
-<div class="wrap">
+<div class="wrap" id="mainWrap" style="display:none;">
 
   <div class="topbar">
     <div class="btnrow">
       <button class="send" id="sendBtn" type="button">Übersicht prüfen</button>
       <button class="danger" id="delBtn" type="button">Alles löschen</button>
     </div>
+    <button type="button" id="backToChooserBtn" style="width:100%; margin-top:8px; background:#fff; border:1px solid var(--border);">← Zurück zur Auswahl</button>
   </div>
 
   <div class="card userCard">
@@ -3061,6 +3101,21 @@ const ORTE = [
 const START_CHOICES = ["21:00","22:00","23:00"];
 const END_CHOICES   = ["06:00","07:00","08:00"];
 
+// Eindeutige Standorte aus ORTE für den Ausrüstungs-Check-Dropdown
+// (ORTE enthält je Standort mehrere Einträge für Nacht-/Tagschicht-Zeiten)
+(function fillEquipStandorte(){
+  if(!equipStandortEl) return;
+  const seen = new Set();
+  ORTE.forEach(o=>{
+    if(seen.has(o.short)) return;
+    seen.add(o.short);
+    const opt = document.createElement("option");
+    opt.value = o.short;
+    opt.textContent = o.short;
+    equipStandortEl.appendChild(opt);
+  });
+})();
+
 const nameEl = document.getElementById("name");
 const monthEl = document.getElementById("month");
 const yearEl  = document.getElementById("year");
@@ -3099,6 +3154,24 @@ const pinBack = document.getElementById("pinBack");
 const pinInput = document.getElementById("pinInput");
 const pinBtn = document.getElementById("pinBtn");
 const pinError = document.getElementById("pinError");
+
+// ===== Ausrüstungs-Check =====
+// URL/Token nach Deployment des Google Apps Script eintragen (siehe
+// AusruestungsCheck_Backend.gs). Solange hier "HIER_" drinsteht, wird
+// der Check übersprungen, damit die App lokal weiter testbar bleibt.
+const EQUIP_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzNrtg6-hoAv_kWkuE_noqRtlRYYJAzQMxJnpnEbyP3b4JjlHyG4vPVsuqdC45xrPe9/exec";
+const EQUIP_API_TOKEN   = "Zk0sUhvBN2XU13DGgeAwhm-H-rtmBcK1OwJR7NLc1VI";
+
+const equipBack = document.getElementById("equipBack");
+const equipMitarbeiterEl = document.getElementById("equipMitarbeiter");
+const equipStandortEl = document.getElementById("equipStandort");
+const equipFotoInput = document.getElementById("equipFoto");
+const equipFotoBtn = document.getElementById("equipFotoBtn");
+const equipUploadBtn = document.getElementById("equipUploadBtn");
+const equipErrorEl = document.getElementById("equipError");
+const equipStatusEl = document.getElementById("equipStatus");
+
+let equipSelectedFile = null;
 
 const dlgBack = document.getElementById("dlgBack");
 const dlgTitleEl = document.getElementById("dlgTitle");
@@ -4190,10 +4263,16 @@ async function sendenDirekt(){
 }
 
 function requirePin(){
-  if(!APP_PIN || APP_PIN.trim()==="") return;
+  if(!APP_PIN || APP_PIN.trim()===""){
+    showChooser();
+    return;
+  }
 
   const ok = sessionStorage.getItem("sad_pin_ok")==="1";
-  if(ok) return;
+  if(ok){
+    showChooser();
+    return;
+  }
 
   pinBack.style.display="flex";
   setTimeout(()=>pinInput.focus(), 50);
@@ -4205,6 +4284,7 @@ function requirePin(){
       pinBack.style.display="none";
       pinError.style.display="none";
       pinInput.value="";
+      showChooser();
     }else{
       pinError.style.display="block";
     }
@@ -4215,6 +4295,117 @@ function requirePin(){
     if(e.key==="Enter") check();
   });
 }
+
+// Ein Kalendertag = ein Check-Zwang; danach bleibt es für den Rest
+// des Tages (Session) freigeschaltet.
+function equipTodayKey(){
+  const d = new Date();
+  return "sad_equip_ok_" + d.getFullYear() + "-" + String(d.getMonth()+1).padStart(2,"0") + "-" + String(d.getDate()).padStart(2,"0");
+}
+
+function equipDoneToday(){
+  return sessionStorage.getItem(equipTodayKey()) === "1";
+}
+
+const chooserBack = document.getElementById("chooserBack");
+const chooserFormularBtn = document.getElementById("chooserFormularBtn");
+const chooserEquipBtn = document.getElementById("chooserEquipBtn");
+const chooserEquipSub = document.getElementById("chooserEquipSub");
+const mainWrap = document.getElementById("mainWrap");
+const backToChooserBtn = document.getElementById("backToChooserBtn");
+const equipBackBtn = document.getElementById("equipBackBtn");
+
+function showChooser(){
+  mainWrap.style.display = "none";
+  equipBack.style.display = "none";
+  chooserEquipSub.textContent = equipDoneToday()
+    ? "✔ heute bereits erledigt"
+    : "Tägliche Foto-Kontrolle";
+  chooserBack.style.display = "flex";
+}
+
+function openStundenformular(){
+  chooserBack.style.display = "none";
+  mainWrap.style.display = "block";
+}
+
+function openEquipCheck(){
+  // Backend noch nicht eingerichtet -> nichts zu öffnen
+  if(!EQUIP_WEB_APP_URL || EQUIP_WEB_APP_URL.indexOf("HIER_") === 0){
+    dlgAlert("Der Ausrüstungs-Check ist noch nicht eingerichtet.", "Hinweis");
+    return;
+  }
+  chooserBack.style.display = "none";
+  equipBack.style.display = "flex";
+}
+
+chooserFormularBtn.addEventListener("click", openStundenformular);
+chooserEquipBtn.addEventListener("click", openEquipCheck);
+backToChooserBtn.addEventListener("click", showChooser);
+equipBackBtn.addEventListener("click", showChooser);
+
+function equipFileToBase64(file){
+  return new Promise((resolve, reject)=>{
+    const reader = new FileReader();
+    reader.onload = ()=> resolve(reader.result.split(",")[1]);
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
+
+equipFotoBtn?.addEventListener("click", ()=> equipFotoInput.click());
+
+equipFotoInput?.addEventListener("change", (e)=>{
+  equipSelectedFile = e.target.files[0] || null;
+  equipUploadBtn.disabled = !equipSelectedFile;
+  equipUploadBtn.style.opacity = equipSelectedFile ? "1" : ".55";
+  equipStatusEl.textContent = equipSelectedFile ? "Foto bereit. Auf \u201eHochladen & weiter\u201c tippen." : "";
+  equipErrorEl.style.display = "none";
+});
+
+equipUploadBtn?.addEventListener("click", async ()=>{
+  if(!equipSelectedFile) return;
+
+  const mitarbeiter = (equipMitarbeiterEl.value || "").trim();
+  if(!mitarbeiter){
+    equipErrorEl.textContent = "Bitte Namen eingeben.";
+    equipErrorEl.style.display = "block";
+    return;
+  }
+  const standort = equipStandortEl.value || "unbekannt";
+
+  equipUploadBtn.disabled = true;
+  equipStatusEl.textContent = "Wird hochgeladen...";
+  equipErrorEl.style.display = "none";
+
+  try{
+    const base64 = await equipFileToBase64(equipSelectedFile);
+    const res = await fetch(EQUIP_WEB_APP_URL, {
+      method: "POST",
+      body: JSON.stringify({
+        token: EQUIP_API_TOKEN,
+        standort,
+        mitarbeiter,
+        imageBase64: base64,
+        mimeType: equipSelectedFile.type
+      })
+    });
+    const result = await res.json();
+    if(result.status === "success"){
+      sessionStorage.setItem(equipTodayKey(), "1");
+      equipStatusEl.textContent = "";
+      showChooser();
+    }else{
+      equipErrorEl.textContent = "Fehler: " + result.message;
+      equipErrorEl.style.display = "block";
+      equipUploadBtn.disabled = false;
+    }
+  }catch(err){
+    equipErrorEl.textContent = "Fehler beim Hochladen: " + err.message;
+    equipErrorEl.style.display = "block";
+    equipUploadBtn.disabled = false;
+  }
+});
 
 
 function updateEntryRowHighlight(){
