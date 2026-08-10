@@ -4367,10 +4367,46 @@ function getPositionSafe(){
   });
 }
 
-// Zeichnet Datum/Uhrzeit + GPS-Koordinaten direkt aufs Foto (wie bei
+// Wandelt Koordinaten in eine lesbare Adresse um (Straße + Hausnr., Ort).
+// Nutzt den kostenlosen OpenStreetMap-Dienst, kein API-Key nötig.
+// Gibt null zurück, wenn's nicht klappt (z.B. kein Netz, Timeout) -
+// dann wird einfach auf die reinen Koordinaten zurückgefallen.
+async function reverseGeocode(lat, lon){
+  try{
+    const controller = new AbortController();
+    const timeoutId = setTimeout(()=> controller.abort(), 4000);
+
+    const res = await fetch(
+      `https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lon}&zoom=18&addressdetails=1`,
+      { signal: controller.signal }
+    );
+    clearTimeout(timeoutId);
+    if(!res.ok) return null;
+
+    const data = await res.json();
+    const a = data && data.address;
+    if(!a) return null;
+
+    const strasse = a.road || a.pedestrian || a.footway || "";
+    const hausnr = a.house_number || "";
+    const ort = a.city || a.town || a.village || a.suburb || a.municipality || "";
+
+    const parts = [];
+    if(strasse) parts.push(hausnr ? `${strasse} ${hausnr}` : strasse);
+    if(ort) parts.push(ort);
+
+    if(parts.length) return parts.join(", ");
+    return data.display_name || null;
+  }catch(_){
+    return null;
+  }
+}
+
+// Zeichnet Datum/Uhrzeit + Standort direkt aufs Foto (wie bei
 // klassischen Zeitstempel-Kamera-Apps), gibt einen neuen JPEG-Blob zurück.
 async function stampPhoto(file){
   const pos = await getPositionSafe();
+  const address = pos ? await reverseGeocode(pos.coords.latitude, pos.coords.longitude) : null;
 
   const img = await new Promise((resolve, reject)=>{
     const url = URL.createObjectURL(file);
@@ -4391,7 +4427,7 @@ async function stampPhoto(file){
   const timeStr = now.toLocaleTimeString("de-DE", { timeZone: "Europe/Berlin", hour: "2-digit", minute: "2-digit", second: "2-digit" });
   const line1 = `${dateStr}  ${timeStr}`;
   const line2 = pos
-    ? `📍 ${pos.coords.latitude.toFixed(5)}, ${pos.coords.longitude.toFixed(5)}`
+    ? (address ? `📍 ${address}` : `📍 ${pos.coords.latitude.toFixed(5)}, ${pos.coords.longitude.toFixed(5)}`)
     : "📍 Standort nicht verfügbar";
 
   const fontSize = Math.max(20, Math.round(canvas.width * 0.028));
