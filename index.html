@@ -2853,6 +2853,7 @@ tbody tr:nth-child(odd){
     </div>
 
     <input type="file" id="equipFoto" accept="image/*" capture="environment" style="display:none;">
+    <canvas id="equipCanvas" style="display:none;"></canvas>
     <button class="pinOk" id="equipFotoBtn" type="button" style="width:100%; margin-bottom:8px;">📷 Foto aufnehmen</button>
     <button class="pinOk" id="equipUploadBtn" type="button" style="width:100%; opacity:.55;" disabled>Hochladen &amp; weiter</button>
 
@@ -4353,14 +4354,100 @@ function equipFileToBase64(file){
   });
 }
 
+// Holt einmalig den GPS-Standort, gibt bei Ablehnung/Timeout/fehlender
+// Unterstützung einfach null zurück (bricht den Foto-Prozess nicht ab).
+function getPositionSafe(){
+  return new Promise((resolve)=>{
+    if(!navigator.geolocation){ resolve(null); return; }
+    navigator.geolocation.getCurrentPosition(
+      pos => resolve(pos),
+      ()  => resolve(null),
+      { enableHighAccuracy: true, timeout: 6000, maximumAge: 0 }
+    );
+  });
+}
+
+// Zeichnet Datum/Uhrzeit + GPS-Koordinaten direkt aufs Foto (wie bei
+// klassischen Zeitstempel-Kamera-Apps), gibt einen neuen JPEG-Blob zurück.
+async function stampPhoto(file){
+  const pos = await getPositionSafe();
+
+  const img = await new Promise((resolve, reject)=>{
+    const url = URL.createObjectURL(file);
+    const image = new Image();
+    image.onload = ()=>{ URL.revokeObjectURL(url); resolve(image); };
+    image.onerror = ()=>{ URL.revokeObjectURL(url); reject(new Error("Bild konnte nicht geladen werden")); };
+    image.src = url;
+  });
+
+  const canvas = document.getElementById("equipCanvas");
+  canvas.width = img.naturalWidth;
+  canvas.height = img.naturalHeight;
+  const ctx = canvas.getContext("2d");
+  ctx.drawImage(img, 0, 0);
+
+  const now = new Date();
+  const dateStr = now.toLocaleDateString("de-DE", { timeZone: "Europe/Berlin" });
+  const timeStr = now.toLocaleTimeString("de-DE", { timeZone: "Europe/Berlin", hour: "2-digit", minute: "2-digit", second: "2-digit" });
+  const line1 = `${dateStr}  ${timeStr}`;
+  const line2 = pos
+    ? `📍 ${pos.coords.latitude.toFixed(5)}, ${pos.coords.longitude.toFixed(5)}`
+    : "📍 Standort nicht verfügbar";
+
+  const fontSize = Math.max(20, Math.round(canvas.width * 0.028));
+  const marginX = fontSize * 0.7;
+  const marginY = fontSize * 0.7;
+  const lineGap = fontSize * 1.3;
+
+  ctx.font = `bold ${fontSize}px Arial, sans-serif`;
+  ctx.textBaseline = "bottom";
+  ctx.lineWidth = fontSize * 0.14;
+  ctx.strokeStyle = "rgba(0,0,0,0.85)";
+  ctx.fillStyle = "#FFD54A";
+
+  ctx.strokeText(line2, marginX, canvas.height - marginY);
+  ctx.fillText(line2, marginX, canvas.height - marginY);
+  ctx.strokeText(line1, marginX, canvas.height - marginY - lineGap);
+  ctx.fillText(line1, marginX, canvas.height - marginY - lineGap);
+
+  const blob = await new Promise((resolve, reject)=>{
+    canvas.toBlob((b)=> b ? resolve(b) : reject(new Error("Konnte Foto nicht verarbeiten")), "image/jpeg", 0.9);
+  });
+
+  return { blob, hasLocation: !!pos };
+}
+
 equipFotoBtn?.addEventListener("click", ()=> equipFotoInput.click());
 
-equipFotoInput?.addEventListener("change", (e)=>{
-  equipSelectedFile = e.target.files[0] || null;
-  equipUploadBtn.disabled = !equipSelectedFile;
-  equipUploadBtn.style.opacity = equipSelectedFile ? "1" : ".55";
-  equipStatusEl.textContent = equipSelectedFile ? "Foto bereit. Auf \u201eHochladen & weiter\u201c tippen." : "";
+equipFotoInput?.addEventListener("change", async (e)=>{
+  const rawFile = e.target.files[0] || null;
+  if(!rawFile){
+    equipSelectedFile = null;
+    equipUploadBtn.disabled = true;
+    equipUploadBtn.style.opacity = ".55";
+    equipStatusEl.textContent = "";
+    return;
+  }
+
   equipErrorEl.style.display = "none";
+  equipUploadBtn.disabled = true;
+  equipStatusEl.textContent = "Foto wird mit Zeitstempel & Standort versehen...";
+
+  try{
+    const { blob, hasLocation } = await stampPhoto(rawFile);
+    equipSelectedFile = blob;
+    equipUploadBtn.disabled = false;
+    equipUploadBtn.style.opacity = "1";
+    equipStatusEl.textContent = hasLocation
+      ? "Foto bereit (mit Zeitstempel & Standort)."
+      : "Foto bereit (mit Zeitstempel, Standort nicht verfügbar).";
+  }catch(err){
+    // Falls Stempeln fehlschlägt (z.B. Browser-Einschränkung), Original weiterverwenden
+    equipSelectedFile = rawFile;
+    equipUploadBtn.disabled = false;
+    equipUploadBtn.style.opacity = "1";
+    equipStatusEl.textContent = "Foto bereit (ohne Zeitstempel-Overlay).";
+  }
 });
 
 equipUploadBtn?.addEventListener("click", async ()=>{
