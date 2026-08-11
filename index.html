@@ -4390,6 +4390,10 @@ function openEquipCheck(){
     dlgAlert("Der Ausrüstungs-Check ist noch nicht eingerichtet.", "Hinweis");
     return;
   }
+  // Zuletzt genutzten Namen automatisch vorausfüllen (dauerhaft gemerkt, kein erneutes Eintippen)
+  const savedName = localStorage.getItem("sad_equip_name");
+  if(savedName) equipMitarbeiterEl.value = savedName;
+
   chooserBack.style.display = "none";
   equipBack.style.display = "flex";
 }
@@ -4671,6 +4675,7 @@ equipUploadBtn?.addEventListener("click", async ()=>{
     const result = await res.json();
     if(result.status === "success"){
       sessionStorage.setItem(equipTodayKey(), "1");
+      localStorage.setItem("sad_equip_name", mitarbeiter);
       equipStatusEl.textContent = "";
       showEquipSuccess(showChooser);
     }else{
