@@ -3161,6 +3161,10 @@ const pinError = document.getElementById("pinError");
 // URL/Token nach Deployment des Google Apps Script eintragen (siehe
 // AusruestungsCheck_Backend.gs). Solange hier "HIER_" drinsteht, wird
 // der Check übersprungen, damit die App lokal weiter testbar bleibt.
+// Ausrüstungs-Check manuell sperren/freigeben: einfach true/false ändern.
+// true = freigeschaltet, false = gesperrt (mit Hinweistext im Auswahlbildschirm).
+const EQUIP_ENABLED = false;
+
 const EQUIP_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzNrtg6-hoAv_kWkuE_noqRtlRYYJAzQMxJnpnEbyP3b4JjlHyG4vPVsuqdC45xrPe9/exec";
 const EQUIP_API_TOKEN   = "Zk0sUhvBN2XU13DGgeAwhm-H-rtmBcK1OwJR7NLc1VI";
 
@@ -4332,12 +4336,26 @@ const mainWrap = document.getElementById("mainWrap");
 const backToChooserBtn = document.getElementById("backToChooserBtn");
 const equipBackBtn = document.getElementById("equipBackBtn");
 
+function equipIsLocked(){
+  return !EQUIP_ENABLED;
+}
+
 function showChooser(){
   mainWrap.style.display = "none";
   equipBack.style.display = "none";
-  chooserEquipSub.textContent = equipDoneToday()
-    ? "✔ heute bereits erledigt"
-    : "Tägliche Foto-Kontrolle";
+
+  if(equipIsLocked()){
+    chooserEquipSub.textContent = "🔒 Wird bald freigeschaltet";
+    chooserEquipBtn.style.opacity = ".5";
+    chooserEquipBtn.style.cursor = "not-allowed";
+  }else{
+    chooserEquipSub.textContent = equipDoneToday()
+      ? "✔ heute bereits erledigt"
+      : "Tägliche Foto-Kontrolle";
+    chooserEquipBtn.style.opacity = "1";
+    chooserEquipBtn.style.cursor = "pointer";
+  }
+
   chooserBack.style.display = "flex";
 }
 
@@ -4363,6 +4381,10 @@ window.addEventListener("popstate", ()=>{
 });
 
 function openEquipCheck(){
+  if(equipIsLocked()){
+    dlgAlert("Diese Funktion wird bald freigeschaltet.", "Noch nicht verfügbar");
+    return;
+  }
   // Backend noch nicht eingerichtet -> nichts zu öffnen
   if(!EQUIP_WEB_APP_URL || EQUIP_WEB_APP_URL.indexOf("HIER_") === 0){
     dlgAlert("Der Ausrüstungs-Check ist noch nicht eingerichtet.", "Hinweis");
@@ -4443,7 +4465,12 @@ async function reverseGeocode(lat, lon){
 
 // Zeichnet Datum/Uhrzeit + Standort direkt aufs Foto (wie bei
 // klassischen Zeitstempel-Kamera-Apps), gibt einen neuen JPEG-Blob zurück.
-async function stampPhoto(file){
+// Maximale Kantenlänge fürs hochgeladene Foto. Handykameras liefern oft
+// 3000-4000px+, was Uploads unnötig lang macht - für einen Ausrüstungs-
+// Nachweis reicht diese Auflösung völlig.
+const EQUIP_MAX_DIMENSION = 1600;
+
+async function stampPhoto(file, standort){
   const pos = await getPositionSafe();
   const address = pos ? await reverseGeocode(pos.coords.latitude, pos.coords.longitude) : null;
 
@@ -4455,21 +4482,34 @@ async function stampPhoto(file){
     image.src = url;
   });
 
+  // Bild ggf. verkleinern (Seitenverhältnis bleibt erhalten)
+  let targetW = img.naturalWidth;
+  let targetH = img.naturalHeight;
+  const longestSide = Math.max(targetW, targetH);
+  if(longestSide > EQUIP_MAX_DIMENSION){
+    const scale = EQUIP_MAX_DIMENSION / longestSide;
+    targetW = Math.round(targetW * scale);
+    targetH = Math.round(targetH * scale);
+  }
+
   const canvas = document.getElementById("equipCanvas");
-  canvas.width = img.naturalWidth;
-  canvas.height = img.naturalHeight;
+  canvas.width = targetW;
+  canvas.height = targetH;
   const ctx = canvas.getContext("2d");
-  ctx.drawImage(img, 0, 0);
+  ctx.drawImage(img, 0, 0, targetW, targetH);
 
   const now = new Date();
   const dateStr = now.toLocaleDateString("de-DE", { timeZone: "Europe/Berlin" });
   const timeStr = now.toLocaleTimeString("de-DE", { timeZone: "Europe/Berlin", hour: "2-digit", minute: "2-digit", second: "2-digit" });
-  const line1 = `${dateStr}  ${timeStr}`;
-  const line2 = pos
+  const line1 = standort ? `🚉 ${standort}` : "";
+  const line2 = `${dateStr}  ${timeStr}`;
+  const line3 = pos
     ? (address ? `📍 ${address}` : `📍 ${pos.coords.latitude.toFixed(5)}, ${pos.coords.longitude.toFixed(5)}`)
     : "📍 Standort nicht verfügbar";
 
-  const fontSize = Math.max(20, Math.round(canvas.width * 0.028));
+  const lines = [line1, line2, line3].filter(Boolean);
+
+  const fontSize = Math.max(20, Math.round(canvas.width * 0.032));
   const marginX = fontSize * 0.7;
   const marginY = fontSize * 0.7;
   const lineGap = fontSize * 1.3;
@@ -4480,13 +4520,15 @@ async function stampPhoto(file){
   ctx.strokeStyle = "rgba(0,0,0,0.85)";
   ctx.fillStyle = "#FFD54A";
 
-  ctx.strokeText(line2, marginX, canvas.height - marginY);
-  ctx.fillText(line2, marginX, canvas.height - marginY);
-  ctx.strokeText(line1, marginX, canvas.height - marginY - lineGap);
-  ctx.fillText(line1, marginX, canvas.height - marginY - lineGap);
+  // Von unten nach oben zeichnen: zuletzt in der Liste = unterste Zeile
+  for(let i = 0; i < lines.length; i++){
+    const y = canvas.height - marginY - (lines.length - 1 - i) * lineGap;
+    ctx.strokeText(lines[i], marginX, y);
+    ctx.fillText(lines[i], marginX, y);
+  }
 
   const blob = await new Promise((resolve, reject)=>{
-    canvas.toBlob((b)=> b ? resolve(b) : reject(new Error("Konnte Foto nicht verarbeiten")), "image/jpeg", 0.9);
+    canvas.toBlob((b)=> b ? resolve(b) : reject(new Error("Konnte Foto nicht verarbeiten")), "image/jpeg", 0.85);
   });
 
   return { blob, hasLocation: !!pos };
@@ -4576,7 +4618,7 @@ equipFotoInput?.addEventListener("change", async (e)=>{
   ]);
 
   try{
-    const { blob, hasLocation } = await stampPhoto(rawFile);
+    const { blob, hasLocation } = await stampPhoto(rawFile, equipStandortEl.value);
     equipSelectedFile = blob;
     equipUploadBtn.disabled = false;
     equipUploadBtn.style.opacity = "1";
