@@ -4500,8 +4500,9 @@ const equipCheckmark = document.getElementById("equipCheckmark");
 
 let equipLoadingInterval = null;
 
-// texts: entweder ein einzelner String oder ein Array, das im Kreis
-// durchgewechselt wird, damit der Ladevorgang lebendiger wirkt.
+// texts: entweder ein einzelner String oder ein Array, das EINMAL
+// der Reihe nach durchgewechselt wird (bleibt am Ende beim letzten
+// Text stehen, kein Loop von vorn).
 function showEquipLoading(texts){
   const list = Array.isArray(texts) ? texts : [texts];
   let i = 0;
@@ -4513,7 +4514,12 @@ function showEquipLoading(texts){
   if(equipLoadingInterval) clearInterval(equipLoadingInterval);
   if(list.length > 1){
     equipLoadingInterval = setInterval(()=>{
-      i = (i + 1) % list.length;
+      i++;
+      if(i >= list.length){
+        clearInterval(equipLoadingInterval);
+        equipLoadingInterval = null;
+        return;
+      }
       equipLoadingText.textContent = list[i];
     }, 1600);
   }
