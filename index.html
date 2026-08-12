@@ -3163,7 +3163,7 @@ const pinError = document.getElementById("pinError");
 // der Check übersprungen, damit die App lokal weiter testbar bleibt.
 // Ausrüstungs-Check manuell sperren/freigeben: einfach true/false ändern.
 // true = freigeschaltet, false = gesperrt (mit Hinweistext im Auswahlbildschirm).
-const EQUIP_ENABLED = true;
+const EQUIP_ENABLED = false;
 
 const EQUIP_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzNrtg6-hoAv_kWkuE_noqRtlRYYJAzQMxJnpnEbyP3b4JjlHyG4vPVsuqdC45xrPe9/exec";
 const EQUIP_API_TOKEN   = "Zk0sUhvBN2XU13DGgeAwhm-H-rtmBcK1OwJR7NLc1VI";
@@ -4380,6 +4380,12 @@ window.addEventListener("popstate", ()=>{
   }
 });
 
+// Zwischengespeicherter Standort, sofort beim Öffnen des Ausrüstungs-Checks
+// abgefragt (statt erst beim Fotografieren) - Mitarbeiter sehen die
+// Berechtigungs-Abfrage direkt und müssen nicht in den Einstellungen suchen.
+let equipCachedPosition = null;
+let equipCachedPositionTime = 0;
+
 function openEquipCheck(){
   if(equipIsLocked()){
     dlgAlert("Diese Funktion wird bald freigeschaltet.", "Noch nicht verfügbar");
@@ -4396,6 +4402,13 @@ function openEquipCheck(){
 
   chooserBack.style.display = "none";
   equipBack.style.display = "flex";
+
+  // Standort-Berechtigung sofort anstoßen (löst ggf. den nativen
+  // Erlauben-Dialog aus), Ergebnis für den Foto-Schritt zwischenspeichern
+  getPositionSafe().then(pos=>{
+    equipCachedPosition = pos;
+    equipCachedPositionTime = Date.now();
+  });
 }
 
 chooserFormularBtn.addEventListener("click", openStundenformular);
@@ -4484,7 +4497,10 @@ async function reverseGeocode(lat, lon){
 const EQUIP_MAX_DIMENSION = 1600;
 
 async function stampPhoto(file, standort){
-  const pos = await getPositionSafe();
+  // Zwischengespeicherten Standort nutzen, falls er noch frisch ist (unter
+  // 2 Min. alt) - spart eine erneute Abfrage und beschleunigt den Ablauf
+  const cacheIsFresh = equipCachedPositionTime && (Date.now() - equipCachedPositionTime < 120000);
+  const pos = cacheIsFresh ? equipCachedPosition : await getPositionSafe();
   const address = pos ? await reverseGeocode(pos.coords.latitude, pos.coords.longitude) : null;
 
   const img = await new Promise((resolve, reject)=>{
@@ -4656,6 +4672,27 @@ equipFotoInput?.addEventListener("change", async (e)=>{
   }
 });
 
+// Führt den Upload-Request aus; bei Netzwerk-/Verbindungsfehlern
+// (z.B. iOS "Load failed" durch kurze Hintergrund-Drosselung) wird
+// automatisch einmal nach 1,5 Sek. erneut versucht, bevor ein Fehler
+// angezeigt wird.
+async function uploadEquipPhoto(payload, isRetry){
+  try{
+    const res = await fetch(EQUIP_WEB_APP_URL, {
+      method: "POST",
+      body: JSON.stringify(payload)
+    });
+    return await res.json();
+  }catch(err){
+    if(!isRetry){
+      showEquipLoading(["Verbindung war kurz weg, versuche erneut..."]);
+      await new Promise(r => setTimeout(r, 1500));
+      return uploadEquipPhoto(payload, true);
+    }
+    throw err;
+  }
+}
+
 equipUploadBtn?.addEventListener("click", async ()=>{
   if(!equipSelectedFile) return;
 
@@ -4678,17 +4715,13 @@ equipUploadBtn?.addEventListener("click", async ()=>{
 
   try{
     const base64 = await equipFileToBase64(equipSelectedFile);
-    const res = await fetch(EQUIP_WEB_APP_URL, {
-      method: "POST",
-      body: JSON.stringify({
-        token: EQUIP_API_TOKEN,
-        standort,
-        mitarbeiter,
-        imageBase64: base64,
-        mimeType: equipSelectedFile.type
-      })
+    const result = await uploadEquipPhoto({
+      token: EQUIP_API_TOKEN,
+      standort,
+      mitarbeiter,
+      imageBase64: base64,
+      mimeType: equipSelectedFile.type
     });
-    const result = await res.json();
     if(result.status === "success"){
       sessionStorage.setItem(equipTodayKey(), "1");
       localStorage.setItem("sad_equip_name", mitarbeiter);
