@@ -3163,7 +3163,7 @@ const pinError = document.getElementById("pinError");
 // der Check übersprungen, damit die App lokal weiter testbar bleibt.
 // Ausrüstungs-Check manuell sperren/freigeben: einfach true/false ändern.
 // true = freigeschaltet, false = gesperrt (mit Hinweistext im Auswahlbildschirm).
-const EQUIP_ENABLED = true;
+const EQUIP_ENABLED = false;
 
 const EQUIP_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzNrtg6-hoAv_kWkuE_noqRtlRYYJAzQMxJnpnEbyP3b4JjlHyG4vPVsuqdC45xrPe9/exec";
 const EQUIP_API_TOKEN   = "Zk0sUhvBN2XU13DGgeAwhm-H-rtmBcK1OwJR7NLc1VI";
@@ -4421,14 +4421,23 @@ function equipFileToBase64(file){
 
 // Holt einmalig den GPS-Standort, gibt bei Ablehnung/Timeout/fehlender
 // Unterstützung einfach null zurück (bricht den Foto-Prozess nicht ab).
+// Zusätzliches manuelles Sicherheitsnetz (8 Sek.), weil einige iOS-Versionen
+// das eingebaute Geolocation-Timeout ignorieren, wenn der native
+// Berechtigungs-Dialog offen hängt - sonst würde die App ewig warten.
 function getPositionSafe(){
   return new Promise((resolve)=>{
-    if(!navigator.geolocation){ resolve(null); return; }
+    let settled = false;
+    const finish = (val)=>{ if(!settled){ settled = true; resolve(val); } };
+
+    if(!navigator.geolocation){ finish(null); return; }
+
     navigator.geolocation.getCurrentPosition(
-      pos => resolve(pos),
-      ()  => resolve(null),
+      pos => finish(pos),
+      ()  => finish(null),
       { enableHighAccuracy: true, timeout: 6000, maximumAge: 0 }
     );
+
+    setTimeout(()=> finish(null), 8000);
   });
 }
 
@@ -4622,7 +4631,13 @@ equipFotoInput?.addEventListener("change", async (e)=>{
   ]);
 
   try{
-    const { blob, hasLocation } = await stampPhoto(rawFile, equipStandortEl.value);
+    const timeoutGuard = new Promise((_, reject)=>
+      setTimeout(()=> reject(new Error("Zeitüberschreitung")), 15000)
+    );
+    const { blob, hasLocation } = await Promise.race([
+      stampPhoto(rawFile, equipStandortEl.value),
+      timeoutGuard
+    ]);
     equipSelectedFile = blob;
     equipUploadBtn.disabled = false;
     equipUploadBtn.style.opacity = "1";
@@ -4630,7 +4645,8 @@ equipFotoInput?.addEventListener("change", async (e)=>{
       ? "Foto bereit (mit Zeitstempel & Standort)."
       : "Foto bereit (mit Zeitstempel, Standort nicht verfügbar).";
   }catch(err){
-    // Falls Stempeln fehlschlägt (z.B. Browser-Einschränkung), Original weiterverwenden
+    // Falls Stempeln fehlschlägt oder zu lange dauert (z.B. iOS-Berechtigungsdialog
+    // hängt), Original-Foto ohne Overlay weiterverwenden statt ewig zu warten
     equipSelectedFile = rawFile;
     equipUploadBtn.disabled = false;
     equipUploadBtn.style.opacity = "1";
