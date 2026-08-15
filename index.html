@@ -2193,6 +2193,18 @@ button.danger::before{
   font-weight:900 !important;
 }
 
+#rows tr.rowFilled{
+  background: rgba(61,58,135,0.07) !important;
+}
+
+#rows tr.rowFilled td:first-child{
+  border-left:4px solid #3D3A87 !important;
+}
+
+#rows tr.rowEmpty{
+  opacity:.7;
+}
+
 #rows tr{
   transition:background .2s ease, opacity .2s ease;
 }
@@ -2949,7 +2961,7 @@ tbody tr:nth-child(odd){
 
       <div id="newPinToggleWrap" style="margin-top:8px;">
         <button type="button" id="newPinToggleBtn" style="background:none; border:none; padding:4px 0; color:var(--purple, #3D3A87); font-size:12px; font-weight:800; text-decoration:underline; cursor:pointer;">
-          Noch kein PIN? jetzt automatisch anfordern
+          Neu hier? PIN automatisch anfordern
         </button>
       </div>
 
