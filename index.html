@@ -2946,6 +2946,19 @@ tbody tr:nth-child(odd){
       <div class="small" id="nameError" style="display:none; color:var(--danger); font-weight:900;">
         Bitte gültige PIN (2 Ziffern) eingeben.
       </div>
+
+      <div id="newPinToggleWrap" style="margin-top:8px;">
+        <button type="button" id="newPinToggleBtn" style="background:none; border:none; padding:4px 0; color:var(--purple, #3D3A87); font-size:12px; font-weight:800; text-decoration:underline; cursor:pointer;">
+          Neu hier? PIN automatisch anfordern
+        </button>
+      </div>
+
+      <div id="newPinPanel" style="display:none; margin-top:10px; padding:12px; border-radius:14px; border:1px solid var(--border); background:#faf9ff;">
+        <div style="font-size:12px; font-weight:700; margin-bottom:8px;">Name eingeben, dann bekommst du automatisch eine freie PIN:</div>
+        <input id="newPinNameInput" type="text" placeholder="Dein Name" style="width:100%; padding:10px 12px; border-radius:10px; border:1px solid var(--border); font-size:14px; margin-bottom:8px; box-sizing:border-box;">
+        <button type="button" id="newPinRequestBtn" style="width:100%; padding:11px; border-radius:10px; border:none; background:linear-gradient(135deg, #3D3A87, #6b63c9); color:#fff; font-weight:800; font-size:14px; cursor:pointer;">PIN anfordern</button>
+        <div id="newPinStatus" style="margin-top:8px; font-size:12px;"></div>
+      </div>
     </div>
 
     <div class="modernPeriodSection">
@@ -3178,6 +3191,81 @@ const equipErrorEl = document.getElementById("equipError");
 const equipStatusEl = document.getElementById("equipStatus");
 
 let equipSelectedFile = null;
+
+// ===== Personal-PIN: automatisch merken & neu vergeben =====
+const newPinToggleBtn = document.getElementById("newPinToggleBtn");
+const newPinPanel = document.getElementById("newPinPanel");
+const newPinNameInput = document.getElementById("newPinNameInput");
+const newPinRequestBtn = document.getElementById("newPinRequestBtn");
+const newPinStatus = document.getElementById("newPinStatus");
+const newPinToggleWrap = document.getElementById("newPinToggleWrap");
+
+// Bereits bekannte PIN auf diesem Gerät automatisch vorausfüllen
+(function prefillSavedPersonalPin(){
+  const savedPin = localStorage.getItem("sad_personal_pin");
+  if(savedPin && nameEl){
+    nameEl.value = savedPin;
+    if(newPinToggleWrap) newPinToggleWrap.style.display = "none"; // schon bekannt -> Anfrage-Link ausblenden
+  }
+})();
+
+// Jede gültige, manuell eingegebene 2-stellige PIN ebenfalls dauerhaft merken
+// (auch für Mitarbeiter, die ihre PIN schon vorher kannten)
+nameEl?.addEventListener("blur", ()=>{
+  const val = (nameEl.value || "").trim();
+  if(/^\d{2}$/.test(val)){
+    localStorage.setItem("sad_personal_pin", val);
+    if(newPinToggleWrap) newPinToggleWrap.style.display = "none";
+  }
+});
+
+newPinToggleBtn?.addEventListener("click", ()=>{
+  newPinPanel.style.display = newPinPanel.style.display === "none" ? "block" : "none";
+});
+
+newPinRequestBtn?.addEventListener("click", async ()=>{
+  const requestedName = (newPinNameInput.value || "").trim();
+  if(!requestedName){
+    newPinStatus.style.color = "#c0392b";
+    newPinStatus.textContent = "Bitte Namen eingeben.";
+    return;
+  }
+
+  newPinRequestBtn.disabled = true;
+  newPinStatus.style.color = "#666";
+  newPinStatus.textContent = "PIN wird angefordert...";
+
+  try{
+    const res = await fetch(EQUIP_WEB_APP_URL, {
+      method: "POST",
+      body: JSON.stringify({
+        token: EQUIP_API_TOKEN,
+        action: "assignPin",
+        name: requestedName
+      })
+    });
+    const result = await res.json();
+
+    if(result.status === "success"){
+      nameEl.value = result.pin;
+      localStorage.setItem("sad_personal_pin", result.pin);
+      newPinStatus.style.color = "#2f9e44";
+      newPinStatus.textContent = result.existing
+        ? `Du hattest schon eine PIN: ${result.pin} (jetzt eingetragen).`
+        : `Deine neue PIN lautet: ${result.pin} – ist automatisch eingetragen und wird ab jetzt gemerkt.`;
+      setNameError(false);
+      setTimeout(()=>{ newPinPanel.style.display = "none"; if(newPinToggleWrap) newPinToggleWrap.style.display = "none"; }, 2500);
+    }else{
+      newPinStatus.style.color = "#c0392b";
+      newPinStatus.textContent = "Fehler: " + result.message;
+      newPinRequestBtn.disabled = false;
+    }
+  }catch(err){
+    newPinStatus.style.color = "#c0392b";
+    newPinStatus.textContent = "Fehler: " + err.message;
+    newPinRequestBtn.disabled = false;
+  }
+});
 
 // Eindeutige Standorte aus ORTE für den Ausrüstungs-Check-Dropdown
 // (ORTE enthält je Standort mehrere Einträge für Nacht-/Tagschicht-Zeiten)
