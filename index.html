@@ -3264,16 +3264,24 @@ newPinRequestBtn?.addEventListener("click", async ()=>{
       );
     }else if(result.status === "confirm"){
       newPinStatus.textContent = "";
-      const isSamePerson = await openDialog({
-        title: "Bist du das?",
-        message: `Es gibt schon einen Eintrag "${result.matchName}". Bist du das?`,
-        mode: "confirm",
-        okText: "Ja, das bin ich",
-        cancelText: "Nein, neue PIN"
-      });
+      let confirmedPin = null;
 
-      if(isSamePerson){
-        applyAssignedPin(result.pin, `Deine PIN lautet: ${result.pin} (jetzt eingetragen).`);
+      for(const candidate of result.candidates){
+        const isSamePerson = await openDialog({
+          title: "Bist du das?",
+          message: `Es gibt schon einen Eintrag "${candidate.storedName}". Bist du das?`,
+          mode: "confirm",
+          okText: "Ja, das bin ich",
+          cancelText: "Nein"
+        });
+        if(isSamePerson){
+          confirmedPin = candidate.pin;
+          break;
+        }
+      }
+
+      if(confirmedPin){
+        applyAssignedPin(confirmedPin, `Deine PIN lautet: ${confirmedPin} (jetzt eingetragen).`);
       }else{
         newPinStatus.style.color = "#666";
         newPinStatus.textContent = "Neue PIN wird angelegt...";
