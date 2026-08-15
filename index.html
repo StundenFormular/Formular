@@ -2954,8 +2954,9 @@ tbody tr:nth-child(odd){
       </div>
 
       <div id="newPinPanel" style="display:none; margin-top:10px; padding:12px; border-radius:14px; border:1px solid var(--border); background:#faf9ff;">
-        <div style="font-size:12px; font-weight:700; margin-bottom:8px;">Name eingeben, dann bekommst du automatisch eine freie PIN:</div>
-        <input id="newPinNameInput" type="text" placeholder="Dein Name" style="width:100%; padding:10px 12px; border-radius:10px; border:1px solid var(--border); font-size:14px; margin-bottom:8px; box-sizing:border-box;">
+        <div style="font-size:12px; font-weight:700; margin-bottom:8px;">Vor- und Nachname eingeben, dann bekommst du automatisch eine freie PIN:</div>
+        <input id="newPinVornameInput" type="text" placeholder="Vorname" style="width:100%; padding:10px 12px; border-radius:10px; border:1px solid var(--border); font-size:14px; margin-bottom:8px; box-sizing:border-box;">
+        <input id="newPinNachnameInput" type="text" placeholder="Nachname" style="width:100%; padding:10px 12px; border-radius:10px; border:1px solid var(--border); font-size:14px; margin-bottom:8px; box-sizing:border-box;">
         <button type="button" id="newPinRequestBtn" style="width:100%; padding:11px; border-radius:10px; border:none; background:linear-gradient(135deg, #3D3A87, #6b63c9); color:#fff; font-weight:800; font-size:14px; cursor:pointer;">PIN anfordern</button>
         <div id="newPinStatus" style="margin-top:8px; font-size:12px;"></div>
       </div>
@@ -3170,12 +3171,6 @@ const pinInput = document.getElementById("pinInput");
 const pinBtn = document.getElementById("pinBtn");
 const pinError = document.getElementById("pinError");
 
-// ===== Ausrüstungs-Check =====
-// URL/Token nach Deployment des Google Apps Script eintragen (siehe
-// AusruestungsCheck_Backend.gs). Solange hier "HIER_" drinsteht, wird
-// der Check übersprungen, damit die App lokal weiter testbar bleibt.
-// Ausrüstungs-Check manuell sperren/freigeben: einfach true/false ändern.
-// true = freigeschaltet, false = gesperrt (mit Hinweistext im Auswahlbildschirm).
 const EQUIP_ENABLED = false;
 
 const EQUIP_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzNrtg6-hoAv_kWkuE_noqRtlRYYJAzQMxJnpnEbyP3b4JjlHyG4vPVsuqdC45xrPe9/exec";
@@ -3192,25 +3187,22 @@ const equipStatusEl = document.getElementById("equipStatus");
 
 let equipSelectedFile = null;
 
-// ===== Personal-PIN: automatisch merken & neu vergeben =====
 const newPinToggleBtn = document.getElementById("newPinToggleBtn");
 const newPinPanel = document.getElementById("newPinPanel");
-const newPinNameInput = document.getElementById("newPinNameInput");
+const newPinVornameInput = document.getElementById("newPinVornameInput");
+const newPinNachnameInput = document.getElementById("newPinNachnameInput");
 const newPinRequestBtn = document.getElementById("newPinRequestBtn");
 const newPinStatus = document.getElementById("newPinStatus");
 const newPinToggleWrap = document.getElementById("newPinToggleWrap");
 
-// Bereits bekannte PIN auf diesem Gerät automatisch vorausfüllen
 (function prefillSavedPersonalPin(){
   const savedPin = localStorage.getItem("sad_personal_pin");
   if(savedPin && nameEl){
     nameEl.value = savedPin;
-    if(newPinToggleWrap) newPinToggleWrap.style.display = "none"; // schon bekannt -> Anfrage-Link ausblenden
+    if(newPinToggleWrap) newPinToggleWrap.style.display = "none";
   }
 })();
 
-// Jede gültige, manuell eingegebene 2-stellige PIN ebenfalls dauerhaft merken
-// (auch für Mitarbeiter, die ihre PIN schon vorher kannten)
 nameEl?.addEventListener("blur", ()=>{
   const val = (nameEl.value || "").trim();
   if(/^\d{2}$/.test(val)){
@@ -3223,11 +3215,36 @@ newPinToggleBtn?.addEventListener("click", ()=>{
   newPinPanel.style.display = newPinPanel.style.display === "none" ? "block" : "none";
 });
 
+async function requestPin(vorname, nachname, forceNew){
+  const res = await fetch(EQUIP_WEB_APP_URL, {
+    method: "POST",
+    body: JSON.stringify({
+      token: EQUIP_API_TOKEN,
+      action: "assignPin",
+      vorname: vorname,
+      nachname: nachname,
+      forceNew: !!forceNew
+    })
+  });
+  return res.json();
+}
+
+function applyAssignedPin(pin, message){
+  nameEl.value = pin;
+  localStorage.setItem("sad_personal_pin", pin);
+  newPinStatus.style.color = "#2f9e44";
+  newPinStatus.textContent = message;
+  setNameError(false);
+  setTimeout(()=>{ newPinPanel.style.display = "none"; if(newPinToggleWrap) newPinToggleWrap.style.display = "none"; }, 2500);
+}
+
 newPinRequestBtn?.addEventListener("click", async ()=>{
-  const requestedName = (newPinNameInput.value || "").trim();
-  if(!requestedName){
+  const vorname = (newPinVornameInput.value || "").trim();
+  const nachname = (newPinNachnameInput.value || "").trim();
+
+  if(!vorname || !nachname){
     newPinStatus.style.color = "#c0392b";
-    newPinStatus.textContent = "Bitte Namen eingeben.";
+    newPinStatus.textContent = "Bitte Vor- und Nachname eingeben.";
     return;
   }
 
@@ -3236,25 +3253,39 @@ newPinRequestBtn?.addEventListener("click", async ()=>{
   newPinStatus.textContent = "PIN wird angefordert...";
 
   try{
-    const res = await fetch(EQUIP_WEB_APP_URL, {
-      method: "POST",
-      body: JSON.stringify({
-        token: EQUIP_API_TOKEN,
-        action: "assignPin",
-        name: requestedName
-      })
-    });
-    const result = await res.json();
+    const result = await requestPin(vorname, nachname, false);
 
     if(result.status === "success"){
-      nameEl.value = result.pin;
-      localStorage.setItem("sad_personal_pin", result.pin);
-      newPinStatus.style.color = "#2f9e44";
-      newPinStatus.textContent = result.existing
-        ? `Du hattest schon eine PIN: ${result.pin} (jetzt eingetragen).`
-        : `Deine neue PIN lautet: ${result.pin} – ist automatisch eingetragen und wird ab jetzt gemerkt.`;
-      setNameError(false);
-      setTimeout(()=>{ newPinPanel.style.display = "none"; if(newPinToggleWrap) newPinToggleWrap.style.display = "none"; }, 2500);
+      applyAssignedPin(
+        result.pin,
+        result.existing
+          ? `Du hattest schon eine PIN: ${result.pin} (jetzt eingetragen).`
+          : `Deine neue PIN lautet: ${result.pin} – ist automatisch eingetragen und wird ab jetzt gemerkt.`
+      );
+    }else if(result.status === "confirm"){
+      newPinStatus.textContent = "";
+      const isSamePerson = await openDialog({
+        title: "Bist du das?",
+        message: `Es gibt schon einen Eintrag "${result.matchName}". Bist du das?`,
+        mode: "confirm",
+        okText: "Ja, das bin ich",
+        cancelText: "Nein, neue PIN"
+      });
+
+      if(isSamePerson){
+        applyAssignedPin(result.pin, `Deine PIN lautet: ${result.pin} (jetzt eingetragen).`);
+      }else{
+        newPinStatus.style.color = "#666";
+        newPinStatus.textContent = "Neue PIN wird angelegt...";
+        const retryResult = await requestPin(vorname, nachname, true);
+        if(retryResult.status === "success"){
+          applyAssignedPin(retryResult.pin, `Deine neue PIN lautet: ${retryResult.pin} – ist automatisch eingetragen und wird ab jetzt gemerkt.`);
+        }else{
+          newPinStatus.style.color = "#c0392b";
+          newPinStatus.textContent = "Fehler: " + retryResult.message;
+          newPinRequestBtn.disabled = false;
+        }
+      }
     }else{
       newPinStatus.style.color = "#c0392b";
       newPinStatus.textContent = "Fehler: " + result.message;
@@ -3267,8 +3298,6 @@ newPinRequestBtn?.addEventListener("click", async ()=>{
   }
 });
 
-// Eindeutige Standorte aus ORTE für den Ausrüstungs-Check-Dropdown
-// (ORTE enthält je Standort mehrere Einträge für Nacht-/Tagschicht-Zeiten)
 (function fillEquipStandorte(){
   if(!equipStandortEl) return;
   const seen = new Set();
@@ -3647,7 +3676,6 @@ function openTimeSheet({ title, list, currentValue, targetInput, targetRow, mode
     timeSheetList.appendChild(div);
   };
 
- 
   list.forEach(t=>{
     addOpt(t, t, currentValue === t, false);
   });
@@ -4152,7 +4180,6 @@ function openPreview(){
 }
 function closePreview(){ modalBack.style.display="none"; }
 
-
 function showSuccessPremium(){
   return new Promise((resolve)=>{
     dlgBack.style.display = "block";
@@ -4211,8 +4238,6 @@ function showSuccessPremium(){
     document.addEventListener("keydown", onKey);
   });
 }
-
-
 
 function showSendConfirmPremium(){
   return new Promise((resolve)=>{
@@ -4273,8 +4298,6 @@ function showSendConfirmPremium(){
   });
 }
 
-
-
 function showPdfDownloadPrompt(){
   return new Promise((resolve)=>{
     dlgBack.style.display = "block";
@@ -4321,7 +4344,6 @@ function showPdfDownloadPrompt(){
     document.addEventListener("keydown", onKey);
   });
 }
-
 
 async function sendenDirekt(){
   const nm = (nameEl.value || "").trim();
@@ -4405,8 +4427,6 @@ function requirePin(){
   });
 }
 
-// Ein Kalendertag = ein Check-Zwang; danach bleibt es für den Rest
-// des Tages (Session) freigeschaltet.
 function equipTodayKey(){
   const d = new Date();
   return "sad_equip_ok_" + d.getFullYear() + "-" + String(d.getMonth()+1).padStart(2,"0") + "-" + String(d.getDate()).padStart(2,"0");
@@ -4447,9 +4467,6 @@ function showChooser(){
   chooserBack.style.display = "flex";
 }
 
-// Merkt sich, ob für das offene Stundenformular gerade ein History-Eintrag
-// gesetzt ist, damit Handy-Zurück-Taste/-Geste und der "Zurück zur
-// Auswahl"-Button dasselbe tun, ohne die App komplett zu verlassen.
 let formularHistoryPushed = false;
 
 function openStundenformular(){
@@ -4468,9 +4485,6 @@ window.addEventListener("popstate", ()=>{
   }
 });
 
-// Zwischengespeicherter Standort, sofort beim Öffnen des Ausrüstungs-Checks
-// abgefragt (statt erst beim Fotografieren) - Mitarbeiter sehen die
-// Berechtigungs-Abfrage direkt und müssen nicht in den Einstellungen suchen.
 let equipCachedPosition = null;
 let equipCachedPositionTime = 0;
 
@@ -4479,20 +4493,16 @@ function openEquipCheck(){
     dlgAlert("Diese Funktion wird bald freigeschaltet.", "Noch nicht verfügbar");
     return;
   }
-  // Backend noch nicht eingerichtet -> nichts zu öffnen
   if(!EQUIP_WEB_APP_URL || EQUIP_WEB_APP_URL.indexOf("HIER_") === 0){
     dlgAlert("Der Ausrüstungs-Check ist noch nicht eingerichtet.", "Hinweis");
     return;
   }
-  // Zuletzt genutzten Namen automatisch vorausfüllen (dauerhaft gemerkt, kein erneutes Eintippen)
   const savedName = localStorage.getItem("sad_equip_name");
   if(savedName) equipMitarbeiterEl.value = savedName;
 
   chooserBack.style.display = "none";
   equipBack.style.display = "flex";
 
-  // Standort-Berechtigung sofort anstoßen (löst ggf. den nativen
-  // Erlauben-Dialog aus), Ergebnis für den Foto-Schritt zwischenspeichern
   getPositionSafe().then(pos=>{
     equipCachedPosition = pos;
     equipCachedPositionTime = Date.now();
@@ -4520,11 +4530,6 @@ function equipFileToBase64(file){
   });
 }
 
-// Holt einmalig den GPS-Standort, gibt bei Ablehnung/Timeout/fehlender
-// Unterstützung einfach null zurück (bricht den Foto-Prozess nicht ab).
-// Zusätzliches manuelles Sicherheitsnetz (8 Sek.), weil einige iOS-Versionen
-// das eingebaute Geolocation-Timeout ignorieren, wenn der native
-// Berechtigungs-Dialog offen hängt - sonst würde die App ewig warten.
 function getPositionSafe(){
   return new Promise((resolve)=>{
     let settled = false;
@@ -4542,10 +4547,6 @@ function getPositionSafe(){
   });
 }
 
-// Wandelt Koordinaten in eine lesbare Adresse um (Straße + Hausnr., Ort).
-// Nutzt den kostenlosen OpenStreetMap-Dienst, kein API-Key nötig.
-// Gibt null zurück, wenn's nicht klappt (z.B. kein Netz, Timeout) -
-// dann wird einfach auf die reinen Koordinaten zurückgefallen.
 async function reverseGeocode(lat, lon){
   try{
     const controller = new AbortController();
@@ -4577,16 +4578,9 @@ async function reverseGeocode(lat, lon){
   }
 }
 
-// Zeichnet Datum/Uhrzeit + Standort direkt aufs Foto (wie bei
-// klassischen Zeitstempel-Kamera-Apps), gibt einen neuen JPEG-Blob zurück.
-// Maximale Kantenlänge fürs hochgeladene Foto. Handykameras liefern oft
-// 3000-4000px+, was Uploads unnötig lang macht - für einen Ausrüstungs-
-// Nachweis reicht diese Auflösung völlig.
 const EQUIP_MAX_DIMENSION = 1600;
 
 async function stampPhoto(file, standort){
-  // Zwischengespeicherten Standort nutzen, falls er noch frisch ist (unter
-  // 2 Min. alt) - spart eine erneute Abfrage und beschleunigt den Ablauf
   const cacheIsFresh = equipCachedPositionTime && (Date.now() - equipCachedPositionTime < 120000);
   const pos = cacheIsFresh ? equipCachedPosition : await getPositionSafe();
   const address = pos ? await reverseGeocode(pos.coords.latitude, pos.coords.longitude) : null;
@@ -4599,7 +4593,6 @@ async function stampPhoto(file, standort){
     image.src = url;
   });
 
-  // Bild ggf. verkleinern (Seitenverhältnis bleibt erhalten)
   let targetW = img.naturalWidth;
   let targetH = img.naturalHeight;
   const longestSide = Math.max(targetW, targetH);
@@ -4637,7 +4630,6 @@ async function stampPhoto(file, standort){
   ctx.strokeStyle = "rgba(0,0,0,0.85)";
   ctx.fillStyle = "#FFD54A";
 
-  // Von unten nach oben zeichnen: zuletzt in der Liste = unterste Zeile
   for(let i = 0; i < lines.length; i++){
     const y = canvas.height - marginY - (lines.length - 1 - i) * lineGap;
     ctx.strokeText(lines[i], marginX, y);
@@ -4659,9 +4651,6 @@ const equipCheckmark = document.getElementById("equipCheckmark");
 
 let equipLoadingInterval = null;
 
-// texts: entweder ein einzelner String oder ein Array, das EINMAL
-// der Reihe nach durchgewechselt wird (bleibt am Ende beim letzten
-// Text stehen, kein Loop von vorn).
 function showEquipLoading(texts){
   const list = Array.isArray(texts) ? texts : [texts];
   let i = 0;
@@ -4693,8 +4682,6 @@ function hideEquipLoading(){
   equipBackBtn.disabled = false;
 }
 
-// Zeigt kurz ein grünes Häkchen mit Bestätigungstext, dann automatisch
-// weiter zur übergebenen Callback-Funktion (z.B. zurück zur Auswahl).
 function showEquipSuccess(callback){
   if(equipLoadingInterval){ clearInterval(equipLoadingInterval); equipLoadingInterval = null; }
   equipSpinner.style.display = "none";
@@ -4749,8 +4736,6 @@ equipFotoInput?.addEventListener("change", async (e)=>{
       ? "Foto bereit (mit Zeitstempel & Standort)."
       : "Foto bereit (mit Zeitstempel, Standort nicht verfügbar).";
   }catch(err){
-    // Falls Stempeln fehlschlägt oder zu lange dauert (z.B. iOS-Berechtigungsdialog
-    // hängt), Original-Foto ohne Overlay weiterverwenden statt ewig zu warten
     equipSelectedFile = rawFile;
     equipUploadBtn.disabled = false;
     equipUploadBtn.style.opacity = "1";
@@ -4760,10 +4745,6 @@ equipFotoInput?.addEventListener("change", async (e)=>{
   }
 });
 
-// Führt den Upload-Request aus; bei Netzwerk-/Verbindungsfehlern
-// (z.B. iOS "Load failed" durch kurze Hintergrund-Drosselung) wird
-// automatisch einmal nach 1,5 Sek. erneut versucht, bevor ein Fehler
-// angezeigt wird.
 async function uploadEquipPhoto(payload, isRetry){
   try{
     const res = await fetch(EQUIP_WEB_APP_URL, {
@@ -4828,7 +4809,6 @@ equipUploadBtn?.addEventListener("click", async ()=>{
     hideEquipLoading();
   }
 });
-
 
 function updateEntryRowHighlight(){
   document.querySelectorAll("#rows tr").forEach(tr=>{
