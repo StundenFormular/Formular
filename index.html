@@ -4427,7 +4427,7 @@ async function sendenDirekt(){
 
   if(!pinIsRegistered){
     setNameError(true);
-    await dlgAlert("Diese PIN ist noch nicht registriert. Bitte fordere zuerst über \"Neu hier? PIN automatisch anfordern\" eine PIN an, bevor du Stunden sendest.", "PIN nicht erkannt");
+    await dlgAlert("Diese PIN ist noch nicht registriert. Bitte fordere zuerst über \"Noch kein PIN ? Jetzt automatisch anfordern\" eine PIN an, bevor du Stunden sendest.", "PIN nicht erkannt");
     if(newPinToggleWrap) newPinToggleWrap.style.display = "block";
     nameEl.focus();
     return;
