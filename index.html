@@ -2903,6 +2903,15 @@ tbody tr:nth-child(odd){
   </div>
 </div>
 
+<div id="sendLoadingOverlay" style="display:none; position:fixed; inset:0; z-index:9999; background:rgba(15,23,42,.92); flex-direction:column; align-items:center; justify-content:center; text-align:center; padding:24px;">
+  <div style="width:52px; height:52px; border-radius:50%; border:4px solid rgba(255,255,255,.25); border-top-color:#FFD54A; animation:sendSpin 0.8s linear infinite;"></div>
+  <div id="sendLoadingText" style="margin-top:20px; color:#fff; font-weight:800; font-size:17px;">Wird gesendet...</div>
+  <div style="margin-top:6px; color:rgba(255,255,255,.7); font-size:13px;">Bitte warten und die Seite nicht schließen</div>
+</div>
+<style>
+@keyframes sendSpin { to { transform: rotate(360deg); } }
+</style>
+
 <div class="dlgBack" id="dlgBack">
   <div class="dlg" role="dialog" aria-modal="true" aria-labelledby="dlgTitle">
     <div class="dlgTop" id="dlgTitle">Hinweis</div>
@@ -4357,6 +4366,35 @@ function showPdfDownloadPrompt(){
   });
 }
 
+const sendLoadingOverlay = document.getElementById("sendLoadingOverlay");
+const sendLoadingText = document.getElementById("sendLoadingText");
+let sendLoadingInterval = null;
+
+function showSendLoading(texts){
+  const list = Array.isArray(texts) ? texts : [texts];
+  let i = 0;
+  sendLoadingText.textContent = list[0];
+  sendLoadingOverlay.style.display = "flex";
+
+  if(sendLoadingInterval) clearInterval(sendLoadingInterval);
+  if(list.length > 1){
+    sendLoadingInterval = setInterval(()=>{
+      i++;
+      if(i >= list.length){
+        clearInterval(sendLoadingInterval);
+        sendLoadingInterval = null;
+        return;
+      }
+      sendLoadingText.textContent = list[i];
+    }, 1200);
+  }
+}
+
+function hideSendLoading(){
+  if(sendLoadingInterval){ clearInterval(sendLoadingInterval); sendLoadingInterval = null; }
+  sendLoadingOverlay.style.display = "none";
+}
+
 async function sendenDirekt(){
   const nm = (nameEl.value || "").trim();
 
@@ -4367,8 +4405,7 @@ async function sendenDirekt(){
   }
 
   sendBtn.disabled = true;
-  const originalSendText = sendBtn.textContent;
-  sendBtn.textContent = "Prüfe PIN...";
+  showSendLoading(["PIN wird geprüft...", "Validiere..."]);
 
   let pinIsRegistered = false;
   try{
@@ -4380,13 +4417,13 @@ async function sendenDirekt(){
     pinIsRegistered = checkResult.status === "success" && checkResult.exists === true;
   }catch(err){
     sendBtn.disabled = false;
-    sendBtn.textContent = originalSendText;
+    hideSendLoading();
     await dlgAlert("PIN konnte nicht geprüft werden: " + err.message, "Fehler");
     return;
   }
 
   sendBtn.disabled = false;
-  sendBtn.textContent = originalSendText;
+  hideSendLoading();
 
   if(!pinIsRegistered){
     setNameError(true);
@@ -4416,8 +4453,12 @@ async function sendenDirekt(){
   const payload = getState();
 
   sendBtn.disabled = true;
-  const oldText = sendBtn.textContent;
-  sendBtn.textContent = "Sende...";
+  showSendLoading([
+    "Stunden werden validiert...",
+    "Daten werden gesendet...",
+    "Wird übermittelt...",
+    "Gleich fertig..."
+  ]);
 
   try{
     const res = await fetch(WEB_APP_URL, {
@@ -4428,13 +4469,15 @@ async function sendenDirekt(){
 
     if(!res.ok) throw new Error("HTTP " + res.status);
 
+    hideSendLoading();
  await showSuccessPremium();
   }catch(err){
     console.error(err);
+    hideSendLoading();
     await dlgAlert("Fehler: Failed to fetch", "Fehler");
   }finally{
     sendBtn.disabled = false;
-    sendBtn.textContent = oldText;
+    hideSendLoading();
   }
 }
 
