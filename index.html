@@ -2970,7 +2970,7 @@ tbody tr:nth-child(odd){
 
       <div id="newPinToggleWrap" style="margin-top:8px;">
         <button type="button" id="newPinToggleBtn" style="background:none; border:none; padding:4px 0; color:var(--purple, #3D3A87); font-size:12px; font-weight:800; text-decoration:underline; cursor:pointer;">
-          Noch kein PIN? Jetzt automatisch anfordern
+          PIN vergessen oder noch keine?
         </button>
       </div>
 
@@ -3242,13 +3242,16 @@ async function requestPin(vorname, nachname, forceNew){
   return res.json();
 }
 
-function applyAssignedPin(pin, message){
+async function applyAssignedPin(pin, message){
   nameEl.value = pin;
   localStorage.setItem("sad_personal_pin", pin);
   newPinStatus.style.color = "#2f9e44";
   newPinStatus.textContent = message;
   setNameError(false);
-  setTimeout(()=>{ newPinPanel.style.display = "none"; if(newPinToggleWrap) newPinToggleWrap.style.display = "none"; }, 2500);
+  newPinPanel.style.display = "none";
+  if(newPinToggleWrap) newPinToggleWrap.style.display = "none";
+
+  await dlgAlert(`Deine PIN lautet: ${pin}\n\nBitte immer diese PIN nutzen.`, "Deine PIN");
 }
 
 newPinRequestBtn?.addEventListener("click", async ()=>{
@@ -3269,7 +3272,7 @@ newPinRequestBtn?.addEventListener("click", async ()=>{
     const result = await requestPin(vorname, nachname, false);
 
     if(result.status === "success"){
-      applyAssignedPin(
+      await applyAssignedPin(
         result.pin,
         result.existing
           ? `Du hattest schon eine PIN: ${result.pin} (jetzt eingetragen).`
@@ -3294,13 +3297,13 @@ newPinRequestBtn?.addEventListener("click", async ()=>{
       }
 
       if(confirmedPin){
-        applyAssignedPin(confirmedPin, `Deine PIN lautet: ${confirmedPin} (jetzt eingetragen).`);
+        await applyAssignedPin(confirmedPin, `Deine PIN lautet: ${confirmedPin} (jetzt eingetragen).`);
       }else{
         newPinStatus.style.color = "#666";
         newPinStatus.textContent = "Neue PIN wird angelegt...";
         const retryResult = await requestPin(vorname, nachname, true);
         if(retryResult.status === "success"){
-          applyAssignedPin(retryResult.pin, `Deine neue PIN lautet: ${retryResult.pin} – ist automatisch eingetragen und wird ab jetzt gemerkt.`);
+          await applyAssignedPin(retryResult.pin, `Deine neue PIN lautet: ${retryResult.pin} – ist automatisch eingetragen und wird ab jetzt gemerkt.`);
         }else{
           newPinStatus.style.color = "#c0392b";
           newPinStatus.textContent = "Fehler: " + retryResult.message;
@@ -4427,7 +4430,7 @@ async function sendenDirekt(){
 
   if(!pinIsRegistered){
     setNameError(true);
-    await dlgAlert("Diese PIN ist noch nicht registriert. Bitte fordere zuerst über \"Noch kein PIN ? Jetzt automatisch anfordern\" eine PIN an, bevor du Stunden sendest.", "PIN nicht erkannt");
+    await dlgAlert("Diese PIN ist noch nicht registriert. Bitte fordere zuerst über \"PIN vergessen oder noch keine?\" eine PIN an, bevor du Stunden sendest.", "PIN nicht erkannt");
     if(newPinToggleWrap) newPinToggleWrap.style.display = "block";
     nameEl.focus();
     return;
