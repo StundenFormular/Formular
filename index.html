@@ -4374,6 +4374,37 @@ async function sendenDirekt(){
     return;
   }
 
+  sendBtn.disabled = true;
+  const originalSendText = sendBtn.textContent;
+  sendBtn.textContent = "Prüfe PIN...";
+
+  let pinIsRegistered = false;
+  try{
+    const checkRes = await fetch(EQUIP_WEB_APP_URL, {
+      method: "POST",
+      body: JSON.stringify({ token: EQUIP_API_TOKEN, action: "checkPin", pin: nm })
+    });
+    const checkResult = await checkRes.json();
+    pinIsRegistered = checkResult.status === "success" && checkResult.exists === true;
+  }catch(err){
+    sendBtn.disabled = false;
+    sendBtn.textContent = originalSendText;
+    await dlgAlert("PIN konnte nicht geprüft werden: " + err.message, "Fehler");
+    return;
+  }
+
+  sendBtn.disabled = false;
+  sendBtn.textContent = originalSendText;
+
+  if(!pinIsRegistered){
+    setNameError(true);
+    await dlgAlert("Diese PIN ist noch nicht registriert. Bitte fordere zuerst über \"Neu hier? PIN automatisch anfordern\" eine PIN an, bevor du Stunden sendest.", "PIN nicht erkannt");
+    if(newPinToggleWrap) newPinToggleWrap.style.display = "block";
+    nameEl.focus();
+    return;
+  }
+  setNameError(false);
+
   const vres = validateRowsBeforeSend();
   if(!vres.ok){
     await dlgAlert(vres.message, "Bitte prüfen");
