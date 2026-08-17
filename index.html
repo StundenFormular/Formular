@@ -3251,7 +3251,19 @@ async function applyAssignedPin(pin, message){
   newPinPanel.style.display = "none";
   if(newPinToggleWrap) newPinToggleWrap.style.display = "none";
 
-  await dlgAlert(`Deine PIN lautet: ${pin}\n\nBitte immer diese PIN nutzen.`, "Deine PIN");
+  dlgTitleEl.textContent = "Deine PIN";
+  dlgMsgEl.innerHTML = `
+    <div style="font-size:28px; font-weight:900; color:#3D3A87; margin-bottom:10px;">${pin}</div>
+    <div>Bitte immer diese PIN nutzen.</div>
+  `;
+  dlgBtnsEl.innerHTML = `<button id="dlgOkBtn" style="grid-column:1 / -1;">OK</button>`;
+  dlgBack.style.display = "flex";
+  await new Promise(resolve=>{
+    document.getElementById("dlgOkBtn").addEventListener("click", ()=>{
+      dlgBack.style.display = "none";
+      resolve();
+    }, { once:true });
+  });
 }
 
 newPinRequestBtn?.addEventListener("click", async ()=>{
