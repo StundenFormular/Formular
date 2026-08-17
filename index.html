@@ -3215,14 +3215,6 @@ const newPinToggleWrap = document.getElementById("newPinToggleWrap");
   }
 })();
 
-nameEl?.addEventListener("blur", ()=>{
-  const val = (nameEl.value || "").trim();
-  if(/^\d{2}$/.test(val)){
-    localStorage.setItem("sad_personal_pin", val);
-    if(newPinToggleWrap) newPinToggleWrap.style.display = "none";
-  }
-});
-
 newPinToggleBtn?.addEventListener("click", ()=>{
   newPinPanel.style.display = newPinPanel.style.display === "none" ? "block" : "none";
 });
@@ -4404,6 +4396,8 @@ async function sendenDirekt(){
     return;
   }
   setNameError(false);
+  localStorage.setItem("sad_personal_pin", nm);
+  if(newPinToggleWrap) newPinToggleWrap.style.display = "none";
 
   const vres = validateRowsBeforeSend();
   if(!vres.ok){
