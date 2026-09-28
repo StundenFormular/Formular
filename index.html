@@ -2889,6 +2889,37 @@ tbody tr:nth-child(odd){
 </style>
 
 <!-- Auswahlbildschirm: Stundenformular (monatlich) vs. Ausrüstungs-Check (täglich) -->
+<div class="pinBack" id="hoursBack">
+  <div class="pinCard" style="max-height:85vh; overflow-y:auto;">
+    <div class="pinTitle">Meine Stunden</div>
+    <p class="pinHint">Hier siehst du deine korrigierten Stunden und kannst Nachrichten schreiben.</p>
+
+    <div id="hoursLoginPanel">
+      <div class="pinRow" style="margin-bottom:10px;">
+        <input id="hoursVornameInput" type="text" placeholder="Vorname">
+      </div>
+      <div class="pinRow" style="margin-bottom:10px;">
+        <input id="hoursNachnameInput" type="text" placeholder="Nachname">
+      </div>
+      <button class="pinOk" id="hoursLoginBtn" type="button" style="width:100%;">Bestätigen</button>
+      <div id="hoursLoginStatus" style="margin-top:8px; font-size:12px;"></div>
+    </div>
+
+    <div id="hoursContentPanel" style="display:none;">
+      <div id="hoursTableWrap" style="max-height:220px; overflow-y:auto; margin-bottom:14px;"></div>
+
+      <div style="font-weight:800; margin-bottom:6px;">Nachrichten</div>
+      <div id="hoursMessagesWrap" style="max-height:180px; overflow-y:auto; margin-bottom:10px; display:flex; flex-direction:column; gap:6px;"></div>
+
+      <textarea id="hoursMessageInput" placeholder="Nachricht schreiben..." style="width:100%; min-height:60px; padding:10px 12px; border-radius:10px; border:1px solid var(--border); font-size:14px; box-sizing:border-box; margin-bottom:8px;"></textarea>
+      <button class="pinOk" id="hoursSendMessageBtn" type="button" style="width:100%;">Nachricht senden</button>
+      <div id="hoursMessageStatus" style="margin-top:8px; font-size:12px;"></div>
+    </div>
+
+    <button class="pinOk" id="hoursBackBtn" type="button" style="width:100%; margin-top:14px; background:rgba(255,255,255,.12);">← Zurück zur Auswahl</button>
+  </div>
+</div>
+
 <div class="pinBack" id="chooserBack">
   <div class="pinCard">
     <div class="pinTitle">Was möchtest du tun?</div>
@@ -2897,8 +2928,11 @@ tbody tr:nth-child(odd){
     <button class="pinOk" id="chooserFormularBtn" type="button" style="width:100%; margin-bottom:10px; text-align:left; padding:16px;">
       📋 Stundenformular<br><span style="font-weight:400; font-size:12px; opacity:.8;">Monatliche Zeiterfassung</span>
     </button>
-    <button class="pinOk" id="chooserEquipBtn" type="button" style="width:100%; text-align:left; padding:16px;">
+    <button class="pinOk" id="chooserEquipBtn" type="button" style="width:100%; margin-bottom:10px; text-align:left; padding:16px;">
       📷 Ausrüstungs-Check<br><span style="font-weight:400; font-size:12px; opacity:.8;" id="chooserEquipSub">Tägliche Foto-Kontrolle</span>
+    </button>
+    <button class="pinOk" id="chooserHoursBtn" type="button" style="width:100%; text-align:left; padding:16px;">
+      🕒 Meine Stunden ansehen<br><span style="font-weight:400; font-size:12px; opacity:.8;">Korrigierte Stunden & Nachrichten</span>
     </button>
   </div>
 </div>
@@ -3242,9 +3276,12 @@ async function requestPin(vorname, nachname, forceNew){
   return res.json();
 }
 
-async function applyAssignedPin(pin, message){
+async function applyAssignedPin(pin, message, secret){
   nameEl.value = pin;
   localStorage.setItem("sad_personal_pin", pin);
+  if(secret){
+    localStorage.setItem("sad_device_secret", secret);
+  }
   newPinStatus.style.color = "#2f9e44";
   newPinStatus.textContent = message;
   setNameError(false);
@@ -3288,11 +3325,13 @@ newPinRequestBtn?.addEventListener("click", async ()=>{
         result.pin,
         result.existing
           ? `Du hattest schon eine PIN: ${result.pin} (jetzt eingetragen).`
-          : `Deine neue PIN lautet: ${result.pin} – ist automatisch eingetragen und wird ab jetzt gemerkt.`
+          : `Deine neue PIN lautet: ${result.pin} – ist automatisch eingetragen und wird ab jetzt gemerkt.`,
+        result.secret
       );
     }else if(result.status === "confirm"){
       newPinStatus.textContent = "";
       let confirmedPin = null;
+      let confirmedCandidate = null;
 
       for(const candidate of result.candidates){
         const isSamePerson = await openDialog({
@@ -3304,18 +3343,23 @@ newPinRequestBtn?.addEventListener("click", async ()=>{
         });
         if(isSamePerson){
           confirmedPin = candidate.pin;
+          confirmedCandidate = candidate;
           break;
         }
       }
 
       if(confirmedPin){
-        await applyAssignedPin(confirmedPin, `Deine PIN lautet: ${confirmedPin} (jetzt eingetragen).`);
+        const parts = confirmedCandidate.storedName.split(" ");
+        const confVorname = parts.shift();
+        const confNachname = parts.join(" ");
+        const confirmedResult = await requestPin(confVorname, confNachname, false);
+        await applyAssignedPin(confirmedPin, `Deine PIN lautet: ${confirmedPin} (jetzt eingetragen).`, confirmedResult.secret);
       }else{
         newPinStatus.style.color = "#666";
         newPinStatus.textContent = "Neue PIN wird angelegt...";
         const retryResult = await requestPin(vorname, nachname, true);
         if(retryResult.status === "success"){
-          await applyAssignedPin(retryResult.pin, `Deine neue PIN lautet: ${retryResult.pin} – ist automatisch eingetragen und wird ab jetzt gemerkt.`);
+          await applyAssignedPin(retryResult.pin, `Deine neue PIN lautet: ${retryResult.pin} – ist automatisch eingetragen und wird ab jetzt gemerkt.`, retryResult.secret);
         }else{
           newPinStatus.style.color = "#c0392b";
           newPinStatus.textContent = "Fehler: " + retryResult.message;
@@ -4543,6 +4587,20 @@ const chooserBack = document.getElementById("chooserBack");
 const chooserFormularBtn = document.getElementById("chooserFormularBtn");
 const chooserEquipBtn = document.getElementById("chooserEquipBtn");
 const chooserEquipSub = document.getElementById("chooserEquipSub");
+const chooserHoursBtn = document.getElementById("chooserHoursBtn");
+const hoursBack = document.getElementById("hoursBack");
+const hoursLoginPanel = document.getElementById("hoursLoginPanel");
+const hoursContentPanel = document.getElementById("hoursContentPanel");
+const hoursVornameInput = document.getElementById("hoursVornameInput");
+const hoursNachnameInput = document.getElementById("hoursNachnameInput");
+const hoursLoginBtn = document.getElementById("hoursLoginBtn");
+const hoursLoginStatus = document.getElementById("hoursLoginStatus");
+const hoursTableWrap = document.getElementById("hoursTableWrap");
+const hoursMessagesWrap = document.getElementById("hoursMessagesWrap");
+const hoursMessageInput = document.getElementById("hoursMessageInput");
+const hoursSendMessageBtn = document.getElementById("hoursSendMessageBtn");
+const hoursMessageStatus = document.getElementById("hoursMessageStatus");
+const hoursBackBtn = document.getElementById("hoursBackBtn");
 const mainWrap = document.getElementById("mainWrap");
 const backToChooserBtn = document.getElementById("backToChooserBtn");
 const equipBackBtn = document.getElementById("equipBackBtn");
@@ -4554,6 +4612,7 @@ function equipIsLocked(){
 function showChooser(){
   mainWrap.style.display = "none";
   equipBack.style.display = "none";
+  hoursBack.style.display = "none";
 
   if(equipIsLocked()){
     chooserEquipSub.textContent = "🔒 Wird bald freigeschaltet";
@@ -4614,6 +4673,190 @@ function openEquipCheck(){
 
 chooserFormularBtn.addEventListener("click", openStundenformular);
 chooserEquipBtn.addEventListener("click", openEquipCheck);
+
+function openMyHours(){
+  chooserBack.style.display = "none";
+  hoursBack.style.display = "flex";
+
+  const savedPin = localStorage.getItem("sad_personal_pin");
+  const savedSecret = localStorage.getItem("sad_device_secret");
+
+  if(savedPin && savedSecret){
+    hoursLoginPanel.style.display = "none";
+    hoursContentPanel.style.display = "block";
+    loadMyHours(savedPin, savedSecret);
+  }else{
+    hoursLoginPanel.style.display = "block";
+    hoursContentPanel.style.display = "none";
+    hoursLoginStatus.textContent = "";
+  }
+}
+
+chooserHoursBtn.addEventListener("click", openMyHours);
+
+hoursLoginBtn.addEventListener("click", async ()=>{
+  const vorname = (hoursVornameInput.value || "").trim();
+  const nachname = (hoursNachnameInput.value || "").trim();
+
+  if(!vorname || !nachname){
+    hoursLoginStatus.style.color = "#c0392b";
+    hoursLoginStatus.textContent = "Bitte Vor- und Nachname eingeben.";
+    return;
+  }
+
+  hoursLoginBtn.disabled = true;
+  hoursLoginStatus.style.color = "#666";
+  hoursLoginStatus.textContent = "Wird geprüft...";
+
+  try{
+    const result = await requestPin(vorname, nachname, false);
+
+    if(result.status === "success"){
+      localStorage.setItem("sad_personal_pin", result.pin);
+      if(result.secret) localStorage.setItem("sad_device_secret", result.secret);
+      hoursLoginPanel.style.display = "none";
+      hoursContentPanel.style.display = "block";
+      loadMyHours(result.pin, result.secret);
+    }else if(result.status === "confirm"){
+      let confirmed = null;
+      for(const candidate of result.candidates){
+        const isSamePerson = await openDialog({
+          title: "Bist du das?",
+          message: `Es gibt schon einen Eintrag "${candidate.storedName}". Bist du das?`,
+          mode: "confirm",
+          okText: "Ja, das bin ich",
+          cancelText: "Nein"
+        });
+        if(isSamePerson){ confirmed = candidate; break; }
+      }
+      if(confirmed){
+        const parts = confirmed.storedName.split(" ");
+        const confVorname = parts.shift();
+        const confNachname = parts.join(" ");
+        const confirmedResult = await requestPin(confVorname, confNachname, false);
+        localStorage.setItem("sad_personal_pin", confirmedResult.pin);
+        if(confirmedResult.secret) localStorage.setItem("sad_device_secret", confirmedResult.secret);
+        hoursLoginPanel.style.display = "none";
+        hoursContentPanel.style.display = "block";
+        loadMyHours(confirmedResult.pin, confirmedResult.secret);
+      }else{
+        hoursLoginStatus.style.color = "#c0392b";
+        hoursLoginStatus.textContent = "Kein Eintrag gefunden. Bitte zuerst im Stundenformular eine PIN anfordern.";
+        hoursLoginBtn.disabled = false;
+      }
+    }else{
+      hoursLoginStatus.style.color = "#c0392b";
+      hoursLoginStatus.textContent = "Fehler: " + result.message;
+      hoursLoginBtn.disabled = false;
+    }
+  }catch(err){
+    hoursLoginStatus.style.color = "#c0392b";
+    hoursLoginStatus.textContent = "Fehler: " + err.message;
+    hoursLoginBtn.disabled = false;
+  }
+});
+
+async function loadMyHours(pin, secret){
+  hoursTableWrap.innerHTML = `<div style="color:rgba(255,255,255,.7); font-size:13px;">Lädt...</div>`;
+  hoursMessagesWrap.innerHTML = "";
+
+  try{
+    const res = await fetch(EQUIP_WEB_APP_URL, {
+      method: "POST",
+      body: JSON.stringify({ token: EQUIP_API_TOKEN, action: "getMyHours", pin: pin, secret: secret })
+    });
+    const result = await res.json();
+
+    if(result.status !== "success"){
+      hoursTableWrap.innerHTML = `<div style="color:#ff9a9a;">Fehler: ${result.message}</div>`;
+      hoursLoginPanel.style.display = "block";
+      hoursContentPanel.style.display = "none";
+      hoursLoginStatus.style.color = "#c0392b";
+      hoursLoginStatus.textContent = "Dieses Gerät ist nicht mehr erkannt. Bitte erneut bestätigen.";
+      hoursLoginBtn.disabled = false;
+      return;
+    }
+
+    if(!result.hours || result.hours.length === 0){
+      hoursTableWrap.innerHTML = `<div style="color:rgba(255,255,255,.7); font-size:13px;">Noch keine Stunden hinterlegt.</div>`;
+    }else{
+      let html = `<table style="width:100%; border-collapse:collapse; font-size:12px; color:#fff;">
+        <thead><tr style="text-align:left; border-bottom:1px solid rgba(255,255,255,.2);">
+          <th style="padding:4px;">Datum</th><th style="padding:4px;">Standort</th><th style="padding:4px;">Beginn</th><th style="padding:4px;">Ende</th><th style="padding:4px;">Std.</th>
+        </tr></thead><tbody>`;
+      result.hours.forEach(h=>{
+        html += `<tr style="border-bottom:1px solid rgba(255,255,255,.08);">
+          <td style="padding:4px;">${h.datum || ""}</td>
+          <td style="padding:4px;">${h.standort || ""}</td>
+          <td style="padding:4px;">${h.beginn || ""}</td>
+          <td style="padding:4px;">${h.ende || ""}</td>
+          <td style="padding:4px;">${h.stunden || ""}</td>
+        </tr>`;
+      });
+      html += `</tbody></table>`;
+      hoursTableWrap.innerHTML = html;
+    }
+
+    renderMyMessages(result.messages || []);
+  }catch(err){
+    hoursTableWrap.innerHTML = `<div style="color:#ff9a9a;">Fehler beim Laden: ${err.message}</div>`;
+  }
+}
+
+function renderMyMessages(messages){
+  if(messages.length === 0){
+    hoursMessagesWrap.innerHTML = `<div style="color:rgba(255,255,255,.6); font-size:12px;">Noch keine Nachrichten.</div>`;
+    return;
+  }
+  hoursMessagesWrap.innerHTML = messages.map(m=>{
+    const isAdmin = m.absender === "Admin";
+    return `<div style="align-self:${isAdmin ? "flex-start" : "flex-end"}; max-width:80%; padding:8px 10px; border-radius:10px; background:${isAdmin ? "rgba(255,255,255,.14)" : "rgba(232,163,61,.25)"}; color:#fff; font-size:13px;">
+      <div style="font-weight:800; font-size:11px; opacity:.7; margin-bottom:2px;">${isAdmin ? "Admin" : "Du"}</div>
+      <div>${(m.text || "").replace(/</g,"&lt;")}</div>
+    </div>`;
+  }).join("");
+}
+
+hoursSendMessageBtn.addEventListener("click", async ()=>{
+  const text = (hoursMessageInput.value || "").trim();
+  const pin = localStorage.getItem("sad_personal_pin");
+  const secret = localStorage.getItem("sad_device_secret");
+
+  if(!text) return;
+  if(!pin || !secret){
+    hoursMessageStatus.style.color = "#c0392b";
+    hoursMessageStatus.textContent = "Bitte zuerst bestätigen.";
+    return;
+  }
+
+  hoursSendMessageBtn.disabled = true;
+  hoursMessageStatus.style.color = "#666";
+  hoursMessageStatus.textContent = "Wird gesendet...";
+
+  try{
+    const res = await fetch(EQUIP_WEB_APP_URL, {
+      method: "POST",
+      body: JSON.stringify({ token: EQUIP_API_TOKEN, action: "addMessage", pin: pin, secret: secret, text: text })
+    });
+    const result = await res.json();
+
+    if(result.status === "success"){
+      hoursMessageInput.value = "";
+      hoursMessageStatus.textContent = "";
+      loadMyHours(pin, secret);
+    }else{
+      hoursMessageStatus.style.color = "#c0392b";
+      hoursMessageStatus.textContent = "Fehler: " + result.message;
+    }
+  }catch(err){
+    hoursMessageStatus.style.color = "#c0392b";
+    hoursMessageStatus.textContent = "Fehler: " + err.message;
+  }finally{
+    hoursSendMessageBtn.disabled = false;
+  }
+});
+
+hoursBackBtn.addEventListener("click", showChooser);
 backToChooserBtn.addEventListener("click", ()=>{
   if(formularHistoryPushed){
     formularHistoryPushed = false;
