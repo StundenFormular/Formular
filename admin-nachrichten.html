@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Nachrichten – Admin</title>
+<style>
+  :root{ --purple:#3D3A87; --gold:#E8A33D; --border:#e2e2ea; --bg:#f5f5fa; }
+  *{ box-sizing:border-box; }
+  body{ margin:0; font-family:-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif; background:var(--bg); color:#1a1a2e; }
+  header{ background:var(--purple); color:#fff; padding:16px 20px; font-weight:800; font-size:18px; }
+
+  .pinBack{ position:fixed; inset:0; z-index:50; background:linear-gradient(160deg, #201c46, #3D3A87); display:flex; align-items:center; justify-content:center; padding:20px; }
+  .pinCard{ background:rgba(20,18,50,.55); border:1px solid rgba(255,255,255,.14); border-radius:22px; padding:28px 22px; max-width:360px; width:100%; text-align:center; }
+  .pinCard h1{ color:#fff; font-size:20px; margin:0 0 6px; }
+  .pinCard p{ color:rgba(255,255,255,.7); font-size:13px; margin:0 0 18px; }
+  .pinCard input{ width:100%; padding:14px 16px; border-radius:16px; border:none; font-size:18px; text-align:center; margin-bottom:12px; }
+  .pinCard button{ width:100%; padding:13px; border-radius:16px; border:none; background:linear-gradient(135deg, var(--purple), #6b63c9); color:#fff; font-weight:800; font-size:15px; cursor:pointer; }
+  .pinErr{ display:none; color:#ff9a9a; font-size:13px; margin-top:10px; }
+
+  #app{ display:none; padding:16px; max-width:900px; margin:0 auto; }
+
+  .threadCard{ background:#fff; border-radius:14px; border:1px solid var(--border); margin-bottom:14px; overflow:hidden; }
+  .threadHeader{ padding:12px 14px; background:#faf9ff; font-weight:800; display:flex; justify-content:space-between; align-items:center; cursor:pointer; }
+  .threadBody{ padding:14px; display:none; }
+  .msgBubble{ padding:8px 10px; border-radius:10px; margin-bottom:8px; font-size:13px; max-width:80%; }
+  .msgMitarbeiter{ background:#f0f0f5; margin-right:auto; }
+  .msgAdmin{ background:rgba(232,163,61,.25); margin-left:auto; }
+  .replyRow{ display:flex; gap:8px; margin-top:10px; }
+  .replyRow textarea{ flex:1; padding:8px 10px; border-radius:10px; border:1px solid var(--border); font-size:13px; min-height:44px; }
+  .replyRow button{ padding:0 16px; border-radius:10px; border:none; background:var(--purple); color:#fff; font-weight:700; cursor:pointer; }
+  #refreshBtn{ margin-bottom:14px; padding:10px 16px; border-radius:10px; border:none; background:var(--purple); color:#fff; font-weight:700; cursor:pointer; }
+  #emptyState{ color:#777; padding:20px; text-align:center; }
+</style>
+</head>
+<body>
+
+<div class="pinBack" id="pinBack">
+  <div class="pinCard">
+    <h1>Nachrichten-Übersicht</h1>
+    <p>Admin-Zugang für Stunden-Korrekturen & Rückfragen</p>
+    <input id="pinInput" inputmode="numeric" placeholder="Admin-PIN eingeben">
+    <button id="pinBtn" type="button">Anmelden</button>
+    <div class="pinErr" id="pinErr">Falscher PIN</div>
+  </div>
+</div>
+
+<div id="app">
+  <header style="margin:-16px -16px 16px -16px;">Nachrichten-Übersicht</header>
+  <button id="refreshBtn" type="button">🔄 Aktualisieren</button>
+  <div id="threadsWrap"></div>
+  <div id="emptyState" style="display:none;">Noch keine Nachrichten.</div>
+</div>
+
+<script>
+const EQUIP_WEB_APP_URL = "HIER_DEINE_APPS_SCRIPT_WEB_APP_URL_EINTRAGEN";
+const EQUIP_API_TOKEN   = "Zk0sUhvBN2XU13DGgeAwhm-H-rtmBcK1OwJR7NLc1VI";
+const ADMIN_PIN = "19630";
+
+const pinBack = document.getElementById("pinBack");
+const pinInput = document.getElementById("pinInput");
+const pinBtn = document.getElementById("pinBtn");
+const pinErr = document.getElementById("pinErr");
+const appEl = document.getElementById("app");
+const threadsWrap = document.getElementById("threadsWrap");
+const emptyState = document.getElementById("emptyState");
+const refreshBtn = document.getElementById("refreshBtn");
+
+function checkPin(){
+  if(pinInput.value.trim() === ADMIN_PIN){
+    pinBack.style.display = "none";
+    appEl.style.display = "block";
+    loadThreads();
+  }else{
+    pinErr.style.display = "block";
+  }
+}
+pinBtn.addEventListener("click", checkPin);
+pinInput.addEventListener("keydown", (e)=>{ if(e.key === "Enter") checkPin(); });
+refreshBtn.addEventListener("click", loadThreads);
+
+async function loadThreads(){
+  threadsWrap.innerHTML = `<div style="text-align:center; padding:20px; color:#777;">Lädt...</div>`;
+  emptyState.style.display = "none";
+
+  try{
+    const res = await fetch(EQUIP_WEB_APP_URL, {
+      method: "POST",
+      body: JSON.stringify({ token: EQUIP_API_TOKEN, action: "adminListMessages" })
+    });
+    const data = await res.json();
+
+    if(data.status !== "success"){
+      threadsWrap.innerHTML = `<div style="color:#c0392b; padding:20px;">Fehler: ${data.message}</div>`;
+      return;
+    }
+
+    renderThreads(data.messages || []);
+  }catch(err){
+    threadsWrap.innerHTML = `<div style="color:#c0392b; padding:20px;">Fehler beim Laden: ${err.message}</div>`;
+  }
+}
+
+function renderThreads(messages){
+  const grouped = {};
+  messages.forEach(m=>{
+    if(!grouped[m.pin]) grouped[m.pin] = { name: m.name, pin: m.pin, msgs: [] };
+    grouped[m.pin].msgs.push(m);
+  });
+
+  const pins = Object.keys(grouped);
+  if(pins.length === 0){
+    threadsWrap.innerHTML = "";
+    emptyState.style.display = "block";
+    return;
+  }
+  emptyState.style.display = "none";
+
+  threadsWrap.innerHTML = "";
+  pins.forEach(pin=>{
+    const thread = grouped[pin];
+    const card = document.createElement("div");
+    card.className = "threadCard";
+
+    const lastMsg = thread.msgs[thread.msgs.length - 1];
+    card.innerHTML = `
+      <div class="threadHeader">
+        <span>${escapeHtml(thread.name)} (PIN ${escapeHtml(pin)})</span>
+        <span style="font-weight:400; font-size:12px; color:#777;">${thread.msgs.length} Nachricht${thread.msgs.length === 1 ? "" : "en"}</span>
+      </div>
+      <div class="threadBody">
+        <div class="msgsInner"></div>
+        <div class="replyRow">
+          <textarea placeholder="Antwort schreiben..."></textarea>
+          <button type="button">Senden</button>
+        </div>
+        <div class="replyStatus" style="font-size:12px; margin-top:6px;"></div>
+      </div>
+    `;
+
+    const header = card.querySelector(".threadHeader");
+    const body = card.querySelector(".threadBody");
+    header.addEventListener("click", ()=>{
+      body.style.display = body.style.display === "none" ? "block" : "none";
+    });
+
+    const msgsInner = card.querySelector(".msgsInner");
+    thread.msgs.forEach(m=>{
+      const bubble = document.createElement("div");
+      bubble.className = "msgBubble " + (m.absender === "Admin" ? "msgAdmin" : "msgMitarbeiter");
+      bubble.textContent = m.text;
+      msgsInner.appendChild(bubble);
+    });
+
+    const replyBtn = card.querySelector(".replyRow button");
+    const replyTextarea = card.querySelector(".replyRow textarea");
+    const replyStatus = card.querySelector(".replyStatus");
+
+    replyBtn.addEventListener("click", async ()=>{
+      const text = replyTextarea.value.trim();
+      if(!text) return;
+      replyBtn.disabled = true;
+      replyStatus.textContent = "Wird gesendet...";
+      replyStatus.style.color = "#666";
+
+      try{
+        const res = await fetch(EQUIP_WEB_APP_URL, {
+          method: "POST",
+          body: JSON.stringify({ token: EQUIP_API_TOKEN, action: "adminReply", pin: pin, text: text })
+        });
+        const result = await res.json();
+        if(result.status === "success"){
+          replyTextarea.value = "";
+          replyStatus.textContent = "";
+          loadThreads();
+        }else{
+          replyStatus.style.color = "#c0392b";
+          replyStatus.textContent = "Fehler: " + result.message;
+        }
+      }catch(err){
+        replyStatus.style.color = "#c0392b";
+        replyStatus.textContent = "Fehler: " + err.message;
+      }finally{
+        replyBtn.disabled = false;
+      }
+    });
+
+    threadsWrap.appendChild(card);
+  });
+}
+
+function escapeHtml(str){
+  const div = document.createElement("div");
+  div.textContent = str == null ? "" : String(str);
+  return div.innerHTML;
+}
+</script>
+</body>
+</html>
