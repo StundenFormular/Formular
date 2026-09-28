@@ -2906,7 +2906,7 @@ tbody tr:nth-child(odd){
     </div>
 
     <div id="hoursContentPanel" style="display:none;">
-      <div id="hoursTableWrap" style="max-height:220px; overflow-y:auto; margin-bottom:14px;"></div>
+      <div id="hoursTableWrap" style="max-height:320px; overflow-y:auto; margin-bottom:14px;"></div>
 
       <div style="font-weight:800; margin-bottom:6px;">Nachrichten</div>
       <div id="hoursMessagesWrap" style="max-height:180px; overflow-y:auto; margin-bottom:10px; display:flex; flex-direction:column; gap:6px;"></div>
@@ -4775,25 +4775,27 @@ async function loadMyHours(pin, secret){
     if(!result.hours || result.hours.length === 0){
       hoursTableWrap.innerHTML = `<div style="color:rgba(255,255,255,.7); font-size:13px;">Noch keine Stunden hinterlegt.</div>`;
     }else{
-      let html = `<table style="width:100%; border-collapse:collapse; font-size:12px; color:#fff;">
-        <thead><tr style="text-align:left; border-bottom:1px solid rgba(255,255,255,.2);">
-          <th style="padding:4px;">Datum</th><th style="padding:4px;">Standort</th><th style="padding:4px;">Beginn</th><th style="padding:4px;">Ende</th><th style="padding:4px;">Std.</th><th style="padding:4px;">Status</th>
-        </tr></thead><tbody>`;
-      result.hours.forEach(h=>{
-        const statusHtml = h.korrigiert
-          ? `<span style="color:#7CFC9A; font-weight:800;">✅ Korrigiert</span>`
-          : `<span style="color:#FFD54A; font-weight:800;">⏳ Noch nicht korrigiert</span>`;
-        html += `<tr style="border-bottom:1px solid rgba(255,255,255,.08);">
-          <td style="padding:4px;">${h.datum || ""}</td>
-          <td style="padding:4px;">${h.standort || ""}</td>
-          <td style="padding:4px;">${h.beginn || ""}</td>
-          <td style="padding:4px;">${h.ende || ""}</td>
-          <td style="padding:4px;">${h.stunden || ""}</td>
-          <td style="padding:4px; white-space:nowrap;">${statusHtml}</td>
-        </tr>`;
-      });
-      html += `</tbody></table>`;
-      hoursTableWrap.innerHTML = html;
+      const sorted = [...result.hours].sort((a,b)=> String(a.datum).localeCompare(String(b.datum)));
+      hoursTableWrap.innerHTML = sorted.map(h=>{
+        const korrigiert = !!h.korrigiert;
+        const badgeBg = korrigiert ? "rgba(124,252,154,.16)" : "rgba(255,213,74,.16)";
+        const badgeBorder = korrigiert ? "rgba(124,252,154,.45)" : "rgba(255,213,74,.45)";
+        const badgeColor = korrigiert ? "#7CFC9A" : "#FFD54A";
+        const badgeText = korrigiert ? "✅ Korrigiert" : "⏳ Ausstehend";
+
+        return `
+        <div style="background:rgba(255,255,255,.05); border:1px solid rgba(255,255,255,.1); border-radius:14px; padding:12px 14px; margin-bottom:10px;">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+            <div style="font-weight:800; color:#fff; font-size:14px;">${h.datum || ""}</div>
+            <span style="font-size:11px; font-weight:800; padding:3px 9px; border-radius:20px; background:${badgeBg}; border:1px solid ${badgeBorder}; color:${badgeColor}; white-space:nowrap;">${badgeText}</span>
+          </div>
+          <div style="color:rgba(255,255,255,.85); font-size:13px; margin-bottom:6px;">📍 ${h.standort || "–"}</div>
+          <div style="display:flex; gap:14px; font-size:13px; color:rgba(255,255,255,.85);">
+            <span>🕒 ${h.beginn || "–"} – ${h.ende || "–"}</span>
+            <span style="font-weight:800; color:#FFD54A;">${h.stunden || "–"} Std.</span>
+          </div>
+        </div>`;
+      }).join("");
     }
 
     renderMyMessages(result.messages || []);
@@ -4809,8 +4811,11 @@ function renderMyMessages(messages){
   }
   hoursMessagesWrap.innerHTML = messages.map(m=>{
     const isAdmin = m.absender === "Admin";
-    return `<div style="align-self:${isAdmin ? "flex-start" : "flex-end"}; max-width:80%; padding:8px 10px; border-radius:10px; background:${isAdmin ? "rgba(255,255,255,.14)" : "rgba(232,163,61,.25)"}; color:#fff; font-size:13px;">
-      <div style="font-weight:800; font-size:11px; opacity:.7; margin-bottom:2px;">${isAdmin ? "Admin" : "Du"}</div>
+    const bg = isAdmin ? "#3D3A87" : "linear-gradient(135deg, #E8A33D, #f0c674)";
+    const textColor = isAdmin ? "#fff" : "#2b1f04";
+    const labelColor = isAdmin ? "rgba(255,255,255,.75)" : "rgba(43,31,4,.65)";
+    return `<div style="align-self:${isAdmin ? "flex-start" : "flex-end"}; max-width:80%; padding:9px 12px; border-radius:14px; background:${bg}; color:${textColor}; font-size:13px; box-shadow:0 2px 6px rgba(0,0,0,.25);">
+      <div style="font-weight:800; font-size:11px; color:${labelColor}; margin-bottom:2px;">${isAdmin ? "Admin" : "Du"}</div>
       <div>${(m.text || "").replace(/</g,"&lt;")}</div>
     </div>`;
   }).join("");
