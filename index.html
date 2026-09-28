@@ -4707,8 +4707,14 @@ hoursLoginBtn.addEventListener("click", async ()=>{
     const result = await requestPin(vorname, nachname, false);
 
     if(result.status === "success"){
+      if(!result.secret){
+        hoursLoginStatus.style.color = "#c0392b";
+        hoursLoginStatus.textContent = "Dieses Gerät ist schon einem anderen verknüpft. Bitte den Admin bitten, das zurückzusetzen.";
+        hoursLoginBtn.disabled = false;
+        return;
+      }
       localStorage.setItem("sad_personal_pin", result.pin);
-      if(result.secret) localStorage.setItem("sad_device_secret", result.secret);
+      localStorage.setItem("sad_device_secret", result.secret);
       hoursLoginPanel.style.display = "none";
       hoursContentPanel.style.display = "block";
       loadMyHours(result.pin, result.secret);
@@ -4729,8 +4735,14 @@ hoursLoginBtn.addEventListener("click", async ()=>{
         const confVorname = parts.shift();
         const confNachname = parts.join(" ");
         const confirmedResult = await requestPin(confVorname, confNachname, false);
+        if(!confirmedResult.secret){
+          hoursLoginStatus.style.color = "#c0392b";
+          hoursLoginStatus.textContent = "Dieses Gerät ist schon einem anderen verknüpft. Bitte den Admin bitten, das zurückzusetzen.";
+          hoursLoginBtn.disabled = false;
+          return;
+        }
         localStorage.setItem("sad_personal_pin", confirmedResult.pin);
-        if(confirmedResult.secret) localStorage.setItem("sad_device_secret", confirmedResult.secret);
+        localStorage.setItem("sad_device_secret", confirmedResult.secret);
         hoursLoginPanel.style.display = "none";
         hoursContentPanel.style.display = "block";
         loadMyHours(confirmedResult.pin, confirmedResult.secret);
