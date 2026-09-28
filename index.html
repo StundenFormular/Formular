@@ -4504,11 +4504,6 @@ async function sendenDirekt(){
   const ok = await showSendConfirmPremium();
   if(!ok) return;
 
-  if(!WEB_APP_URL || WEB_APP_URL.includes("HIER_DEIN_EXEC_LINK") || WEB_APP_URL === "leerlassen"){
-    await dlgAlert("Bitte erst den WEB_APP_URL (exec Link) im Code eintragen.", "Fehler");
-    return;
-  }
-
   const payload = getState();
 
   sendBtn.disabled = true;
@@ -4520,20 +4515,20 @@ async function sendenDirekt(){
   ]);
 
   try{
-    const res = await fetch(WEB_APP_URL, {
+    const res = await fetch(EQUIP_WEB_APP_URL, {
       method: "POST",
-      headers: { "Content-Type": "text/plain;charset=utf-8" },
-      body: JSON.stringify(payload)
+      body: JSON.stringify({ token: EQUIP_API_TOKEN, action: "submitHours", ...payload })
     });
 
-    if(!res.ok) throw new Error("HTTP " + res.status);
+    const result = await res.json();
+    if(result.status !== "success") throw new Error(result.message || "Unbekannter Fehler");
 
     hideSendLoading();
  await showSuccessPremium();
   }catch(err){
     console.error(err);
     hideSendLoading();
-    await dlgAlert("Fehler: Failed to fetch", "Fehler");
+    await dlgAlert("Fehler: " + err.message, "Fehler");
   }finally{
     sendBtn.disabled = false;
     hideSendLoading();
@@ -4782,15 +4777,19 @@ async function loadMyHours(pin, secret){
     }else{
       let html = `<table style="width:100%; border-collapse:collapse; font-size:12px; color:#fff;">
         <thead><tr style="text-align:left; border-bottom:1px solid rgba(255,255,255,.2);">
-          <th style="padding:4px;">Datum</th><th style="padding:4px;">Standort</th><th style="padding:4px;">Beginn</th><th style="padding:4px;">Ende</th><th style="padding:4px;">Std.</th>
+          <th style="padding:4px;">Datum</th><th style="padding:4px;">Standort</th><th style="padding:4px;">Beginn</th><th style="padding:4px;">Ende</th><th style="padding:4px;">Std.</th><th style="padding:4px;">Status</th>
         </tr></thead><tbody>`;
       result.hours.forEach(h=>{
+        const statusHtml = h.korrigiert
+          ? `<span style="color:#7CFC9A; font-weight:800;">✅ Korrigiert</span>`
+          : `<span style="color:#FFD54A; font-weight:800;">⏳ Noch nicht korrigiert</span>`;
         html += `<tr style="border-bottom:1px solid rgba(255,255,255,.08);">
           <td style="padding:4px;">${h.datum || ""}</td>
           <td style="padding:4px;">${h.standort || ""}</td>
           <td style="padding:4px;">${h.beginn || ""}</td>
           <td style="padding:4px;">${h.ende || ""}</td>
           <td style="padding:4px;">${h.stunden || ""}</td>
+          <td style="padding:4px; white-space:nowrap;">${statusHtml}</td>
         </tr>`;
       });
       html += `</tbody></table>`;
