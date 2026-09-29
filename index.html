@@ -2906,6 +2906,8 @@ tbody tr:nth-child(odd){
     </div>
 
     <div id="hoursContentPanel" style="display:none;">
+      <div id="hoursDocumentsWrap" style="margin-bottom:14px;"></div>
+
       <div id="hoursTableWrap" style="max-height:320px; overflow-y:auto; margin-bottom:14px;"></div>
 
       <div style="font-weight:800; margin-bottom:6px;">Nachrichten</div>
@@ -4591,6 +4593,7 @@ const hoursNachnameInput = document.getElementById("hoursNachnameInput");
 const hoursLoginBtn = document.getElementById("hoursLoginBtn");
 const hoursLoginStatus = document.getElementById("hoursLoginStatus");
 const hoursTableWrap = document.getElementById("hoursTableWrap");
+const hoursDocumentsWrap = document.getElementById("hoursDocumentsWrap");
 const hoursMessagesWrap = document.getElementById("hoursMessagesWrap");
 const hoursMessageInput = document.getElementById("hoursMessageInput");
 const hoursSendMessageBtn = document.getElementById("hoursSendMessageBtn");
@@ -4766,6 +4769,7 @@ hoursLoginBtn.addEventListener("click", async ()=>{
 async function loadMyHours(pin, secret){
   hoursTableWrap.innerHTML = `<div style="color:rgba(255,255,255,.7); font-size:13px;">Lädt...</div>`;
   hoursMessagesWrap.innerHTML = "";
+  hoursDocumentsWrap.innerHTML = "";
 
   try{
     const res = await fetch(EQUIP_WEB_APP_URL, {
@@ -4782,6 +4786,17 @@ async function loadMyHours(pin, secret){
       hoursLoginStatus.textContent = "Dieses Gerät ist nicht mehr erkannt. Bitte erneut bestätigen.";
       hoursLoginBtn.disabled = false;
       return;
+    }
+
+    if(result.documents && result.documents.length > 0){
+      hoursDocumentsWrap.innerHTML = `
+        <div style="font-weight:800; margin-bottom:6px; color:#fff;">📎 Dokumente</div>
+        ${result.documents.map(d=>`
+          <a href="${d.link}" target="_blank" rel="noopener" style="display:flex; align-items:center; gap:8px; padding:10px 12px; margin-bottom:8px; border-radius:12px; background:rgba(232,163,61,.14); border:1px solid rgba(232,163,61,.4); color:#FFD54A; text-decoration:none; font-size:13px; font-weight:700;">
+            📄 ${(d.dateiname || "Dokument").replace(/</g,"&lt;")}
+          </a>
+        `).join("")}
+      `;
     }
 
     if(!result.hours || result.hours.length === 0){
