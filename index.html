@@ -4787,7 +4787,7 @@ async function loadMyHours(pin, secret){
     if(!result.hours || result.hours.length === 0){
       hoursTableWrap.innerHTML = `<div style="color:rgba(255,255,255,.7); font-size:13px;">Noch keine Stunden hinterlegt.</div>`;
     }else{
-      const sorted = [...result.hours].sort((a,b)=> String(a.datum).localeCompare(String(b.datum)));
+      const sorted = [...result.hours].sort((a,b)=> String(a.sortKey || a.datum).localeCompare(String(b.sortKey || b.datum)));
       hoursTableWrap.innerHTML = sorted.map(h=>{
         const korrigiert = !!h.korrigiert;
         const badgeBg = korrigiert ? "rgba(124,252,154,.16)" : "rgba(255,213,74,.16)";
