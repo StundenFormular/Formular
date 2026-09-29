@@ -31,6 +31,23 @@
   .replyRow button{ padding:0 16px; border-radius:10px; border:none; background:var(--purple); color:#fff; font-weight:700; cursor:pointer; }
   #refreshBtn{ margin-bottom:14px; padding:10px 16px; border-radius:10px; border:none; background:var(--purple); color:#fff; font-weight:700; cursor:pointer; }
   #emptyState{ color:#777; padding:20px; text-align:center; }
+
+  .tabBar{ display:flex; gap:8px; margin-bottom:16px; }
+  .tabBtn{ padding:10px 18px; border-radius:10px; border:1px solid var(--border); background:#fff; color:#1a1a2e; font-weight:700; cursor:pointer; }
+  .tabBtn.active{ background:var(--purple); color:#fff; border-color:var(--purple); }
+  .tabPanel{ display:none; }
+  .tabPanel.active{ display:block; }
+
+  .uploadCard{ background:#fff; border-radius:14px; border:1px solid var(--border); padding:18px; }
+  .uploadCard input[type="text"]{ width:100%; padding:12px 14px; border-radius:10px; border:1px solid var(--border); font-size:14px; margin-bottom:10px; box-sizing:border-box; }
+  .searchResults{ margin-bottom:12px; }
+  .searchResultItem{ padding:10px 12px; border-radius:10px; border:1px solid var(--border); margin-bottom:6px; cursor:pointer; font-size:14px; }
+  .searchResultItem:hover{ background:#faf9ff; }
+  .searchResultItem.selected{ background:var(--purple); color:#fff; border-color:var(--purple); }
+  .selectedEmployee{ padding:10px 12px; border-radius:10px; background:rgba(232,163,61,.15); border:1px solid var(--gold); margin-bottom:12px; font-weight:700; }
+  #uploadFileInput{ margin-bottom:12px; }
+  #uploadBtn{ width:100%; padding:12px; border-radius:10px; border:none; background:linear-gradient(135deg, var(--purple), #6b63c9); color:#fff; font-weight:800; cursor:pointer; }
+  #uploadStatus{ margin-top:10px; font-size:13px; }
 </style>
 </head>
 <body>
@@ -46,10 +63,33 @@
 </div>
 
 <div id="app">
-  <header style="margin:-16px -16px 16px -16px;">Nachrichten-Übersicht</header>
-  <button id="refreshBtn" type="button">🔄 Aktualisieren</button>
-  <div id="threadsWrap"></div>
-  <div id="emptyState" style="display:none;">Noch keine Nachrichten.</div>
+  <header style="margin:-16px -16px 16px -16px;">Admin-Bereich</header>
+
+  <div class="tabBar">
+    <button class="tabBtn active" id="tabNachrichtenBtn" type="button">💬 Nachrichten</button>
+    <button class="tabBtn" id="tabUploadBtn" type="button">📎 Dokument hochladen</button>
+  </div>
+
+  <div class="tabPanel active" id="tabNachrichten">
+    <button id="refreshBtn" type="button">🔄 Aktualisieren</button>
+    <div id="threadsWrap"></div>
+    <div id="emptyState" style="display:none;">Noch keine Nachrichten.</div>
+  </div>
+
+  <div class="tabPanel" id="tabUpload">
+    <div class="uploadCard">
+      <div style="font-weight:800; margin-bottom:10px;">Mitarbeiter suchen</div>
+      <input type="text" id="searchNameInput" placeholder="Name eingeben (Tippfehler werden toleriert)...">
+      <div class="searchResults" id="searchResults"></div>
+
+      <div id="selectedEmployeeWrap" style="display:none;">
+        <div class="selectedEmployee" id="selectedEmployeeLabel"></div>
+        <input type="file" id="uploadFileInput" accept="application/pdf">
+        <button id="uploadBtn" type="button">Dokument hochladen</button>
+        <div id="uploadStatus"></div>
+      </div>
+    </div>
+  </div>
 </div>
 
 <script>
@@ -78,6 +118,135 @@ function checkPin(){
 pinBtn.addEventListener("click", checkPin);
 pinInput.addEventListener("keydown", (e)=>{ if(e.key === "Enter") checkPin(); });
 refreshBtn.addEventListener("click", loadThreads);
+
+// ===== Tabs =====
+const tabNachrichtenBtn = document.getElementById("tabNachrichtenBtn");
+const tabUploadBtn = document.getElementById("tabUploadBtn");
+const tabNachrichten = document.getElementById("tabNachrichten");
+const tabUpload = document.getElementById("tabUpload");
+
+tabNachrichtenBtn.addEventListener("click", ()=>{
+  tabNachrichtenBtn.classList.add("active");
+  tabUploadBtn.classList.remove("active");
+  tabNachrichten.classList.add("active");
+  tabUpload.classList.remove("active");
+});
+tabUploadBtn.addEventListener("click", ()=>{
+  tabUploadBtn.classList.add("active");
+  tabNachrichtenBtn.classList.remove("active");
+  tabUpload.classList.add("active");
+  tabNachrichten.classList.remove("active");
+});
+
+// ===== Mitarbeiter-Suche (tippfehler-tolerant) =====
+const searchNameInput = document.getElementById("searchNameInput");
+const searchResults = document.getElementById("searchResults");
+const selectedEmployeeWrap = document.getElementById("selectedEmployeeWrap");
+const selectedEmployeeLabel = document.getElementById("selectedEmployeeLabel");
+const uploadFileInput = document.getElementById("uploadFileInput");
+const uploadBtn = document.getElementById("uploadBtn");
+const uploadStatus = document.getElementById("uploadStatus");
+
+let selectedPin = null;
+let searchDebounce = null;
+
+searchNameInput.addEventListener("input", ()=>{
+  clearTimeout(searchDebounce);
+  const query = searchNameInput.value.trim();
+  if(query.length < 2){
+    searchResults.innerHTML = "";
+    return;
+  }
+  searchDebounce = setTimeout(()=> runSearch(query), 300);
+});
+
+async function runSearch(query){
+  searchResults.innerHTML = `<div style="color:#777; font-size:13px;">Suche...</div>`;
+  try{
+    const res = await fetch(EQUIP_WEB_APP_URL, {
+      method: "POST",
+      body: JSON.stringify({ token: EQUIP_API_TOKEN, action: "searchEmployee", query: query })
+    });
+    const data = await res.json();
+    if(data.status !== "success" || !data.results || data.results.length === 0){
+      searchResults.innerHTML = `<div style="color:#777; font-size:13px;">Keine Treffer.</div>`;
+      return;
+    }
+    searchResults.innerHTML = "";
+    data.results.forEach(r=>{
+      const item = document.createElement("div");
+      item.className = "searchResultItem";
+      item.textContent = `${r.name} (PIN ${r.pin})`;
+      item.addEventListener("click", ()=>{
+        selectedPin = r.pin;
+        selectedEmployeeLabel.textContent = `Ausgewählt: ${r.name} (PIN ${r.pin})`;
+        selectedEmployeeWrap.style.display = "block";
+        searchResults.innerHTML = "";
+        searchNameInput.value = "";
+        uploadStatus.textContent = "";
+      });
+      searchResults.appendChild(item);
+    });
+  }catch(err){
+    searchResults.innerHTML = `<div style="color:#c0392b; font-size:13px;">Fehler: ${err.message}</div>`;
+  }
+}
+
+uploadBtn.addEventListener("click", async ()=>{
+  if(!selectedPin){
+    uploadStatus.style.color = "#c0392b";
+    uploadStatus.textContent = "Bitte zuerst einen Mitarbeiter auswählen.";
+    return;
+  }
+  const file = uploadFileInput.files[0];
+  if(!file){
+    uploadStatus.style.color = "#c0392b";
+    uploadStatus.textContent = "Bitte eine Datei auswählen.";
+    return;
+  }
+
+  uploadBtn.disabled = true;
+  uploadStatus.style.color = "#666";
+  uploadStatus.textContent = "Wird hochgeladen...";
+
+  try{
+    const base64 = await fileToBase64(file);
+    const res = await fetch(EQUIP_WEB_APP_URL, {
+      method: "POST",
+      body: JSON.stringify({
+        token: EQUIP_API_TOKEN,
+        action: "uploadDocument",
+        pin: selectedPin,
+        filename: file.name,
+        mimeType: file.type || "application/pdf",
+        fileBase64: base64
+      })
+    });
+    const result = await res.json();
+    if(result.status === "success"){
+      uploadStatus.style.color = "#2f9e44";
+      uploadStatus.textContent = "Hochgeladen! Der Mitarbeiter sieht es jetzt in der App.";
+      uploadFileInput.value = "";
+    }else{
+      uploadStatus.style.color = "#c0392b";
+      uploadStatus.textContent = "Fehler: " + result.message;
+    }
+  }catch(err){
+    uploadStatus.style.color = "#c0392b";
+    uploadStatus.textContent = "Fehler: " + err.message;
+  }finally{
+    uploadBtn.disabled = false;
+  }
+});
+
+function fileToBase64(file){
+  return new Promise((resolve, reject)=>{
+    const reader = new FileReader();
+    reader.onload = ()=> resolve(reader.result.split(",")[1]);
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
 
 async function loadThreads(){
   threadsWrap.innerHTML = `<div style="text-align:center; padding:20px; color:#777;">Lädt...</div>`;
