@@ -48,6 +48,28 @@
   #uploadFileInput{ margin-bottom:12px; }
   #uploadBtn{ width:100%; padding:12px; border-radius:10px; border:none; background:linear-gradient(135deg, var(--purple), #6b63c9); color:#fff; font-weight:800; cursor:pointer; }
   #uploadStatus{ margin-top:10px; font-size:13px; }
+
+  .overviewBar{ display:flex; gap:10px; align-items:center; margin-bottom:16px; flex-wrap:wrap; }
+  .overviewBar input[type="month"]{ padding:10px 14px; border-radius:10px; border:1px solid var(--border); font-size:14px; }
+  .overviewBar button{ padding:10px 16px; border-radius:10px; border:none; background:var(--purple); color:#fff; font-weight:700; cursor:pointer; }
+
+  .empCard{ background:#fff; border-radius:14px; border:1px solid var(--border); margin-bottom:10px; overflow:hidden; }
+  .empHeader{ padding:12px 14px; display:flex; justify-content:space-between; align-items:center; cursor:pointer; }
+  .empHeader.sent{ border-left:5px solid #2f9e44; }
+  .empHeader.notSent{ border-left:5px solid #c0392b; }
+  .empStatusDot{ font-size:12px; font-weight:800; padding:3px 10px; border-radius:20px; }
+  .empStatusDot.sent{ background:rgba(47,158,68,.15); color:#2f9e44; }
+  .empStatusDot.notSent{ background:rgba(192,57,43,.15); color:#c0392b; }
+  .empBody{ display:none; padding:14px; border-top:1px solid var(--border); }
+  .empSums{ display:flex; gap:16px; margin-bottom:12px; flex-wrap:wrap; }
+  .empSumBox{ background:#faf9ff; border-radius:10px; padding:8px 14px; font-size:13px; }
+  .empSumBox b{ display:block; font-size:16px; }
+  .freigabeToggle{ display:flex; align-items:center; gap:8px; margin-bottom:14px; font-weight:700; font-size:13px; }
+  .dayRow{ display:grid; grid-template-columns:90px 1fr 70px 70px 70px 32px; gap:6px; align-items:center; padding:6px 4px; border-bottom:1px solid var(--border); font-size:12px; }
+  .dayRow input{ width:100%; padding:5px 6px; border-radius:6px; border:1px solid var(--border); font-size:12px; box-sizing:border-box; }
+  .dayRow.diverges{ background:rgba(255,213,74,.12); }
+  .dayEditBtn{ border:none; background:var(--purple); color:#fff; border-radius:6px; padding:4px 6px; cursor:pointer; font-size:11px; }
+  .dayComment{ grid-column:1 / -1; font-size:11px; color:#8A5A15; background:rgba(232,163,61,.12); padding:4px 8px; border-radius:6px; margin-top:2px; }
 </style>
 </head>
 <body>
@@ -68,6 +90,7 @@
   <div class="tabBar">
     <button class="tabBtn active" id="tabNachrichtenBtn" type="button">💬 Nachrichten</button>
     <button class="tabBtn" id="tabUploadBtn" type="button">📎 Dokument hochladen</button>
+    <button class="tabBtn" id="tabOverviewBtn" type="button">📊 Stundenübersicht</button>
   </div>
 
   <div class="tabPanel active" id="tabNachrichten">
@@ -98,6 +121,14 @@
         <div id="vermerkStatus" style="margin-top:10px; font-size:13px;"></div>
       </div>
     </div>
+  </div>
+
+  <div class="tabPanel" id="tabOverview">
+    <div class="overviewBar">
+      <input type="month" id="overviewMonthInput">
+      <button id="overviewLoadBtn" type="button">Anzeigen</button>
+    </div>
+    <div id="overviewWrap"></div>
   </div>
 </div>
 
@@ -131,20 +162,27 @@ refreshBtn.addEventListener("click", loadThreads);
 // ===== Tabs =====
 const tabNachrichtenBtn = document.getElementById("tabNachrichtenBtn");
 const tabUploadBtn = document.getElementById("tabUploadBtn");
+const tabOverviewBtn = document.getElementById("tabOverviewBtn");
 const tabNachrichten = document.getElementById("tabNachrichten");
 const tabUpload = document.getElementById("tabUpload");
+const tabOverview = document.getElementById("tabOverview");
 
-tabNachrichtenBtn.addEventListener("click", ()=>{
-  tabNachrichtenBtn.classList.add("active");
-  tabUploadBtn.classList.remove("active");
-  tabNachrichten.classList.add("active");
-  tabUpload.classList.remove("active");
-});
-tabUploadBtn.addEventListener("click", ()=>{
-  tabUploadBtn.classList.add("active");
-  tabNachrichtenBtn.classList.remove("active");
-  tabUpload.classList.add("active");
-  tabNachrichten.classList.remove("active");
+function activateTab(btn, panel){
+  [tabNachrichtenBtn, tabUploadBtn, tabOverviewBtn].forEach(b => b.classList.remove("active"));
+  [tabNachrichten, tabUpload, tabOverview].forEach(p => p.classList.remove("active"));
+  btn.classList.add("active");
+  panel.classList.add("active");
+}
+
+tabNachrichtenBtn.addEventListener("click", ()=> activateTab(tabNachrichtenBtn, tabNachrichten));
+tabUploadBtn.addEventListener("click", ()=> activateTab(tabUploadBtn, tabUpload));
+tabOverviewBtn.addEventListener("click", ()=>{
+  activateTab(tabOverviewBtn, tabOverview);
+  if(!overviewMonthInput.value){
+    const now = new Date();
+    overviewMonthInput.value = now.getFullYear() + "-" + String(now.getMonth()+1).padStart(2,"0");
+  }
+  loadOverview();
 });
 
 // ===== Mitarbeiter-Suche (tippfehler-tolerant) =====
@@ -441,6 +479,152 @@ function escapeHtml(str){
   const div = document.createElement("div");
   div.textContent = str == null ? "" : String(str);
   return div.innerHTML;
+}
+
+// ===== Stundenübersicht =====
+const overviewMonthInput = document.getElementById("overviewMonthInput");
+const overviewLoadBtn = document.getElementById("overviewLoadBtn");
+const overviewWrap = document.getElementById("overviewWrap");
+
+overviewLoadBtn.addEventListener("click", loadOverview);
+
+async function loadOverview(){
+  const month = overviewMonthInput.value;
+  if(!month){
+    overviewWrap.innerHTML = `<div style="color:#c0392b;">Bitte einen Monat wählen.</div>`;
+    return;
+  }
+  overviewWrap.innerHTML = `<div style="text-align:center; padding:20px; color:#777;">Lädt...</div>`;
+
+  try{
+    const res = await fetch(EQUIP_WEB_APP_URL, {
+      method: "POST",
+      body: JSON.stringify({ token: EQUIP_API_TOKEN, action: "adminGetOverview", month: month })
+    });
+    const data = await res.json();
+    if(data.status !== "success"){
+      overviewWrap.innerHTML = `<div style="color:#c0392b;">Fehler: ${data.message}</div>`;
+      return;
+    }
+    renderOverview(data.results, month);
+  }catch(err){
+    overviewWrap.innerHTML = `<div style="color:#c0392b;">Fehler: ${err.message}</div>`;
+  }
+}
+
+function renderOverview(results, month){
+  if(!results || results.length === 0){
+    overviewWrap.innerHTML = `<div style="color:#777; padding:20px; text-align:center;">Keine Mitarbeiter registriert.</div>`;
+    return;
+  }
+
+  overviewWrap.innerHTML = "";
+  results.forEach(emp => {
+    const card = document.createElement("div");
+    card.className = "empCard";
+
+    const statusClass = emp.hasSubmitted ? "sent" : "notSent";
+    const statusLabel = emp.hasSubmitted ? "🟢 Gesendet" : "🔴 Noch nicht gesendet";
+
+    const header = document.createElement("div");
+    header.className = "empHeader " + statusClass;
+    header.innerHTML = `
+      <span><b>${escapeHtml(emp.name)}</b> (PIN ${escapeHtml(emp.pin)})</span>
+      <span class="empStatusDot ${statusClass}">${statusLabel}</span>
+    `;
+    card.appendChild(header);
+
+    const body = document.createElement("div");
+    body.className = "empBody";
+
+    if(emp.hasSubmitted){
+      body.innerHTML = `
+        <div class="empSums">
+          <div class="empSumBox">Offiziell<b>${emp.summeOffiziell ?? 0} Std.</b></div>
+          <div class="empSumBox">Eingereicht<b>${emp.summeEingereicht ?? 0} Std.</b></div>
+        </div>
+        <label class="freigabeToggle">
+          <input type="checkbox" class="freigabeCheckbox" ${emp.freigegeben ? "checked" : ""}>
+          Für diesen Monat freigegeben
+        </label>
+        <div class="dayList"></div>
+      `;
+
+      const freigabeCheckbox = body.querySelector(".freigabeCheckbox");
+      freigabeCheckbox.addEventListener("change", async ()=>{
+        freigabeCheckbox.disabled = true;
+        try{
+          await fetch(EQUIP_WEB_APP_URL, {
+            method: "POST",
+            body: JSON.stringify({ token: EQUIP_API_TOKEN, action: "adminSetFreigabe", pin: emp.pin, monat: month, value: freigabeCheckbox.checked })
+          });
+        }catch(err){
+          alert("Fehler: " + err.message);
+          freigabeCheckbox.checked = !freigabeCheckbox.checked;
+        }finally{
+          freigabeCheckbox.disabled = false;
+        }
+      });
+
+      const dayList = body.querySelector(".dayList");
+      emp.days.forEach(d => {
+        const diverges = String(d.stunden) !== String(d.eingereicht);
+        const row = document.createElement("div");
+        row.className = "dayRow" + (diverges ? " diverges" : "");
+        row.innerHTML = `
+          <div>${escapeHtml(d.datum)}</div>
+          <input type="text" class="editStandort" value="${escapeHtml(d.standort)}">
+          <input type="text" class="editBeginn" value="${escapeHtml(d.beginn)}">
+          <input type="text" class="editEnde" value="${escapeHtml(d.ende)}">
+          <input type="text" class="editStunden" value="${escapeHtml(d.stunden)}">
+          <button class="dayEditBtn" type="button">💾</button>
+          ${d.kommentar ? `<div class="dayComment">📝 ${escapeHtml(d.kommentar)}</div>` : ""}
+        `;
+
+        const saveBtn = row.querySelector(".dayEditBtn");
+        saveBtn.addEventListener("click", async ()=>{
+          const newStunden = row.querySelector(".editStunden").value;
+          const newStandort = row.querySelector(".editStandort").value;
+          const newBeginn = row.querySelector(".editBeginn").value;
+          const newEnde = row.querySelector(".editEnde").value;
+          const kommentar = prompt("Kommentar zu dieser Korrektur (optional):", d.kommentar || "");
+          if(kommentar === null) return;
+
+          saveBtn.disabled = true;
+          try{
+            const res = await fetch(EQUIP_WEB_APP_URL, {
+              method: "POST",
+              body: JSON.stringify({
+                token: EQUIP_API_TOKEN, action: "adminEditDay",
+                pin: emp.pin, monat: month, day: d.day,
+                standort: newStandort, beginn: newBeginn, ende: newEnde,
+                stunden: newStunden, kommentar: kommentar
+              })
+            });
+            const result = await res.json();
+            if(result.status === "success"){
+              loadOverview();
+            }else{
+              alert("Fehler: " + result.message);
+            }
+          }catch(err){
+            alert("Fehler: " + err.message);
+          }finally{
+            saveBtn.disabled = false;
+          }
+        });
+
+        dayList.appendChild(row);
+      });
+    }
+
+    card.appendChild(body);
+    header.addEventListener("click", ()=>{
+      body.style.display = body.style.display === "none" || !body.style.display ? "block" : "none";
+    });
+
+    overviewWrap.appendChild(card);
+  });
 }
 </script>
 </body>
