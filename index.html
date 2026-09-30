@@ -4808,7 +4808,7 @@ async function loadMyHours(pin, secret){
         ${result.vermerke.map(v=>`
           <div style="padding:10px 12px; margin-bottom:8px; border-radius:12px; background:rgba(255,255,255,.05); border:1px solid rgba(255,255,255,.1);">
             <div style="font-size:11px; color:rgba(255,255,255,.55); margin-bottom:3px;">${(v.zeitstempel || "").toString().replace(/</g,"&lt;")}</div>
-            <div style="font-size:13px; color:rgba(255,255,255,.9);">${(v.text || "").replace(/</g,"&lt;")}</div>
+            <div style="font-size:13px; color:rgba(255,255,255,.9); white-space:pre-wrap; font-family:monospace;">${(v.text || "").replace(/</g,"&lt;")}</div>
           </div>
         `).join("")}
       `;
