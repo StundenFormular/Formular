@@ -540,6 +540,7 @@ async function loadOverview(){
 }
 
 let expandedPin = null;
+let pendingDeleteFeedback = null;
 
 function renderOverview(results, month){
   if(!results || results.length === 0){
@@ -603,7 +604,21 @@ function buildEmployeeCard(emp, month){
       </label>
       <button type="button" class="deleteBlockBtn" style="width:100%; margin-bottom:12px; padding:8px; border-radius:8px; border:1px solid #c0392b; background:#fff; color:#c0392b; font-weight:700; cursor:pointer; font-size:12px;">🗑️ Diesen Monat komplett löschen</button>
       <div class="dayList"></div>
+      <div class="deleteFeedback" style="display:none; margin-top:10px; padding:10px 12px; border-radius:8px; background:rgba(47,158,68,.12); border:1px solid rgba(47,158,68,.4); color:#2f9e44; font-size:12px; font-weight:700;"></div>
+      <div style="margin-top:16px; padding-top:12px; border-top:1px solid var(--border);">
+        <div style="font-weight:800; font-size:13px; margin-bottom:6px;">Kommentar für diesen Monat (z.B. Verspätungen)</div>
+        <textarea class="monthCommentInput" placeholder="z.B. 2x zu spät gekommen diesen Monat" style="width:100%; min-height:70px; padding:10px 12px; border-radius:10px; border:1px solid var(--border); font-size:13px; font-family:monospace; white-space:pre; box-sizing:border-box; margin-bottom:8px; resize:vertical;">${escapeHtml(emp.monatsKommentar || "")}</textarea>
+        <button type="button" class="monthCommentSaveBtn" style="width:100%; padding:10px; border-radius:8px; border:none; background:var(--purple); color:#fff; font-weight:700; cursor:pointer; font-size:13px;">Kommentar speichern</button>
+        <div class="monthCommentStatus" style="margin-top:6px; font-size:12px;"></div>
+      </div>
     `;
+
+    if(pendingDeleteFeedback && pendingDeleteFeedback.pin === emp.pin){
+      const feedback = body.querySelector(".deleteFeedback");
+      feedback.style.display = "block";
+      feedback.textContent = pendingDeleteFeedback.message;
+      pendingDeleteFeedback = null;
+    }
 
     const freigabeCheckbox = body.querySelector(".freigabeCheckbox");
     freigabeCheckbox.addEventListener("change", async ()=>{
@@ -645,6 +660,34 @@ function buildEmployeeCard(emp, month){
         alert("Fehler: " + err.message);
         deleteBlockBtn.disabled = false;
         deleteBlockBtn.textContent = "🗑️ Diesen Monat komplett löschen";
+      }
+    });
+
+    const monthCommentInput = body.querySelector(".monthCommentInput");
+    const monthCommentSaveBtn = body.querySelector(".monthCommentSaveBtn");
+    const monthCommentStatus = body.querySelector(".monthCommentStatus");
+    monthCommentSaveBtn.addEventListener("click", async ()=>{
+      monthCommentSaveBtn.disabled = true;
+      monthCommentStatus.style.color = "#666";
+      monthCommentStatus.textContent = "Wird gespeichert...";
+      try{
+        const res = await fetch(EQUIP_WEB_APP_URL, {
+          method: "POST",
+          body: JSON.stringify({ token: EQUIP_API_TOKEN, action: "adminSetMonthComment", pin: emp.pin, monat: month, comment: monthCommentInput.value })
+        });
+        const result = await res.json();
+        if(result.status === "success"){
+          monthCommentStatus.style.color = "#2f9e44";
+          monthCommentStatus.textContent = "Gespeichert.";
+        }else{
+          monthCommentStatus.style.color = "#c0392b";
+          monthCommentStatus.textContent = "Fehler: " + result.message;
+        }
+      }catch(err){
+        monthCommentStatus.style.color = "#c0392b";
+        monthCommentStatus.textContent = "Fehler: " + err.message;
+      }finally{
+        monthCommentSaveBtn.disabled = false;
       }
     });
 
@@ -712,7 +755,7 @@ function buildEmployeeCard(emp, month){
           });
           const result = await res.json();
           if(result.status === "success"){
-            alert(`Eintrag gelöscht.\n\nGesamtstunden vorher: ${result.vorher} Std.\nGesamtstunden jetzt: ${result.nachher} Std.`);
+            pendingDeleteFeedback = { pin: emp.pin, message: `Eintrag vom ${d.datum} gelöscht. Gesamtstunden vorher: ${result.vorher} Std. → jetzt: ${result.nachher} Std.` };
             expandedPin = emp.pin;
             loadOverview();
           }else{

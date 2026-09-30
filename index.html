@@ -4863,14 +4863,17 @@ async function loadMyHours(pin, secret){
       hoursSummaryWrap.innerHTML = result.summaries.map(s=>`
         <div style="display:flex; gap:12px; margin-bottom:8px; flex-wrap:wrap;">
           <div style="flex:1; min-width:120px; background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.12); border-radius:12px; padding:10px 12px;">
-            <div style="font-size:11px; color:rgba(255,255,255,.6);">Eigene Eingabe (${s.monat})</div>
+            <div style="font-size:11px; color:rgba(255,255,255,.6);">Gesendete Stunden (${s.monat})</div>
             <div style="font-size:20px; font-weight:900; color:#fff;">${s.summeEingereicht ?? 0} Std.</div>
           </div>
+          ${s.freigegeben ? `
           <div style="flex:1; min-width:120px; background:rgba(232,163,61,.12); border:1px solid rgba(232,163,61,.4); border-radius:12px; padding:10px 12px;">
-            <div style="font-size:11px; color:rgba(255,213,74,.85);">Erfasst (${s.monat})</div>
+            <div style="font-size:11px; color:rgba(255,213,74,.85);">Offiziell erfasst (${s.monat})</div>
             <div style="font-size:20px; font-weight:900; color:#FFD54A;">${s.summeOffiziell ?? 0} Std.</div>
-          </div>
+          </div>` : ""}
         </div>
+        ${s.kommentar && s.kommentar.trim() ? `
+        <div style="padding:10px 12px; margin-bottom:8px; border-radius:10px; background:rgba(232,163,61,.15); border:1px solid rgba(232,163,61,.4); color:#FFD54A; font-size:12px; white-space:pre-wrap;">📝 <b>Hinweis Admin (${s.monat}):</b><br>${s.kommentar.replace(/</g,"&lt;")}</div>` : ""}
       `).join("");
     }
 
