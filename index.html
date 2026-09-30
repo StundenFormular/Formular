@@ -2914,7 +2914,7 @@ tbody tr:nth-child(odd){
       <div style="font-weight:800; margin-bottom:6px;">Nachrichten</div>
       <div id="hoursMessagesWrap" style="max-height:180px; overflow-y:auto; margin-bottom:10px; display:flex; flex-direction:column; gap:6px;"></div>
 
-      <textarea id="hoursMessageInput" placeholder="Nachricht schreiben..." style="width:100%; min-height:60px; padding:10px 12px; border-radius:10px; border:1px solid var(--border); font-size:14px; box-sizing:border-box; margin-bottom:8px;"></textarea>
+      <textarea id="hoursMessageInput" placeholder="Nachricht schreiben... (Enter = neue Zeile)" style="width:100%; min-height:110px; padding:10px 12px; border-radius:10px; border:1px solid var(--border); font-size:14px; font-family:monospace; white-space:pre; box-sizing:border-box; margin-bottom:8px; resize:vertical;"></textarea>
       <button class="pinOk" id="hoursSendMessageBtn" type="button" style="width:100%;">Nachricht senden</button>
       <div id="hoursMessageStatus" style="margin-top:8px; font-size:12px;"></div>
     </div>
@@ -4769,7 +4769,7 @@ hoursLoginBtn.addEventListener("click", async ()=>{
 });
 
 async function loadMyHours(pin, secret){
-  hoursTableWrap.innerHTML = `<div style="color:rgba(255,255,255,.7); font-size:13px;">Lädt...</div>`;
+  hoursTableWrap.innerHTML = `<div style="display:flex; align-items:center; gap:10px; color:rgba(255,255,255,.8); font-size:13px; padding:10px 0;"><span style="display:inline-block; width:20px; height:20px; border-radius:50%; border:3px solid rgba(255,255,255,.25); border-top-color:#FFD54A; animation:equipSpin 0.8s linear infinite;"></span>Lädt...</div>`;
   hoursMessagesWrap.innerHTML = "";
   hoursDocumentsWrap.innerHTML = "";
   hoursVermerkeWrap.innerHTML = "";
@@ -4815,7 +4815,7 @@ async function loadMyHours(pin, secret){
     }
 
     if(!result.hours || result.hours.length === 0){
-      hoursTableWrap.innerHTML = `<div style="color:rgba(255,255,255,.7); font-size:13px;">Noch keine Stunden hinterlegt.</div>`;
+      hoursTableWrap.innerHTML = `<div style="color:rgba(255,255,255,.7); font-size:13px;">Stunden wurden noch nicht vom Admin freigegeben.</div>`;
     }else{
       const sorted = [...result.hours].sort((a,b)=> String(a.sortKey || a.datum).localeCompare(String(b.sortKey || b.datum)));
       hoursTableWrap.innerHTML = sorted.map(h=>{
@@ -4858,7 +4858,7 @@ function renderMyMessages(messages){
     const labelColor = isAdmin ? "rgba(255,255,255,.75)" : "rgba(43,31,4,.65)";
     return `<div style="align-self:${isAdmin ? "flex-start" : "flex-end"}; max-width:80%; padding:9px 12px; border-radius:14px; background:${bg}; color:${textColor}; font-size:13px; box-shadow:0 2px 6px rgba(0,0,0,.25);">
       <div style="font-weight:800; font-size:11px; color:${labelColor}; margin-bottom:2px;">${isAdmin ? "Admin" : "Du"}</div>
-      <div>${(m.text || "").replace(/</g,"&lt;")}</div>
+      <div style="white-space:pre-wrap;">${(m.text || "").replace(/</g,"&lt;")}</div>
     </div>`;
   }).join("");
 }
