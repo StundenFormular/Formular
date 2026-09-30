@@ -2936,8 +2936,9 @@ tbody tr:nth-child(odd){
     <button class="pinOk" id="chooserEquipBtn" type="button" style="width:100%; margin-bottom:10px; text-align:left; padding:16px;">
       📷 Ausrüstungs-Check<br><span style="font-weight:400; font-size:12px; opacity:.8;" id="chooserEquipSub">Tägliche Foto-Kontrolle</span>
     </button>
-    <button class="pinOk" id="chooserHoursBtn" type="button" style="width:100%; text-align:left; padding:16px;">
-      🕒 Meine Stunden ansehen<br><span style="font-weight:400; font-size:12px; opacity:.8;">Korrigierte Stunden & Nachrichten</span>
+    <button class="pinOk" id="chooserHoursBtn" type="button" style="width:100%; text-align:left; padding:16px; position:relative;">
+      🕒 Meine Stunden ansehen<br><span style="font-weight:400; font-size:12px; opacity:.8;">Korrigierte Stunden &amp; Nachrichten</span>
+      <span id="hoursNewBadge" style="display:none; position:absolute; top:10px; right:14px; background:#E8A33D; color:#2b1f04; font-size:11px; font-weight:900; padding:3px 10px; border-radius:20px;">🔴 Neu</span>
     </button>
   </div>
 </div>
@@ -4630,6 +4631,46 @@ function showChooser(){
   }
 
   chooserBack.style.display = "flex";
+  checkForHoursUpdates();
+}
+
+// Zählt Kommentare + Nachrichten + Vermerke + Dokumente zusammen, um zu
+// erkennen, ob es seit dem letzten Öffnen von "Meine Stunden ansehen"
+// etwas Neues gibt - zeigt dann ein dezentes "Neu"-Badge am Button.
+function countHoursContent(result){
+  const commentedDays = (result.hours || []).filter(h => h.kommentar && h.kommentar.trim()).length;
+  const messages = (result.messages || []).length;
+  const vermerke = (result.vermerke || []).length;
+  const documents = (result.documents || []).length;
+  return commentedDays + messages + vermerke + documents;
+}
+
+async function checkForHoursUpdates(){
+  const pin = localStorage.getItem("sad_personal_pin");
+  const secret = localStorage.getItem("sad_device_secret");
+  const badge = document.getElementById("hoursNewBadge");
+  if(!pin || !secret){
+    badge.style.display = "none";
+    return;
+  }
+
+  try{
+    const res = await fetch(EQUIP_WEB_APP_URL, {
+      method: "POST",
+      body: JSON.stringify({ token: EQUIP_API_TOKEN, action: "getMyHours", pin: pin, secret: secret })
+    });
+    const result = await res.json();
+    if(result.status !== "success"){
+      badge.style.display = "none";
+      return;
+    }
+
+    const currentCount = countHoursContent(result);
+    const seenCount = parseInt(localStorage.getItem("sad_seen_count") || "0", 10);
+    badge.style.display = currentCount > seenCount ? "block" : "none";
+  }catch(err){
+    badge.style.display = "none";
+  }
 }
 
 let formularHistoryPushed = false;
@@ -4865,6 +4906,9 @@ async function loadMyHours(pin, secret){
     }
 
     renderMyMessages(result.messages || []);
+    localStorage.setItem("sad_seen_count", String(countHoursContent(result)));
+    const badgeEl = document.getElementById("hoursNewBadge");
+    if(badgeEl) badgeEl.style.display = "none";
   }catch(err){
     hoursTableWrap.innerHTML = `<div style="color:#ff9a9a;">Fehler beim Laden: ${err.message}</div>`;
   }
