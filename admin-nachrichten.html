@@ -421,6 +421,7 @@ function renderThreads(messages){
           <button type="button">Senden</button>
         </div>
         <div class="replyStatus" style="font-size:12px; margin-top:6px;"></div>
+        <button type="button" class="deleteChatBtn" style="margin-top:10px; width:100%; padding:8px; border-radius:8px; border:1px solid #c0392b; background:#fff; color:#c0392b; font-weight:700; cursor:pointer; font-size:12px;">🗑️ Gesamten Verlauf löschen</button>
       </div>
     `;
 
@@ -436,6 +437,32 @@ function renderThreads(messages){
       bubble.className = "msgBubble " + (m.absender === "Admin" ? "msgAdmin" : "msgMitarbeiter");
       bubble.textContent = m.text;
       msgsInner.appendChild(bubble);
+    });
+
+    const deleteChatBtn = card.querySelector(".deleteChatBtn");
+    deleteChatBtn.addEventListener("click", async ()=>{
+      if(!confirm(`Gesamten Nachrichtenverlauf von ${thread.name} (PIN ${pin}) wirklich unwiderruflich löschen?`)) return;
+
+      deleteChatBtn.disabled = true;
+      deleteChatBtn.textContent = "Wird gelöscht...";
+      try{
+        const res = await fetch(EQUIP_WEB_APP_URL, {
+          method: "POST",
+          body: JSON.stringify({ token: EQUIP_API_TOKEN, action: "adminDeleteChatHistory", pin: pin })
+        });
+        const result = await res.json();
+        if(result.status === "success"){
+          loadThreads();
+        }else{
+          alert("Fehler: " + result.message);
+          deleteChatBtn.disabled = false;
+          deleteChatBtn.textContent = "🗑️ Gesamten Verlauf löschen";
+        }
+      }catch(err){
+        alert("Fehler: " + err.message);
+        deleteChatBtn.disabled = false;
+        deleteChatBtn.textContent = "🗑️ Gesamten Verlauf löschen";
+      }
     });
 
     const replyBtn = card.querySelector(".replyRow button");
@@ -520,147 +547,199 @@ function renderOverview(results, month){
     return;
   }
 
-  overviewWrap.innerHTML = "";
-  results.forEach(emp => {
-    const card = document.createElement("div");
-    card.className = "empCard";
+  const sent = results.filter(e => e.hasSubmitted);
+  const notSent = results.filter(e => !e.hasSubmitted);
 
-    const statusClass = emp.hasSubmitted ? "sent" : "notSent";
-    const statusLabel = emp.hasSubmitted ? "🟢 Gesendet" : "🔴 Noch nicht gesendet";
+  overviewWrap.innerHTML = `
+    <div style="font-weight:900; font-size:15px; margin:16px 0 8px; color:#2f9e44;">✅ Gesendet (${sent.length})</div>
+    <div id="overviewSentWrap"></div>
+    <div style="font-weight:900; font-size:15px; margin:20px 0 8px; color:#c0392b;">❌ Noch nicht gesendet (${notSent.length})</div>
+    <div id="overviewNotSentWrap"></div>
+  `;
 
-    const header = document.createElement("div");
-    header.className = "empHeader " + statusClass;
-    header.innerHTML = `
-      <span><b>${escapeHtml(emp.name)}</b> (PIN ${escapeHtml(emp.pin)})</span>
-      <span class="empStatusDot ${statusClass}">${statusLabel}</span>
+  const sentWrap = document.getElementById("overviewSentWrap");
+  const notSentWrap = document.getElementById("overviewNotSentWrap");
+
+  if(sent.length === 0){
+    sentWrap.innerHTML = `<div style="color:#777; padding:10px; font-size:13px;">Niemand.</div>`;
+  }else{
+    sent.forEach(emp => sentWrap.appendChild(buildEmployeeCard(emp, month)));
+  }
+
+  if(notSent.length === 0){
+    notSentWrap.innerHTML = `<div style="color:#777; padding:10px; font-size:13px;">Alle haben gesendet.</div>`;
+  }else{
+    notSent.forEach(emp => notSentWrap.appendChild(buildEmployeeCard(emp, month)));
+  }
+}
+
+function buildEmployeeCard(emp, month){
+  const card = document.createElement("div");
+  card.className = "empCard";
+
+  const statusClass = emp.hasSubmitted ? "sent" : "notSent";
+  const statusLabel = emp.hasSubmitted ? "🟢 Gesendet" : "🔴 Noch nicht gesendet";
+
+  const header = document.createElement("div");
+  header.className = "empHeader " + statusClass;
+  header.innerHTML = `
+    <span><b>${escapeHtml(emp.name)}</b> (PIN ${escapeHtml(emp.pin)})</span>
+    <span class="empStatusDot ${statusClass}">${statusLabel}</span>
+  `;
+  card.appendChild(header);
+
+  const body = document.createElement("div");
+  body.className = "empBody";
+
+  if(emp.hasSubmitted){
+    body.innerHTML = `
+      <div class="empSums">
+        <div class="empSumBox">Offiziell<b>${emp.summeOffiziell ?? 0} Std.</b></div>
+        <div class="empSumBox">Eingereicht<b>${emp.summeEingereicht ?? 0} Std.</b></div>
+      </div>
+      <label class="freigabeToggle">
+        <input type="checkbox" class="freigabeCheckbox" ${emp.freigegeben ? "checked" : ""}>
+        Für diesen Monat freigegeben
+      </label>
+      <button type="button" class="deleteBlockBtn" style="width:100%; margin-bottom:12px; padding:8px; border-radius:8px; border:1px solid #c0392b; background:#fff; color:#c0392b; font-weight:700; cursor:pointer; font-size:12px;">🗑️ Diesen Monat komplett löschen</button>
+      <div class="dayList"></div>
     `;
-    card.appendChild(header);
 
-    const body = document.createElement("div");
-    body.className = "empBody";
+    const freigabeCheckbox = body.querySelector(".freigabeCheckbox");
+    freigabeCheckbox.addEventListener("change", async ()=>{
+      freigabeCheckbox.disabled = true;
+      try{
+        await fetch(EQUIP_WEB_APP_URL, {
+          method: "POST",
+          body: JSON.stringify({ token: EQUIP_API_TOKEN, action: "adminSetFreigabe", pin: emp.pin, monat: month, value: freigabeCheckbox.checked })
+        });
+      }catch(err){
+        alert("Fehler: " + err.message);
+        freigabeCheckbox.checked = !freigabeCheckbox.checked;
+      }finally{
+        freigabeCheckbox.disabled = false;
+      }
+    });
 
-    if(emp.hasSubmitted){
-      body.innerHTML = `
-        <div class="empSums">
-          <div class="empSumBox">Offiziell<b>${emp.summeOffiziell ?? 0} Std.</b></div>
-          <div class="empSumBox">Eingereicht<b>${emp.summeEingereicht ?? 0} Std.</b></div>
+    const deleteBlockBtn = body.querySelector(".deleteBlockBtn");
+    deleteBlockBtn.addEventListener("click", async ()=>{
+      if(!confirm(`Den kompletten Monat ${month} von ${emp.name} (PIN ${emp.pin}) wirklich unwiderruflich löschen?`)) return;
+
+      deleteBlockBtn.disabled = true;
+      deleteBlockBtn.textContent = "Wird gelöscht...";
+      try{
+        const res = await fetch(EQUIP_WEB_APP_URL, {
+          method: "POST",
+          body: JSON.stringify({ token: EQUIP_API_TOKEN, action: "adminDeleteBlock", pin: emp.pin, monat: month })
+        });
+        const result = await res.json();
+        if(result.status === "success"){
+          expandedPin = null;
+          loadOverview();
+        }else{
+          alert("Fehler: " + result.message);
+          deleteBlockBtn.disabled = false;
+          deleteBlockBtn.textContent = "🗑️ Diesen Monat komplett löschen";
+        }
+      }catch(err){
+        alert("Fehler: " + err.message);
+        deleteBlockBtn.disabled = false;
+        deleteBlockBtn.textContent = "🗑️ Diesen Monat komplett löschen";
+      }
+    });
+
+    const dayList = body.querySelector(".dayList");
+    emp.days.forEach(d => {
+      const diverges = String(d.stunden) !== String(d.eingereicht);
+      const row = document.createElement("div");
+      row.className = "dayRow" + (diverges ? " diverges" : "");
+      row.innerHTML = `
+        <div>${escapeHtml(d.datum)}</div>
+        <input type="text" class="editStandort" value="${escapeHtml(d.standort)}">
+        <input type="text" class="editBeginn" value="${escapeHtml(d.beginn)}">
+        <input type="text" class="editEnde" value="${escapeHtml(d.ende)}">
+        <input type="text" class="editStunden" value="${escapeHtml(d.stunden)}">
+        <div style="display:flex; gap:4px;">
+          <button class="dayEditBtn" type="button" title="Speichern">💾</button>
+          <button class="dayDeleteBtn" type="button" title="Eintrag löschen">🗑️</button>
         </div>
-        <label class="freigabeToggle">
-          <input type="checkbox" class="freigabeCheckbox" ${emp.freigegeben ? "checked" : ""}>
-          Für diesen Monat freigegeben
-        </label>
-        <div class="dayList"></div>
+        ${d.kommentar ? `<div class="dayComment">📝 ${escapeHtml(d.kommentar)}</div>` : ""}
       `;
 
-      const freigabeCheckbox = body.querySelector(".freigabeCheckbox");
-      freigabeCheckbox.addEventListener("change", async ()=>{
-        freigabeCheckbox.disabled = true;
+      const saveBtn = row.querySelector(".dayEditBtn");
+      saveBtn.addEventListener("click", async ()=>{
+        const newStunden = row.querySelector(".editStunden").value;
+        const newStandort = row.querySelector(".editStandort").value;
+        const newBeginn = row.querySelector(".editBeginn").value;
+        const newEnde = row.querySelector(".editEnde").value;
+        const kommentar = prompt("Kommentar zu dieser Korrektur (optional):", d.kommentar || "");
+        if(kommentar === null) return;
+
+        saveBtn.disabled = true;
         try{
-          await fetch(EQUIP_WEB_APP_URL, {
+          const res = await fetch(EQUIP_WEB_APP_URL, {
             method: "POST",
-            body: JSON.stringify({ token: EQUIP_API_TOKEN, action: "adminSetFreigabe", pin: emp.pin, monat: month, value: freigabeCheckbox.checked })
+            body: JSON.stringify({
+              token: EQUIP_API_TOKEN, action: "adminEditDay",
+              pin: emp.pin, monat: month, day: d.day,
+              standort: newStandort, beginn: newBeginn, ende: newEnde,
+              stunden: newStunden, kommentar: kommentar
+            })
           });
+          const result = await res.json();
+          if(result.status === "success"){
+            expandedPin = emp.pin;
+            loadOverview();
+          }else{
+            alert("Fehler: " + result.message);
+          }
         }catch(err){
           alert("Fehler: " + err.message);
-          freigabeCheckbox.checked = !freigabeCheckbox.checked;
         }finally{
-          freigabeCheckbox.disabled = false;
+          saveBtn.disabled = false;
         }
       });
 
-      const dayList = body.querySelector(".dayList");
-      emp.days.forEach(d => {
-        const diverges = String(d.stunden) !== String(d.eingereicht);
-        const row = document.createElement("div");
-        row.className = "dayRow" + (diverges ? " diverges" : "");
-        row.innerHTML = `
-          <div>${escapeHtml(d.datum)}</div>
-          <input type="text" class="editStandort" value="${escapeHtml(d.standort)}">
-          <input type="text" class="editBeginn" value="${escapeHtml(d.beginn)}">
-          <input type="text" class="editEnde" value="${escapeHtml(d.ende)}">
-          <input type="text" class="editStunden" value="${escapeHtml(d.stunden)}">
-          <div style="display:flex; gap:4px;">
-            <button class="dayEditBtn" type="button" title="Speichern">💾</button>
-            <button class="dayDeleteBtn" type="button" title="Eintrag löschen">🗑️</button>
-          </div>
-          ${d.kommentar ? `<div class="dayComment">📝 ${escapeHtml(d.kommentar)}</div>` : ""}
-        `;
+      const deleteBtn = row.querySelector(".dayDeleteBtn");
+      deleteBtn.addEventListener("click", async ()=>{
+        if(!confirm(`Eintrag vom ${d.datum} wirklich löschen?`)) return;
 
-        const saveBtn = row.querySelector(".dayEditBtn");
-        saveBtn.addEventListener("click", async ()=>{
-          const newStunden = row.querySelector(".editStunden").value;
-          const newStandort = row.querySelector(".editStandort").value;
-          const newBeginn = row.querySelector(".editBeginn").value;
-          const newEnde = row.querySelector(".editEnde").value;
-          const kommentar = prompt("Kommentar zu dieser Korrektur (optional):", d.kommentar || "");
-          if(kommentar === null) return;
-
-          saveBtn.disabled = true;
-          try{
-            const res = await fetch(EQUIP_WEB_APP_URL, {
-              method: "POST",
-              body: JSON.stringify({
-                token: EQUIP_API_TOKEN, action: "adminEditDay",
-                pin: emp.pin, monat: month, day: d.day,
-                standort: newStandort, beginn: newBeginn, ende: newEnde,
-                stunden: newStunden, kommentar: kommentar
-              })
-            });
-            const result = await res.json();
-            if(result.status === "success"){
-              expandedPin = emp.pin;
-              loadOverview();
-            }else{
-              alert("Fehler: " + result.message);
-            }
-          }catch(err){
-            alert("Fehler: " + err.message);
-          }finally{
-            saveBtn.disabled = false;
+        deleteBtn.disabled = true;
+        try{
+          const res = await fetch(EQUIP_WEB_APP_URL, {
+            method: "POST",
+            body: JSON.stringify({ token: EQUIP_API_TOKEN, action: "adminDeleteDay", pin: emp.pin, monat: month, day: d.day })
+          });
+          const result = await res.json();
+          if(result.status === "success"){
+            alert(`Eintrag gelöscht.\n\nGesamtstunden vorher: ${result.vorher} Std.\nGesamtstunden jetzt: ${result.nachher} Std.`);
+            expandedPin = emp.pin;
+            loadOverview();
+          }else{
+            alert("Fehler: " + result.message);
           }
-        });
-
-        const deleteBtn = row.querySelector(".dayDeleteBtn");
-        deleteBtn.addEventListener("click", async ()=>{
-          if(!confirm(`Eintrag vom ${d.datum} wirklich löschen?`)) return;
-
-          deleteBtn.disabled = true;
-          try{
-            const res = await fetch(EQUIP_WEB_APP_URL, {
-              method: "POST",
-              body: JSON.stringify({ token: EQUIP_API_TOKEN, action: "adminDeleteDay", pin: emp.pin, monat: month, day: d.day })
-            });
-            const result = await res.json();
-            if(result.status === "success"){
-              alert(`Eintrag gelöscht.\n\nGesamtstunden vorher: ${result.vorher} Std.\nGesamtstunden jetzt: ${result.nachher} Std.`);
-              expandedPin = emp.pin;
-              loadOverview();
-            }else{
-              alert("Fehler: " + result.message);
-            }
-          }catch(err){
-            alert("Fehler: " + err.message);
-          }finally{
-            deleteBtn.disabled = false;
-          }
-        });
-
-        dayList.appendChild(row);
+        }catch(err){
+          alert("Fehler: " + err.message);
+        }finally{
+          deleteBtn.disabled = false;
+        }
       });
-    }
 
-    card.appendChild(body);
-    if(emp.pin === expandedPin){
-      body.style.display = "block";
-    }
-    header.addEventListener("click", ()=>{
-      const willOpen = body.style.display === "none" || !body.style.display;
-      body.style.display = willOpen ? "block" : "none";
-      expandedPin = willOpen ? emp.pin : null;
+      dayList.appendChild(row);
     });
+  }
 
-    overviewWrap.appendChild(card);
+  card.appendChild(body);
+  if(emp.pin === expandedPin){
+    body.style.display = "block";
+  }
+  header.addEventListener("click", ()=>{
+    const willOpen = body.style.display === "none" || !body.style.display;
+    body.style.display = willOpen ? "block" : "none";
+    expandedPin = willOpen ? emp.pin : null;
   });
+
+  return card;
 }
 </script>
 </body>
