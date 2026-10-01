@@ -3107,9 +3107,6 @@ tbody tr:nth-child(odd){
     <label class="helpLabel" for="helpName">Dein Name <span>(optional)</span></label>
     <input id="helpName" type="text" maxlength="60" autocomplete="name" placeholder="z. B. Vorname Nachname">
 
-    <label class="helpLabel" for="helpContact">Telefon / WhatsApp für eine Rückmeldung <span>(optional)</span></label>
-    <input id="helpContact" type="text" inputmode="tel" maxlength="80" autocomplete="tel" placeholder="z. B. 0170 1234567">
-
     <div class="helpInfo">Technische Infos (App-Version, Gerätetyp) werden automatisch mitgeschickt.</div>
 
     <button class="pinOk helpSend" id="helpSendBtn" type="button">Nachricht senden</button>
@@ -3343,7 +3340,7 @@ if("serviceWorker" in navigator){
   });
 }
 
-const APP_VERSION = "v20261001d";
+const APP_VERSION = "v20261001e";
 document.getElementById("loginVersion").textContent = "Version " + APP_VERSION;
 
 (function setupUpdateCheck(){
@@ -5042,7 +5039,6 @@ const helpBack = document.getElementById("helpBack");
 const helpText = document.getElementById("helpText");
 const helpCount = document.getElementById("helpCount");
 const helpName = document.getElementById("helpName");
-const helpContact = document.getElementById("helpContact");
 const helpSendBtn = document.getElementById("helpSendBtn");
 const helpStatus = document.getElementById("helpStatus");
 
@@ -5093,7 +5089,6 @@ helpSendBtn.addEventListener("click", async ()=>{
         action: "sendHelp",
         text: text,
         name: helpName.value.trim(),
-        contact: helpContact.value.trim(),
         deviceId: getHelpDeviceId(),
         app: APP_VERSION,
         ua: (navigator.userAgent || "").slice(0, 200)
