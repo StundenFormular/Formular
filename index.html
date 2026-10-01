@@ -568,6 +568,112 @@ select.ort option{
   box-shadow: 0 0 0 3px rgba(239,68,68,.18);
 }
 
+/* ===== Login-Bildschirm (nur #pinBack) ===== */
+#pinBack{ background:#070816; overflow:hidden; }
+#pinBack::before{
+  content:""; position:absolute; inset:0; z-index:0;
+  background:var(--pinBg) center/cover no-repeat;
+  animation:loginKen 34s ease-in-out infinite alternate;
+  will-change:transform;
+}
+#pinBack::after{
+  content:""; position:absolute; inset:0; z-index:0; pointer-events:none;
+  background:
+    radial-gradient(900px 520px at 18% 6%, rgba(61,58,135,.60), transparent 60%),
+    radial-gradient(800px 520px at 90% 94%, rgba(232,163,61,.30), transparent 60%),
+    linear-gradient(180deg, rgba(5,6,18,.58), rgba(5,6,18,.86));
+}
+@keyframes loginKen{ from{ transform:scale(1.02); } to{ transform:scale(1.12) translate3d(-1.5%,-1%,0); } }
+@keyframes loginRise{ from{ opacity:0; transform:translateY(18px) scale(.98); } to{ opacity:1; transform:none; } }
+@keyframes loginShake{ 10%,90%{ transform:translateX(-2px); } 20%,80%{ transform:translateX(4px); } 30%,50%,70%{ transform:translateX(-7px); } 40%,60%{ transform:translateX(7px); } }
+
+#pinBack .loginCard{
+  position:relative; z-index:1;
+  width:min(400px,100%); box-sizing:border-box;
+  max-height:calc(100vh - 32px); max-height:calc(100dvh - 32px); overflow-y:auto;
+  padding:34px 24px 20px; border-radius:28px; text-align:center;
+  background:linear-gradient(160deg, rgba(255,255,255,.15), rgba(255,255,255,.06));
+  border:1px solid rgba(255,255,255,.22);
+  box-shadow:0 30px 80px rgba(0,0,0,.55), inset 0 1px 0 rgba(255,255,255,.18);
+  backdrop-filter:blur(18px); -webkit-backdrop-filter:blur(18px);
+  animation:loginRise .6s cubic-bezier(.2,.8,.2,1) both;
+}
+#pinBack .loginCard.shake{ animation:loginShake .45s both; }
+#pinBack .loginCard::before{
+  content:""; position:absolute; top:0; left:30px; right:30px; height:3px;
+  border-radius:0 0 4px 4px; background:linear-gradient(90deg,#3D3A87,#E8A33D);
+}
+.loginLogo{
+  width:78px; height:78px; margin:0 auto 14px; padding:3px; border-radius:23px;
+  background:linear-gradient(135deg,#3D3A87,#E8A33D);
+  box-shadow:0 10px 30px rgba(232,163,61,.30);
+}
+.loginLogo img{ width:100%; height:100%; display:block; border-radius:20px; object-fit:cover; background:#1b1942; }
+.loginBrand{ font-size:12px; font-weight:800; letter-spacing:.16em; text-transform:uppercase; color:#E8A33D; margin-bottom:6px; }
+#pinBack .pinTitle{ font-size:26px; margin:0 0 6px; }
+#pinBack .pinHint{ font-size:14px; margin:0 0 20px; }
+#pinBack .loginField{ margin-bottom:12px; }
+#pinBack .loginField input{
+  width:100%; box-sizing:border-box; text-align:center;
+  font-size:26px; font-weight:800; letter-spacing:.5em; padding:16px 14px 16px calc(14px + .5em);
+  border-radius:18px; border:1.5px solid rgba(255,255,255,.2);
+  background:rgba(10,12,32,.55); color:#fff; outline:none;
+  transition:border-color .2s, box-shadow .2s;
+}
+#pinBack .loginField input::placeholder{ letter-spacing:.03em; font-size:15px; font-weight:600; color:rgba(255,255,255,.5); }
+#pinBack .loginField input:focus{ border-color:#E8A33D; box-shadow:0 0 0 4px rgba(232,163,61,.2); }
+#pinBack .loginGo{
+  width:100%; padding:15px; border-radius:18px; border:none; font-size:16px; font-weight:900; color:#fff; cursor:pointer;
+  background:linear-gradient(135deg,#3D3A87,#6b63c9 55%,#E8A33D);
+  box-shadow:0 10px 26px rgba(61,58,135,.5); transition:transform .12s;
+}
+#pinBack .loginGo:active{ transform:scale(.98); }
+#pinBack .pinError{ margin-top:12px; text-align:center; }
+.loginHelpLink{
+  margin-top:18px; background:none; border:none; padding:6px; cursor:pointer;
+  color:rgba(255,255,255,.78); font-size:13px; font-weight:700; text-decoration:underline; text-underline-offset:3px;
+}
+.loginVersion{ margin-top:8px; font-size:11px; color:rgba(255,255,255,.38); }
+@media (prefers-reduced-motion:reduce){
+  #pinBack::before, #pinBack .loginCard{ animation:none !important; }
+}
+
+/* ===== Hilfe-Fenster ===== */
+#helpBack{ z-index:1200; overflow-y:auto; align-items:flex-start; }
+.helpCard{ margin:auto; width:min(440px,100%); box-sizing:border-box; }
+.helpHead{ display:flex; gap:12px; align-items:center; margin-bottom:6px; }
+.helpIcon{
+  flex:0 0 46px; height:46px; border-radius:14px; display:flex; align-items:center; justify-content:center; font-size:24px;
+  background:linear-gradient(135deg, rgba(61,58,135,.9), rgba(232,163,61,.85));
+}
+.helpLabel{ display:block; margin:14px 0 6px; font-size:12px; font-weight:800; color:rgba(255,255,255,.9); }
+.helpLabel span{ font-weight:600; color:rgba(255,255,255,.55); }
+.helpCard input, .helpCard textarea{
+  width:100%; box-sizing:border-box; padding:12px 14px; border-radius:14px;
+  border:1px solid rgba(255,255,255,.16); background:rgba(15,23,42,.4);
+  color:#fff; font-size:16px; font-family:inherit; outline:none;
+}
+.helpCard textarea{ min-height:120px; resize:vertical; }
+.helpCard input:focus, .helpCard textarea:focus{ border-color:#E8A33D; box-shadow:0 0 0 3px rgba(232,163,61,.18); }
+.helpCard ::placeholder{ color:rgba(255,255,255,.45); }
+.helpCount{ text-align:right; font-size:11px; color:rgba(255,255,255,.5); margin-top:4px; }
+.helpInfo{ margin:14px 0; font-size:11px; color:rgba(255,255,255,.58); line-height:1.4; }
+.helpSend{ width:100%; padding:14px; font-size:15px; }
+.helpStatus{ min-height:18px; margin-top:10px; font-size:13px; font-weight:700; color:rgba(255,255,255,.8); }
+.helpStatus.ok{ color:#7CFC9A; }
+.helpStatus.err{ color:#fecaca; }
+.helpClose{
+  width:100%; margin-top:8px; padding:12px; border-radius:14px; cursor:pointer;
+  border:1px solid rgba(255,255,255,.16); background:rgba(255,255,255,.08); color:#fff; font-weight:800;
+}
+.helpEntry{
+  width:100%; display:flex; align-items:center; gap:12px; margin-top:14px; padding:12px 14px;
+  border-radius:16px; border:1px solid rgba(255,255,255,.16); background:rgba(255,255,255,.07);
+  color:#fff; text-align:left; cursor:pointer; font-size:14px; font-family:inherit;
+}
+.helpEntry small{ color:rgba(255,255,255,.66); font-size:12px; }
+.helpEntryIcon{ font-size:22px; }
+
 .dlgBack{
   display:none;
   position:fixed;
@@ -2839,14 +2945,18 @@ tbody tr:nth-child(odd){
 
 <!-- PIN Overlay -->
 <div class="pinBack" id="pinBack">
-  <div class="pinCard">
-    <div class="pinTitle">Code erforderlich</div>
-    <p class="pinHint">Bitte Code eingeben, um das Stundenformular zu öffnen.</p>
-    <div class="pinRow">
-      <input id="pinInput" inputmode="numeric" autocomplete="one-time-code" placeholder="Login-Code eingeben">
-      <button class="pinOk" id="pinBtn" type="button">OK</button>
+  <div class="pinCard loginCard">
+    <div class="loginLogo"><img src="./icon-192.png" alt="" onerror="this.parentNode.style.display='none'"></div>
+    <div class="loginBrand">Stundenformular</div>
+    <div class="pinTitle">Willkommen</div>
+    <p class="pinHint">Gib deinen Login-Code ein, um zu starten.</p>
+    <div class="loginField">
+      <input id="pinInput" inputmode="numeric" enterkeyhint="go" autocomplete="one-time-code" placeholder="Login-Code">
     </div>
-    <div class="pinError" id="pinError">Falscher Code</div>
+    <button class="loginGo" id="pinBtn" type="button">Weiter</button>
+    <div class="pinError" id="pinError">Falscher Code – bitte erneut versuchen.</div>
+    <button class="loginHelpLink" id="loginHelpBtn" type="button">🛟 Probleme beim Anmelden? Nachricht an den Admin</button>
+    <div class="loginVersion" id="loginVersion"></div>
   </div>
 </div>
 
@@ -2906,6 +3016,10 @@ tbody tr:nth-child(odd){
     </div>
 
     <div id="hoursContentPanel" style="display:none;">
+      <div id="hoursIdentityBar" style="display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:12px; padding:10px 12px; border-radius:12px; background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.12); font-size:12px; color:rgba(255,255,255,.85);">
+        <span id="hoursIdentityText"></span>
+        <button type="button" id="hoursLogoutBtn" style="background:none; border:none; padding:2px 0; color:#FFD54A; font-size:12px; font-weight:800; text-decoration:underline; cursor:pointer; white-space:nowrap;">Nicht du? Abmelden</button>
+      </div>
       <div id="hoursDocumentsWrap" style="margin-bottom:14px;"></div>
       <div id="hoursSummaryWrap" style="margin-bottom:14px;"></div>
 
@@ -2921,6 +3035,10 @@ tbody tr:nth-child(odd){
       <div id="hoursMessageStatus" style="margin-top:8px; font-size:12px;"></div>
     </div>
 
+    <button class="helpEntry" id="hoursHelpBtn" type="button">
+      <span class="helpEntryIcon">🛟</span>
+      <span><b>Technisches Problem? Brauchst du Hilfe?</b><br><small>Schreib dem Admin direkt – ohne PIN, ohne Stunden.</small></span>
+    </button>
     <button class="pinOk" id="hoursBackBtn" type="button" style="width:100%; margin-top:14px; background:rgba(255,255,255,.12);">← Zurück zur Auswahl</button>
   </div>
 </div>
@@ -2969,6 +3087,34 @@ tbody tr:nth-child(odd){
     <div id="maintenanceStatus" style="font-size:12px; color:rgba(255,255,255,.55); margin-bottom:16px;">Wird automatisch geprüft…</div>
     <button id="maintenanceRetryBtn" type="button" style="width:100%; padding:14px; border-radius:16px; border:none; background:linear-gradient(135deg,#3D3A87,#6b63c9); color:#fff; font-weight:800; font-size:15px;">Erneut prüfen</button>
     <div style="margin-top:16px; font-size:12px; color:rgba(255,255,255,.45);">Danke für dein Verständnis.</div>
+  </div>
+</div>
+
+<div class="pinBack" id="helpBack">
+  <div class="pinCard helpCard">
+    <div class="helpHead">
+      <div class="helpIcon">🛟</div>
+      <div>
+        <div class="pinTitle" style="margin:0;">Hilfe bei Problemen</div>
+        <p class="pinHint" style="margin:2px 0 0;">Schreib dem Admin direkt – ganz ohne PIN und ohne Stunden.</p>
+      </div>
+    </div>
+
+    <label class="helpLabel" for="helpText">Was ist das Problem?</label>
+    <textarea id="helpText" maxlength="1500" placeholder="Beschreibe kurz, was nicht funktioniert …"></textarea>
+    <div class="helpCount" id="helpCount">0 / 1500</div>
+
+    <label class="helpLabel" for="helpName">Dein Name <span>(optional)</span></label>
+    <input id="helpName" type="text" maxlength="60" autocomplete="name" placeholder="z. B. Vorname Nachname">
+
+    <label class="helpLabel" for="helpContact">Telefon / WhatsApp für eine Rückmeldung <span>(optional)</span></label>
+    <input id="helpContact" type="text" inputmode="tel" maxlength="80" autocomplete="tel" placeholder="z. B. 0170 1234567">
+
+    <div class="helpInfo">Technische Infos (App-Version, Gerätetyp) werden automatisch mitgeschickt.</div>
+
+    <button class="pinOk helpSend" id="helpSendBtn" type="button">Nachricht senden</button>
+    <div class="helpStatus" id="helpStatus"></div>
+    <button class="helpClose" id="helpCloseBtn" type="button">Schließen</button>
   </div>
 </div>
 
@@ -3026,6 +3172,11 @@ tbody tr:nth-child(odd){
       </div>
       <div class="small" id="nameError" style="display:none; color:var(--danger); font-weight:900;">
         Bitte gültige PIN (2 Ziffern) eingeben.
+      </div>
+
+      <div id="formIdentityBar" style="display:none; align-items:center; justify-content:space-between; gap:10px; margin-top:8px; padding:8px 10px; border-radius:10px; background:#f3f2fb; border:1px solid var(--border); font-size:12px; font-weight:700; color:#3D3A87;">
+        <span id="formIdentityText"></span>
+        <button type="button" id="formLogoutBtn" style="background:none; border:none; padding:2px 0; color:#c0392b; font-size:12px; font-weight:800; text-decoration:underline; cursor:pointer; white-space:nowrap;">Nicht du? Abmelden</button>
       </div>
 
       <div id="newPinToggleWrap" style="margin-top:8px;">
@@ -3192,7 +3343,8 @@ if("serviceWorker" in navigator){
   });
 }
 
-const APP_VERSION = "v20261001b";
+const APP_VERSION = "v20261001d";
+document.getElementById("loginVersion").textContent = "Version " + APP_VERSION;
 
 (function setupUpdateCheck(){
   let bannerShown = false;
@@ -3319,6 +3471,55 @@ newPinToggleBtn?.addEventListener("click", ()=>{
   newPinPanel.style.display = newPinPanel.style.display === "none" ? "block" : "none";
 });
 
+const DEVICE_PERSONAL_KEYS = ["sad_personal_pin", "sad_device_secret", "sad_device_label", "sad_seen_count", "sad_equip_name"];
+const DEVICE_PERSONAL_PREFIXES = [STORAGE_PREFIX, "stundenformular_note_"];
+
+function wipeDeviceIdentity(){
+  DEVICE_PERSONAL_KEYS.forEach(function(k){ localStorage.removeItem(k); });
+  Object.keys(localStorage).forEach(function(k){
+    if(DEVICE_PERSONAL_PREFIXES.some(function(p){ return k.indexOf(p) === 0; })) localStorage.removeItem(k);
+  });
+  Object.keys(sessionStorage).forEach(function(k){
+    if(k.indexOf("sad_equip_ok_") === 0) sessionStorage.removeItem(k);
+  });
+}
+
+function deviceLabelText(){
+  const pin = localStorage.getItem("sad_personal_pin");
+  const label = localStorage.getItem("sad_device_label");
+  return label ? `PIN ${pin} (${label})` : `PIN ${pin}`;
+}
+
+function renderIdentityBars(){
+  const bound = !!(localStorage.getItem("sad_personal_pin") && localStorage.getItem("sad_device_secret"));
+  const text = bound ? deviceLabelText() : "";
+  const formBar = document.getElementById("formIdentityBar");
+  if(formBar){
+    formBar.style.display = bound ? "flex" : "none";
+    document.getElementById("formIdentityText").textContent = "Dieses Handy ist bestätigt für " + text;
+  }
+  const hoursText = document.getElementById("hoursIdentityText");
+  if(hoursText) hoursText.textContent = "Angemeldet als " + text;
+}
+
+async function logoutDevice(){
+  if(!localStorage.getItem("sad_personal_pin")) return;
+  const ok = await openDialog({
+    title: "Abmelden?",
+    message: `Auf diesem Handy werden ${deviceLabelText()}, der gespeicherte Name und ungesendete Eingaben gelöscht. Danach kann sich jemand anderes anmelden.`,
+    mode: "confirm",
+    okText: "Ja, abmelden",
+    cancelText: "Abbrechen"
+  });
+  if(!ok) return;
+  wipeDeviceIdentity();
+  location.reload();
+}
+
+document.getElementById("formLogoutBtn").addEventListener("click", logoutDevice);
+document.getElementById("hoursLogoutBtn").addEventListener("click", logoutDevice);
+renderIdentityBars();
+
 async function requestPin(vorname, nachname, forceNew){
   const res = await fetch(EQUIP_WEB_APP_URL, {
     method: "POST",
@@ -3333,12 +3534,38 @@ async function requestPin(vorname, nachname, forceNew){
   return res.json();
 }
 
-async function applyAssignedPin(pin, message, secret){
+async function applyAssignedPin(pin, message, secret, label){
+  const curPin = localStorage.getItem("sad_personal_pin");
+  const curSecret = localStorage.getItem("sad_device_secret");
+  let switched = false;
+
+  if(curPin && curSecret && curPin !== pin){
+    const proceed = await openDialog({
+      title: "Handy wechseln?",
+      message: `Dieses Handy gehört aktuell zu dem Mitarbeiter mit der PIN ${curPin}${localStorage.getItem("sad_device_label") ? " (" + localStorage.getItem("sad_device_label") + ")" : ""}. Wenn du fortfährst, wird sein Zugang auf diesem Handy beendet und sein ungesendeter Entwurf gelöscht. Danach gehört das Handy zu dir.`,
+      mode: "confirm",
+      okText: "Ja, Handy wechseln",
+      cancelText: "Abbrechen"
+    });
+    if(!proceed){
+      newPinStatus.style.color = "#c0392b";
+      newPinStatus.textContent = "Abgebrochen. Dieses Handy bleibt beim bisherigen Mitarbeiter.";
+      newPinRequestBtn.disabled = false;
+      return;
+    }
+    wipeDeviceIdentity();
+    switched = true;
+  }
+
   nameEl.value = pin;
   localStorage.setItem("sad_personal_pin", pin);
   if(secret){
     localStorage.setItem("sad_device_secret", secret);
   }
+  if(label){
+    localStorage.setItem("sad_device_label", label);
+  }
+  renderIdentityBars();
   newPinStatus.style.color = "#2f9e44";
   newPinStatus.textContent = message;
   setNameError(false);
@@ -3358,6 +3585,8 @@ async function applyAssignedPin(pin, message, secret){
       resolve();
     }, { once:true });
   });
+
+  if(switched) location.reload();
 }
 
 newPinRequestBtn?.addEventListener("click", async ()=>{
@@ -3383,7 +3612,8 @@ newPinRequestBtn?.addEventListener("click", async ()=>{
         result.existing
           ? `Du hattest schon eine PIN: ${result.pin} (jetzt eingetragen).`
           : `Deine neue PIN lautet: ${result.pin} – ist automatisch eingetragen und wird ab jetzt gemerkt.`,
-        result.secret
+        result.secret,
+        result.nameMasked
       );
     }else if(result.status === "confirm"){
       newPinStatus.textContent = "";
@@ -3410,13 +3640,13 @@ newPinRequestBtn?.addEventListener("click", async ()=>{
         const confVorname = parts.shift();
         const confNachname = parts.join(" ");
         const confirmedResult = await requestPin(confVorname, confNachname, false);
-        await applyAssignedPin(confirmedPin, `Deine PIN lautet: ${confirmedPin} (jetzt eingetragen).`, confirmedResult.secret);
+        await applyAssignedPin(confirmedPin, `Deine PIN lautet: ${confirmedPin} (jetzt eingetragen).`, confirmedResult.secret, confirmedResult.nameMasked);
       }else{
         newPinStatus.style.color = "#666";
         newPinStatus.textContent = "Neue PIN wird angelegt...";
         const retryResult = await requestPin(vorname, nachname, true);
         if(retryResult.status === "success"){
-          await applyAssignedPin(retryResult.pin, `Deine neue PIN lautet: ${retryResult.pin} – ist automatisch eingetragen und wird ab jetzt gemerkt.`, retryResult.secret);
+          await applyAssignedPin(retryResult.pin, `Deine neue PIN lautet: ${retryResult.pin} – ist automatisch eingetragen und wird ab jetzt gemerkt.`, retryResult.secret, retryResult.nameMasked);
         }else{
           newPinStatus.style.color = "#c0392b";
           newPinStatus.textContent = "Fehler: " + retryResult.message;
@@ -4557,7 +4787,7 @@ function confirmIdentity(pin){
         });
         const result = await res.json();
         if(result.status === "success" && result.secret){
-          close(result.secret);
+          close(result);
           return;
         }
         if(result.code === "MAINTENANCE"){
@@ -4592,9 +4822,10 @@ async function sendenDirekt(){
     setNameError(true);
     nameEl.value = boundPin;
     if(newPinToggleWrap) newPinToggleWrap.style.display = "block";
+    const labelNow = localStorage.getItem("sad_device_label") || "";
     await dlgAlert(
-      `Dieses Gerät ist als PIN ${boundPin} bestätigt, du hast aber PIN ${nm} eingegeben. Bitte nutze deine eigene PIN (${boundPin}). Falls du eine andere Person bist, tippe auf "PIN vergessen oder noch keine?" und bestätige deinen Namen.`,
-      "Andere PIN erkannt"
+      `Dieses Handy gehört aktuell zu dem Mitarbeiter mit der PIN ${boundPin}${labelNow ? " (" + labelNow + ")" : ""}. Du hast PIN ${nm} eingegeben. Falls du eine andere Person bist, tippe auf "PIN vergessen oder noch keine?" und bestätige deinen Namen. Falls dieses Handy dir gehört, nutze bitte deine PIN ${boundPin}.`,
+      "Dieses Handy gehört jemand anderem"
     );
     return;
   }
@@ -4668,15 +4899,17 @@ async function sendenDirekt(){
 
     if(result.status !== "success" && result.code === "DEVICE_MISMATCH"){
       hideSendLoading();
-      const claimedSecret = await confirmIdentity(nm);
-      if(!claimedSecret){
+      const claimed = await confirmIdentity(nm);
+      if(!claimed){
         return;
       }
       localStorage.setItem("sad_personal_pin", nm);
-      localStorage.setItem("sad_device_secret", claimedSecret);
+      localStorage.setItem("sad_device_secret", claimed.secret);
+      if(claimed.nameMasked) localStorage.setItem("sad_device_label", claimed.nameMasked);
+      renderIdentityBars();
       if(newPinToggleWrap) newPinToggleWrap.style.display = "none";
       showSendLoading(["Daten werden gesendet...", "Wird übermittelt...", "Gleich fertig..."]);
-      result = await postHours(claimedSecret);
+      result = await postHours(claimed.secret);
     }
 
     if(result.status !== "success"){
@@ -4726,12 +4959,20 @@ function requirePin(){
       showChooser();
     }else{
       pinError.style.display="block";
+      const card = pinBack.querySelector(".loginCard");
+      if(card){ card.classList.remove("shake"); void card.offsetWidth; card.classList.add("shake"); }
+      pinInput.value="";
+      pinInput.focus();
     }
   }
 
   pinBtn.onclick = check;
   pinInput.addEventListener("keydown",(e)=>{
     if(e.key==="Enter") check();
+  });
+  pinInput.addEventListener("input",()=>{
+    pinError.style.display="none";
+    if((pinInput.value||"").trim().length === APP_PIN.length) check();
   });
 }
 
@@ -4797,6 +5038,91 @@ function showChooser(){
 // Zählt Kommentare + Nachrichten + Vermerke + Dokumente zusammen, um zu
 // erkennen, ob es seit dem letzten Öffnen von "Meine Stunden ansehen"
 // etwas Neues gibt - zeigt dann ein dezentes "Neu"-Badge am Button.
+const helpBack = document.getElementById("helpBack");
+const helpText = document.getElementById("helpText");
+const helpCount = document.getElementById("helpCount");
+const helpName = document.getElementById("helpName");
+const helpContact = document.getElementById("helpContact");
+const helpSendBtn = document.getElementById("helpSendBtn");
+const helpStatus = document.getElementById("helpStatus");
+
+function getHelpDeviceId(){
+  let id = localStorage.getItem("sad_help_device");
+  if(!id){
+    id = "d" + Math.random().toString(36).slice(2, 12) + Date.now().toString(36);
+    localStorage.setItem("sad_help_device", id);
+  }
+  return id;
+}
+
+function openHelp(){
+  helpStatus.className = "helpStatus";
+  helpStatus.textContent = "";
+  helpBack.style.display = "flex";
+  setTimeout(()=> helpText.focus(), 60);
+}
+
+function closeHelp(){
+  helpBack.style.display = "none";
+}
+
+function setHelpStatus(kind, text){
+  helpStatus.className = "helpStatus" + (kind ? " " + kind : "");
+  helpStatus.textContent = text;
+}
+
+helpText.addEventListener("input", ()=>{
+  helpCount.textContent = helpText.value.length + " / 1500";
+});
+
+helpSendBtn.addEventListener("click", async ()=>{
+  const text = helpText.value.trim();
+  if(text.length < 5){
+    setHelpStatus("err", "Bitte beschreibe kurz dein Problem (ein paar Worte reichen).");
+    helpText.focus();
+    return;
+  }
+
+  helpSendBtn.disabled = true;
+  setHelpStatus("", "Wird gesendet …");
+  try{
+    const res = await fetch(EQUIP_WEB_APP_URL, {
+      method: "POST",
+      body: JSON.stringify({
+        token: EQUIP_API_TOKEN,
+        action: "sendHelp",
+        text: text,
+        name: helpName.value.trim(),
+        contact: helpContact.value.trim(),
+        deviceId: getHelpDeviceId(),
+        app: APP_VERSION,
+        ua: (navigator.userAgent || "").slice(0, 200)
+      })
+    });
+    const r = await res.json();
+    if(r.status === "success"){
+      helpText.value = "";
+      helpCount.textContent = "0 / 1500";
+      setHelpStatus("ok", "✅ Danke! Deine Nachricht ist beim Admin angekommen.");
+    }else if(r.code === "MAINTENANCE"){
+      setHelpStatus("err", "Gerade laufen Wartungsarbeiten. Bitte versuche es später noch einmal.");
+    }else{
+      setHelpStatus("err", r.message || "Senden hat nicht geklappt.");
+    }
+  }catch(err){
+    setHelpStatus("err", "Keine Verbindung – bitte prüfe dein Internet und versuche es erneut.");
+  }finally{
+    helpSendBtn.disabled = false;
+  }
+});
+
+document.getElementById("helpCloseBtn").addEventListener("click", closeHelp);
+document.getElementById("hoursHelpBtn").addEventListener("click", openHelp);
+document.getElementById("loginHelpBtn").addEventListener("click", openHelp);
+document.addEventListener("keydown", (e)=>{
+  if(e.key === "Escape" && helpBack.style.display === "flex") closeHelp();
+});
+
 let maintenanceActive = false;
 let maintenanceTimer = null;
 
@@ -4881,6 +5207,7 @@ async function checkForHoursUpdates(){
       return;
     }
 
+    if(result.nameMasked){ localStorage.setItem("sad_device_label", result.nameMasked); renderIdentityBars(); }
     const currentCount = countHoursContent(result);
     const seenCount = parseInt(localStorage.getItem("sad_seen_count") || "0", 10);
     badge.style.display = currentCount > seenCount ? "block" : "none";
@@ -4980,6 +5307,8 @@ hoursLoginBtn.addEventListener("click", async ()=>{
       }
       localStorage.setItem("sad_personal_pin", result.pin);
       localStorage.setItem("sad_device_secret", result.secret);
+      if(result.nameMasked) localStorage.setItem("sad_device_label", result.nameMasked);
+      renderIdentityBars();
       hoursLoginPanel.style.display = "none";
       hoursContentPanel.style.display = "block";
       loadMyHours(result.pin, result.secret);
@@ -5008,6 +5337,8 @@ hoursLoginBtn.addEventListener("click", async ()=>{
         }
         localStorage.setItem("sad_personal_pin", confirmedResult.pin);
         localStorage.setItem("sad_device_secret", confirmedResult.secret);
+        if(confirmedResult.nameMasked) localStorage.setItem("sad_device_label", confirmedResult.nameMasked);
+        renderIdentityBars();
         hoursLoginPanel.style.display = "none";
         hoursContentPanel.style.display = "block";
         loadMyHours(confirmedResult.pin, confirmedResult.secret);
@@ -5140,6 +5471,7 @@ async function loadMyHours(pin, secret){
 
     renderMyMessages(result.messages || []);
     localStorage.setItem("sad_seen_count", String(countHoursContent(result)));
+    if(result.nameMasked){ localStorage.setItem("sad_device_label", result.nameMasked); renderIdentityBars(); }
     const badgeEl = document.getElementById("hoursNewBadge");
     if(badgeEl) badgeEl.style.display = "none";
   }catch(err){

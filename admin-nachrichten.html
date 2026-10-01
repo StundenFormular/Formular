@@ -32,7 +32,17 @@
   #refreshBtn{ margin-bottom:14px; padding:10px 16px; border-radius:10px; border:none; background:var(--purple); color:#fff; font-weight:700; cursor:pointer; }
   #emptyState{ color:#777; padding:20px; text-align:center; }
 
-  .tabBar{ display:flex; gap:8px; margin-bottom:16px; }
+  .tabBar{ display:flex; flex-wrap:wrap; gap:8px; margin-bottom:16px; }
+  .helpItem{ background:#fff; border:1px solid var(--border); border-left:5px solid var(--gold); border-radius:14px; padding:12px 14px; margin-bottom:10px; }
+  .helpItem.done{ opacity:.6; border-left-color:#2f9e44; }
+  .helpItemTop{ display:flex; justify-content:space-between; gap:10px; font-size:13px; margin-bottom:6px; }
+  .helpItemTop span{ color:#777; font-size:12px; white-space:nowrap; }
+  .helpItemContact{ font-size:13px; font-weight:700; color:#3D3A87; margin-bottom:6px; }
+  .helpItemText{ white-space:pre-wrap; font-size:14px; line-height:1.4; }
+  .helpItemMeta{ margin-top:8px; font-size:11px; color:#999; word-break:break-all; }
+  .helpItemBtns{ display:flex; gap:8px; margin-top:10px; }
+  .helpItemBtns button{ flex:1; padding:8px; border-radius:8px; border:1px solid var(--border); background:#fff; font-weight:700; font-size:12px; cursor:pointer; }
+  .helpItemBtns .delBtn{ color:#c0392b; border-color:#c0392b; }
   .tabBtn{ padding:10px 18px; border-radius:10px; border:1px solid var(--border); background:#fff; color:#1a1a2e; font-weight:700; cursor:pointer; }
   .tabBtn.active{ background:var(--purple); color:#fff; border-color:var(--purple); }
   .tabPanel{ display:none; }
@@ -102,6 +112,7 @@
     <button class="tabBtn active" id="tabNachrichtenBtn" type="button">💬 Nachrichten</button>
     <button class="tabBtn" id="tabUploadBtn" type="button">📎 Dokument hochladen</button>
     <button class="tabBtn" id="tabOverviewBtn" type="button">📊 Stundenübersicht</button>
+    <button class="tabBtn" id="tabHelpBtn" type="button">🛟 Hilfe</button>
   </div>
 
   <div class="tabPanel active" id="tabNachrichten">
@@ -132,6 +143,11 @@
         <div id="vermerkStatus" style="margin-top:10px; font-size:13px;"></div>
       </div>
     </div>
+  </div>
+
+  <div class="tabPanel" id="tabHelp">
+    <button id="helpRefreshBtn" type="button" style="margin-bottom:14px; padding:10px 16px; border-radius:10px; border:none; background:var(--purple); color:#fff; font-weight:700; cursor:pointer;">🔄 Aktualisieren</button>
+    <div id="helpListWrap"></div>
   </div>
 
   <div class="tabPanel" id="tabOverview">
@@ -180,6 +196,7 @@ function enterAdminApp(){
   appEl.style.display = "block";
   loadMaintenanceStatus();
   loadThreads();
+  loadHelp();
 }
 
 function handleAuthExpired(){
@@ -229,10 +246,12 @@ const tabOverviewBtn = document.getElementById("tabOverviewBtn");
 const tabNachrichten = document.getElementById("tabNachrichten");
 const tabUpload = document.getElementById("tabUpload");
 const tabOverview = document.getElementById("tabOverview");
+const tabHelpBtn = document.getElementById("tabHelpBtn");
+const tabHelp = document.getElementById("tabHelp");
 
 function activateTab(btn, panel){
-  [tabNachrichtenBtn, tabUploadBtn, tabOverviewBtn].forEach(b => b.classList.remove("active"));
-  [tabNachrichten, tabUpload, tabOverview].forEach(p => p.classList.remove("active"));
+  [tabNachrichtenBtn, tabUploadBtn, tabOverviewBtn, tabHelpBtn].forEach(b => b.classList.remove("active"));
+  [tabNachrichten, tabUpload, tabOverview, tabHelp].forEach(p => p.classList.remove("active"));
   btn.classList.add("active");
   panel.classList.add("active");
 }
@@ -916,6 +935,74 @@ maintToggleBtn.addEventListener("click", async ()=>{
     maintToggleBtn.disabled = false;
   }
 });
+
+// ===== Hilfe-Nachrichten =====
+const helpListWrap = document.getElementById("helpListWrap");
+const helpRefreshBtn = document.getElementById("helpRefreshBtn");
+
+tabHelpBtn.addEventListener("click", ()=>{
+  activateTab(tabHelpBtn, tabHelp);
+  loadHelp();
+});
+helpRefreshBtn.addEventListener("click", loadHelp);
+
+async function helpRequest(payload){
+  const res = await fetch(EQUIP_WEB_APP_URL, {
+    method: "POST",
+    body: JSON.stringify(Object.assign({ token: EQUIP_API_TOKEN, adminSession: getAdminSession() }, payload))
+  });
+  return res.json();
+}
+
+async function loadHelp(){
+  helpListWrap.innerHTML = `<div style="text-align:center; padding:20px; color:#777;">Lädt...</div>`;
+  try{
+    const data = await helpRequest({ action: "adminListHelp" });
+    if(data.status !== "success"){
+      helpListWrap.innerHTML = `<div style="color:#c0392b;">Fehler: ${escapeHtml(data.message || "")}</div>`;
+      return;
+    }
+    renderHelp(data.items || []);
+  }catch(err){
+    helpListWrap.innerHTML = `<div style="color:#c0392b;">Fehler: ${escapeHtml(err.message)}</div>`;
+  }
+}
+
+function renderHelp(items){
+  const open = items.filter(i => !i.erledigt).length;
+  tabHelpBtn.textContent = open ? "🛟 Hilfe (" + open + ")" : "🛟 Hilfe";
+
+  if(items.length === 0){
+    helpListWrap.innerHTML = `<div style="color:#777; padding:20px; text-align:center;">Keine Hilfe-Nachrichten.</div>`;
+    return;
+  }
+
+  helpListWrap.innerHTML = "";
+  items.forEach(it => {
+    const card = document.createElement("div");
+    card.className = "helpItem" + (it.erledigt ? " done" : "");
+    card.innerHTML = `
+      <div class="helpItemTop"><b>${escapeHtml(it.name || "Anonym")}</b><span>${escapeHtml(it.zeit)}</span></div>
+      ${it.kontakt ? `<div class="helpItemContact">📞 ${escapeHtml(it.kontakt)}</div>` : ""}
+      <div class="helpItemText">${escapeHtml(it.text)}</div>
+      ${it.geraet ? `<div class="helpItemMeta">${escapeHtml(it.geraet)}</div>` : ""}
+      <div class="helpItemBtns">
+        <button type="button" class="doneBtn">${it.erledigt ? "↩️ Wieder öffnen" : "✅ Erledigt"}</button>
+        <button type="button" class="delBtn">🗑️ Löschen</button>
+      </div>`;
+
+    card.querySelector(".doneBtn").addEventListener("click", async ()=>{
+      const r = await helpRequest({ action: "adminSetHelpDone", id: it.id, done: !it.erledigt });
+      if(r.status === "success") loadHelp(); else alert("Fehler: " + (r.message || ""));
+    });
+    card.querySelector(".delBtn").addEventListener("click", async ()=>{
+      if(!confirm("Diese Hilfe-Nachricht wirklich löschen?")) return;
+      const r = await helpRequest({ action: "adminDeleteHelp", id: it.id });
+      if(r.status === "success") loadHelp(); else alert("Fehler: " + (r.message || ""));
+    });
+    helpListWrap.appendChild(card);
+  });
+}
 
 if(getAdminSession()){ enterAdminApp(); }
 </script>
