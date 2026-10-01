@@ -1,10 +1,5 @@
-// Service Worker für das Stundenformular
-// Sorgt für Offline-Funktion und macht die App auf Android als "echte" PWA installierbar.
+const CACHE_NAME = "stundenformular-v2";
 
-const CACHE_NAME = "stundenformular-v1";
-
-// Grundlegende Dateien, die beim ersten Besuch gecacht werden.
-// Pfade ggf. anpassen, falls Icons/Manifest anders heißen oder in Unterordnern liegen.
 const APP_SHELL = [
   "./",
   "./index.html",
@@ -15,41 +10,46 @@ const APP_SHELL = [
 
 self.addEventListener("install", (event) => {
   event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => {
-      return cache.addAll(APP_SHELL).catch((err) => {
+    caches.open(CACHE_NAME).then((cache) =>
+      cache.addAll(APP_SHELL).catch((err) => {
         console.warn("Konnte nicht alle App-Shell-Dateien cachen:", err);
-      });
-    })
+      })
+    )
   );
   self.skipWaiting();
 });
 
 self.addEventListener("activate", (event) => {
   event.waitUntil(
-    caches.keys().then((keys) =>
-      Promise.all(
-        keys
-          .filter((key) => key !== CACHE_NAME)
-          .map((key) => caches.delete(key))
+    caches.keys()
+      .then((keys) =>
+        Promise.all(
+          keys
+            .filter((key) => key !== CACHE_NAME)
+            .map((key) => caches.delete(key))
+        )
       )
-    )
+      .then(() => self.clients.claim())
   );
-  self.clients.claim();
 });
 
-// Strategie: Network-first für Navigation (immer aktuellste Version, wenn online),
-// Cache-first für alles andere (Bilder, Icons, statische Assets).
 self.addEventListener("fetch", (event) => {
   const { request } = event;
 
   if (request.method !== "GET") return;
 
+  const url = new URL(request.url);
+  if (url.origin !== self.location.origin) return;
+  if (url.searchParams.has("vcheck")) return;
+
   if (request.mode === "navigate") {
     event.respondWith(
-      fetch(request)
+      fetch(request, { cache: "no-store" })
         .then((response) => {
-          const copy = response.clone();
-          caches.open(CACHE_NAME).then((cache) => cache.put(request, copy));
+          if (response.ok) {
+            const copy = response.clone();
+            caches.open(CACHE_NAME).then((cache) => cache.put(request, copy));
+          }
           return response;
         })
         .catch(() => caches.match(request).then((r) => r || caches.match("./index.html")))
@@ -61,10 +61,12 @@ self.addEventListener("fetch", (event) => {
     caches.match(request).then((cached) => {
       if (cached) return cached;
       return fetch(request).then((response) => {
-        const copy = response.clone();
-        caches.open(CACHE_NAME).then((cache) => cache.put(request, copy));
+        if (response.ok) {
+          const copy = response.clone();
+          caches.open(CACHE_NAME).then((cache) => cache.put(request, copy));
+        }
         return response;
-      }).catch(() => cached);
+      });
     })
   );
 });

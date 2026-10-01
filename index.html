@@ -3172,6 +3172,37 @@ if("serviceWorker" in navigator){
   });
 }
 
+const APP_VERSION = "v20261001a";
+
+(function setupUpdateCheck(){
+  let bannerShown = false;
+
+  function showUpdateBanner(){
+    if(bannerShown) return;
+    bannerShown = true;
+    const bar = document.createElement("div");
+    bar.style.cssText = "position:fixed; left:12px; right:12px; bottom:76px; z-index:1400; display:flex; align-items:center; justify-content:space-between; gap:10px; padding:12px 14px; border-radius:14px; background:#3D3A87; color:#fff; font-weight:800; font-size:14px; box-shadow:0 6px 20px rgba(0,0,0,.4);";
+    bar.innerHTML = '<span>🔄 Neue Version verfügbar</span><button type="button" style="border:none; border-radius:10px; padding:8px 14px; font-weight:900; background:#E8A33D; color:#2b1f04;">Aktualisieren</button>';
+    bar.querySelector("button").addEventListener("click", function(){ location.reload(); });
+    document.body.appendChild(bar);
+  }
+
+  async function checkForNewVersion(){
+    try{
+      const res = await fetch(location.pathname + "?vcheck=" + Date.now(), { cache: "no-store" });
+      if(!res.ok) return;
+      const html = await res.text();
+      const m = html.match(/APP_VERSION = "(v[0-9][^"]*)"/);
+      if(m && m[1] !== APP_VERSION) showUpdateBanner();
+    }catch(e){}
+  }
+
+  window.addEventListener("load", function(){ setTimeout(checkForNewVersion, 3000); });
+  document.addEventListener("visibilitychange", function(){
+    if(document.visibilityState === "visible") checkForNewVersion();
+  });
+})();
+
 const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbw3-LIiVd6lG9on22RMTJcMYaMATy2y5Vxm6ep8idY6DWMjc2ThGPTtOHDIutL1pBPVnQ/exec";
 const APP_PIN     = "8558";
 const PIN_BG_FILE = "nr3.jpg";
@@ -4469,6 +4500,17 @@ async function sendenDirekt(){
     return;
   }
 
+  const storedOwnPin = localStorage.getItem("sad_personal_pin");
+  if(storedOwnPin && storedOwnPin !== nm){
+    setNameError(true);
+    await dlgAlert(
+      `Dieses Gerät ist bereits als PIN ${storedOwnPin} gespeichert. Du versuchst gerade, als PIN ${nm} zu senden - das ist nicht erlaubt. Bitte deine eigene PIN (${storedOwnPin}) eintragen, oder den Admin kontaktieren, falls das nicht stimmt.`,
+      "Falsche PIN für dieses Gerät"
+    );
+    nameEl.value = storedOwnPin;
+    return;
+  }
+
   sendBtn.disabled = true;
   showSendLoading(["PIN wird geprüft...", "Validiere..."]);
 
@@ -4511,6 +4553,7 @@ async function sendenDirekt(){
   if(!ok) return;
 
   const payload = getState();
+  const deviceSecret = localStorage.getItem("sad_device_secret") || "";
 
   sendBtn.disabled = true;
   showSendLoading([
@@ -4523,11 +4566,28 @@ async function sendenDirekt(){
   try{
     const res = await fetch(EQUIP_WEB_APP_URL, {
       method: "POST",
-      body: JSON.stringify({ token: EQUIP_API_TOKEN, action: "submitHours", ...payload })
+      body: JSON.stringify({ token: EQUIP_API_TOKEN, action: "submitHours", ...payload, secret: deviceSecret })
     });
 
     const result = await res.json();
-    if(result.status !== "success") throw new Error(result.message || "Unbekannter Fehler");
+
+    if(result.status !== "success"){
+      if(result.code === "DEVICE_MISMATCH"){
+        hideSendLoading();
+        sendBtn.disabled = false;
+        await dlgAlert(
+          `Diese PIN ist bereits einem anderen Gerät zugeordnet. Falls das wirklich deine PIN ist und du dein altes Gerät nicht mehr hast, wende dich bitte an den Admin, damit er das zurücksetzt.`,
+          "Gerät nicht erkannt"
+        );
+        return;
+      }
+      throw new Error(result.message || "Unbekannter Fehler");
+    }
+
+    if(result.secret){
+      localStorage.setItem("sad_personal_pin", nm);
+      localStorage.setItem("sad_device_secret", result.secret);
+    }
 
     hideSendLoading();
  await showSuccessPremium();
@@ -4860,21 +4920,35 @@ async function loadMyHours(pin, secret){
     }
 
     if(result.summaries && result.summaries.length > 0){
-      hoursSummaryWrap.innerHTML = result.summaries.map(s=>`
-        <div style="display:flex; gap:12px; margin-bottom:8px; flex-wrap:wrap;">
-          <div style="flex:1; min-width:120px; background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.12); border-radius:12px; padding:10px 12px;">
-            <div style="font-size:11px; color:rgba(255,255,255,.6);">Gesendete Stunden (${s.monat})</div>
-            <div style="font-size:20px; font-weight:900; color:#fff;">${s.summeEingereicht ?? 0} Std.</div>
+      const monthNames = ["Januar","Februar","März","April","Mai","Juni","Juli","August","September","Oktober","November","Dezember"];
+      const accentColors = ["#E8A33D", "#6FA8DC", "#93C47D", "#C27BA0", "#76A5AF", "#E06666"];
+      const sortedSummaries = [...result.summaries].sort((a,b)=> String(a.monat).localeCompare(String(b.monat)));
+
+      hoursSummaryWrap.innerHTML = sortedSummaries.map((s, idx)=>{
+        const parts = String(s.monat).split("-");
+        const monthLabel = (parts.length === 2 && monthNames[parseInt(parts[1],10)-1])
+          ? `${monthNames[parseInt(parts[1],10)-1]} ${parts[0]}`
+          : s.monat;
+        const accent = accentColors[idx % accentColors.length];
+
+        return `
+        <div style="border:1px solid ${accent}66; border-left:4px solid ${accent}; border-radius:12px; padding:12px; margin-bottom:12px; background:rgba(255,255,255,.03);">
+          <div style="font-weight:900; color:${accent}; font-size:14px; margin-bottom:8px;">📅 ${monthLabel}</div>
+          <div style="display:flex; gap:12px; flex-wrap:wrap;">
+            <div style="flex:1; min-width:120px; background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.12); border-radius:12px; padding:10px 12px;">
+              <div style="font-size:11px; color:rgba(255,255,255,.6);">Gesendete Stunden</div>
+              <div style="font-size:20px; font-weight:900; color:#fff;">${s.summeEingereicht ?? 0} Std.</div>
+            </div>
+            ${s.freigegeben ? `
+            <div style="flex:1; min-width:120px; background:rgba(232,163,61,.12); border:1px solid rgba(232,163,61,.4); border-radius:12px; padding:10px 12px;">
+              <div style="font-size:11px; color:rgba(255,213,74,.85);">Offiziell erfasst</div>
+              <div style="font-size:20px; font-weight:900; color:#FFD54A;">${s.summeOffiziell ?? 0} Std.</div>
+            </div>` : ""}
           </div>
-          ${s.freigegeben ? `
-          <div style="flex:1; min-width:120px; background:rgba(232,163,61,.12); border:1px solid rgba(232,163,61,.4); border-radius:12px; padding:10px 12px;">
-            <div style="font-size:11px; color:rgba(255,213,74,.85);">Offiziell erfasst (${s.monat})</div>
-            <div style="font-size:20px; font-weight:900; color:#FFD54A;">${s.summeOffiziell ?? 0} Std.</div>
-          </div>` : ""}
-        </div>
-        ${s.kommentar && s.kommentar.trim() ? `
-        <div style="padding:10px 12px; margin-bottom:8px; border-radius:10px; background:rgba(232,163,61,.15); border:1px solid rgba(232,163,61,.4); color:#FFD54A; font-size:12px; white-space:pre-wrap;">📝 <b>Hinweis Admin (${s.monat}):</b><br>${s.kommentar.replace(/</g,"&lt;")}</div>` : ""}
-      `).join("");
+          ${s.kommentar && s.kommentar.trim() ? `
+          <div style="margin-top:8px; padding:10px 12px; border-radius:10px; background:rgba(232,163,61,.15); border:1px solid rgba(232,163,61,.4); color:#FFD54A; font-size:12px; white-space:pre-wrap;">📝 <b>Hinweis Admin:</b><br>${s.kommentar.replace(/</g,"&lt;")}</div>` : ""}
+        </div>`;
+      }).join("");
     }
 
     const commentedDays = (result.hours || []).filter(h => h.kommentar && h.kommentar.trim());
