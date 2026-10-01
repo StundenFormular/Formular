@@ -2952,6 +2952,26 @@ tbody tr:nth-child(odd){
 @keyframes sendSpin { to { transform: rotate(360deg); } }
 </style>
 
+<style>
+@keyframes maintPulse { 0%{ box-shadow:0 0 0 0 rgba(232,163,61,.45); } 70%{ box-shadow:0 0 0 22px rgba(232,163,61,0); } 100%{ box-shadow:0 0 0 0 rgba(232,163,61,0); } }
+@keyframes maintSlide { 0%{ transform:translateX(-100%); } 100%{ transform:translateX(260%); } }
+</style>
+<div id="maintenanceBack" style="display:none; position:fixed; inset:0; z-index:20000; background:radial-gradient(900px 500px at 20% 10%, rgba(61,58,135,.55), transparent 60%), radial-gradient(800px 500px at 90% 90%, rgba(232,163,61,.22), transparent 60%), linear-gradient(160deg,#0c0b22,#1b1942 55%,#0e0d27); align-items:center; justify-content:center; padding:20px; overflow-y:auto;">
+  <div style="width:100%; max-width:420px; text-align:center; color:#fff; padding:34px 26px; border-radius:26px; background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.14); box-shadow:0 20px 60px rgba(0,0,0,.5);">
+    <div style="width:84px; height:84px; margin:0 auto 22px; border-radius:50%; background:linear-gradient(135deg,#E8A33D,#f0c674); display:flex; align-items:center; justify-content:center; animation:maintPulse 2.2s infinite;">
+      <svg viewBox="0 0 24 24" width="42" height="42" fill="none" stroke="#2b1f04" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>
+    </div>
+    <div style="font-size:12px; font-weight:800; letter-spacing:.14em; text-transform:uppercase; color:#E8A33D; margin-bottom:8px;">Wartungsarbeiten</div>
+    <div style="font-size:24px; font-weight:900; line-height:1.2; margin-bottom:12px;">Diese Website wird gerade gewartet</div>
+    <div style="font-size:15px; line-height:1.5; color:rgba(255,255,255,.78);">Der Admin führt gerade Wartungsarbeiten durch. Bitte versuche es später noch einmal.</div>
+    <div id="maintenanceMsgBox" style="display:none; margin-top:18px; padding:12px 14px; border-radius:14px; background:rgba(232,163,61,.14); border:1px solid rgba(232,163,61,.4); color:#FFD54A; font-size:14px; font-weight:700; white-space:pre-wrap;"></div>
+    <div style="margin:24px auto 8px; width:70%; height:4px; border-radius:4px; background:rgba(255,255,255,.12); overflow:hidden; position:relative;"><div style="position:absolute; top:0; left:0; width:40%; height:100%; background:linear-gradient(90deg,transparent,#E8A33D,transparent); animation:maintSlide 1.6s ease-in-out infinite;"></div></div>
+    <div id="maintenanceStatus" style="font-size:12px; color:rgba(255,255,255,.55); margin-bottom:16px;">Wird automatisch geprüft…</div>
+    <button id="maintenanceRetryBtn" type="button" style="width:100%; padding:14px; border-radius:16px; border:none; background:linear-gradient(135deg,#3D3A87,#6b63c9); color:#fff; font-weight:800; font-size:15px;">Erneut prüfen</button>
+    <div style="margin-top:16px; font-size:12px; color:rgba(255,255,255,.45);">Danke für dein Verständnis.</div>
+  </div>
+</div>
+
 <div class="dlgBack" id="dlgBack">
   <div class="dlg" role="dialog" aria-modal="true" aria-labelledby="dlgTitle">
     <div class="dlgTop" id="dlgTitle">Hinweis</div>
@@ -3172,7 +3192,7 @@ if("serviceWorker" in navigator){
   });
 }
 
-const APP_VERSION = "v20261001a";
+const APP_VERSION = "v20261001b";
 
 (function setupUpdateCheck(){
   let bannerShown = false;
@@ -4491,6 +4511,72 @@ function hideSendLoading(){
   sendLoadingOverlay.style.display = "none";
 }
 
+function confirmIdentity(pin){
+  return new Promise((resolve)=>{
+    dlgTitleEl.textContent = "Bestätige deinen Namen";
+    dlgMsgEl.innerHTML = `
+      <div style="margin-bottom:12px; font-weight:700;">Dieses Gerät kennt PIN ${pin} noch nicht. Bitte bestätige einmalig deinen Namen. Danach bleibt alles auf diesem Gerät gespeichert.</div>
+      <input id="idVorname" type="text" autocomplete="off" placeholder="Vorname" style="width:100%; padding:11px 12px; margin-bottom:8px; border-radius:10px; border:1px solid var(--border); font-size:15px; box-sizing:border-box;">
+      <input id="idNachname" type="text" autocomplete="off" placeholder="Nachname" style="width:100%; padding:11px 12px; margin-bottom:6px; border-radius:10px; border:1px solid var(--border); font-size:15px; box-sizing:border-box;">
+      <div id="idError" style="min-height:18px; color:#c0392b; font-size:12px; font-weight:700;"></div>
+    `;
+    dlgBtnsEl.innerHTML = `<button id="idCancelBtn" type="button">Abbrechen</button><button id="idOkBtn" type="button">Bestätigen</button>`;
+    dlgBack.style.display = "flex";
+
+    const vornameEl = document.getElementById("idVorname");
+    const nachnameEl = document.getElementById("idNachname");
+    const errorEl = document.getElementById("idError");
+    const okBtn = document.getElementById("idOkBtn");
+    const cancelBtn = document.getElementById("idCancelBtn");
+    setTimeout(()=> vornameEl.focus(), 50);
+
+    function close(result){
+      dlgBack.style.display = "none";
+      dlgMsgEl.innerHTML = "";
+      resolve(result);
+    }
+
+    cancelBtn.addEventListener("click", ()=> close(null));
+
+    okBtn.addEventListener("click", async ()=>{
+      const vorname = vornameEl.value.trim();
+      const nachname = nachnameEl.value.trim();
+      if(!vorname || !nachname){
+        errorEl.style.color = "#c0392b";
+        errorEl.textContent = "Bitte Vor- und Nachname eingeben.";
+        return;
+      }
+
+      okBtn.disabled = true;
+      errorEl.style.color = "#666";
+      errorEl.textContent = "Wird geprüft...";
+      try{
+        const res = await fetch(EQUIP_WEB_APP_URL, {
+          method: "POST",
+          body: JSON.stringify({ token: EQUIP_API_TOKEN, action: "claimPin", pin: pin, vorname: vorname, nachname: nachname })
+        });
+        const result = await res.json();
+        if(result.status === "success" && result.secret){
+          close(result.secret);
+          return;
+        }
+        if(result.code === "MAINTENANCE"){
+          close(null);
+          showMaintenance("");
+          checkMaintenance();
+          return;
+        }
+        errorEl.style.color = "#c0392b";
+        errorEl.textContent = result.message || "Bestätigung fehlgeschlagen.";
+      }catch(err){
+        errorEl.style.color = "#c0392b";
+        errorEl.textContent = "Fehler: " + err.message;
+      }
+      okBtn.disabled = false;
+    });
+  });
+}
+
 async function sendenDirekt(){
   const nm = (nameEl.value || "").trim();
 
@@ -4500,14 +4586,16 @@ async function sendenDirekt(){
     return;
   }
 
-  const storedOwnPin = localStorage.getItem("sad_personal_pin");
-  if(storedOwnPin && storedOwnPin !== nm){
+  const boundPin = localStorage.getItem("sad_personal_pin");
+  const boundSecret = localStorage.getItem("sad_device_secret");
+  if(boundPin && boundSecret && boundPin !== nm){
     setNameError(true);
+    nameEl.value = boundPin;
+    if(newPinToggleWrap) newPinToggleWrap.style.display = "block";
     await dlgAlert(
-      `Dieses Gerät ist bereits als PIN ${storedOwnPin} gespeichert. Du versuchst gerade, als PIN ${nm} zu senden - das ist nicht erlaubt. Bitte deine eigene PIN (${storedOwnPin}) eintragen, oder den Admin kontaktieren, falls das nicht stimmt.`,
-      "Falsche PIN für dieses Gerät"
+      `Dieses Gerät ist als PIN ${boundPin} bestätigt, du hast aber PIN ${nm} eingegeben. Bitte nutze deine eigene PIN (${boundPin}). Falls du eine andere Person bist, tippe auf "PIN vergessen oder noch keine?" und bestätige deinen Namen.`,
+      "Andere PIN erkannt"
     );
-    nameEl.value = storedOwnPin;
     return;
   }
 
@@ -4521,6 +4609,13 @@ async function sendenDirekt(){
       body: JSON.stringify({ token: EQUIP_API_TOKEN, action: "checkPin", pin: nm })
     });
     const checkResult = await checkRes.json();
+    if(checkResult.code === "MAINTENANCE"){
+      sendBtn.disabled = false;
+      hideSendLoading();
+      showMaintenance("");
+      checkMaintenance();
+      return;
+    }
     pinIsRegistered = checkResult.status === "success" && checkResult.exists === true;
   }catch(err){
     sendBtn.disabled = false;
@@ -4540,8 +4635,6 @@ async function sendenDirekt(){
     return;
   }
   setNameError(false);
-  localStorage.setItem("sad_personal_pin", nm);
-  if(newPinToggleWrap) newPinToggleWrap.style.display = "none";
 
   const vres = validateRowsBeforeSend();
   if(!vres.ok){
@@ -4553,7 +4646,6 @@ async function sendenDirekt(){
   if(!ok) return;
 
   const payload = getState();
-  const deviceSecret = localStorage.getItem("sad_device_secret") || "";
 
   sendBtn.disabled = true;
   showSendLoading([
@@ -4563,34 +4655,42 @@ async function sendenDirekt(){
     "Gleich fertig..."
   ]);
 
-  try{
+  async function postHours(secret){
     const res = await fetch(EQUIP_WEB_APP_URL, {
       method: "POST",
-      body: JSON.stringify({ token: EQUIP_API_TOKEN, action: "submitHours", ...payload, secret: deviceSecret })
+      body: JSON.stringify({ token: EQUIP_API_TOKEN, action: "submitHours", ...payload, secret: secret })
     });
+    return res.json();
+  }
 
-    const result = await res.json();
+  try{
+    let result = await postHours(boundPin === nm ? (boundSecret || "") : "");
+
+    if(result.status !== "success" && result.code === "DEVICE_MISMATCH"){
+      hideSendLoading();
+      const claimedSecret = await confirmIdentity(nm);
+      if(!claimedSecret){
+        return;
+      }
+      localStorage.setItem("sad_personal_pin", nm);
+      localStorage.setItem("sad_device_secret", claimedSecret);
+      if(newPinToggleWrap) newPinToggleWrap.style.display = "none";
+      showSendLoading(["Daten werden gesendet...", "Wird übermittelt...", "Gleich fertig..."]);
+      result = await postHours(claimedSecret);
+    }
 
     if(result.status !== "success"){
-      if(result.code === "DEVICE_MISMATCH"){
+      if(result.code === "MAINTENANCE"){
         hideSendLoading();
-        sendBtn.disabled = false;
-        await dlgAlert(
-          `Diese PIN ist bereits einem anderen Gerät zugeordnet. Falls das wirklich deine PIN ist und du dein altes Gerät nicht mehr hast, wende dich bitte an den Admin, damit er das zurücksetzt.`,
-          "Gerät nicht erkannt"
-        );
+        showMaintenance("");
+        checkMaintenance();
         return;
       }
       throw new Error(result.message || "Unbekannter Fehler");
     }
 
-    if(result.secret){
-      localStorage.setItem("sad_personal_pin", nm);
-      localStorage.setItem("sad_device_secret", result.secret);
-    }
-
     hideSendLoading();
- await showSuccessPremium();
+    await showSuccessPremium();
   }catch(err){
     console.error(err);
     hideSendLoading();
@@ -4697,6 +4797,62 @@ function showChooser(){
 // Zählt Kommentare + Nachrichten + Vermerke + Dokumente zusammen, um zu
 // erkennen, ob es seit dem letzten Öffnen von "Meine Stunden ansehen"
 // etwas Neues gibt - zeigt dann ein dezentes "Neu"-Badge am Button.
+let maintenanceActive = false;
+let maintenanceTimer = null;
+
+function showMaintenance(message){
+  maintenanceActive = true;
+  const box = document.getElementById("maintenanceMsgBox");
+  const text = (message || "").trim();
+  box.textContent = text;
+  box.style.display = text ? "block" : "none";
+  document.getElementById("maintenanceBack").style.display = "flex";
+}
+
+function hideMaintenance(){
+  maintenanceActive = false;
+  document.getElementById("maintenanceBack").style.display = "none";
+}
+
+async function checkMaintenance(manual){
+  const statusEl = document.getElementById("maintenanceStatus");
+  try{
+    if(manual) statusEl.textContent = "Wird geprüft…";
+    const res = await fetch(EQUIP_WEB_APP_URL, {
+      method: "POST",
+      body: JSON.stringify({ token: EQUIP_API_TOKEN, action: "getStatus" })
+    });
+    const r = await res.json();
+    if(r.status === "success"){
+      if(r.maintenance){
+        showMaintenance(r.message);
+        statusEl.textContent = "Noch in Wartung – wird automatisch erneut geprüft…";
+      }else{
+        hideMaintenance();
+      }
+    }
+  }catch(e){
+    if(manual) statusEl.textContent = "Keine Verbindung – bitte später erneut versuchen.";
+  }
+}
+
+function scheduleMaintenanceCheck(){
+  clearTimeout(maintenanceTimer);
+  maintenanceTimer = setTimeout(async ()=>{
+    if(document.visibilityState === "visible") await checkMaintenance();
+    scheduleMaintenanceCheck();
+  }, maintenanceActive ? 15000 : 60000);
+}
+
+document.getElementById("maintenanceRetryBtn").addEventListener("click", ()=> checkMaintenance(true));
+document.addEventListener("visibilitychange", ()=>{
+  if(document.visibilityState === "visible") checkMaintenance();
+});
+window.addEventListener("load", ()=>{
+  checkMaintenance();
+  scheduleMaintenanceCheck();
+});
+
 function countHoursContent(result){
   const commentedDays = (result.hours || []).filter(h => h.kommentar && h.kommentar.trim()).length;
   const messages = (result.messages || []).length;

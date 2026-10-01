@@ -87,6 +87,17 @@
 <div id="app">
   <header style="margin:-16px -16px 16px -16px;">Admin-Bereich</header>
 
+  <div id="maintBar" style="margin-bottom:16px; padding:14px 16px; border-radius:14px; border:1px solid var(--border); background:#fff;">
+    <div style="display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap;">
+      <div>
+        <div id="maintTitle" style="font-weight:900; font-size:15px;">Status wird geladen…</div>
+        <div id="maintSub" style="font-size:12px; color:#777; margin-top:2px;"></div>
+      </div>
+      <button id="maintToggleBtn" type="button" style="padding:11px 18px; border-radius:12px; border:none; background:var(--purple); color:#fff; font-weight:800; font-size:14px; cursor:pointer;" disabled>…</button>
+    </div>
+    <input id="maintMessageInput" type="text" placeholder="Hinweis für die Mitarbeiter (optional), z.B. Wieder erreichbar ab 14:00 Uhr" style="width:100%; margin-top:10px; padding:10px 12px; border-radius:10px; border:1px solid var(--border); font-size:13px; box-sizing:border-box;">
+  </div>
+
   <div class="tabBar">
     <button class="tabBtn active" id="tabNachrichtenBtn" type="button">💬 Nachrichten</button>
     <button class="tabBtn" id="tabUploadBtn" type="button">📎 Dokument hochladen</button>
@@ -135,7 +146,25 @@
 <script>
 const EQUIP_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzNrtg6-hoAv_kWkuE_noqRtlRYYJAzQMxJnpnEbyP3b4JjlHyG4vPVsuqdC45xrPe9/exec";
 const EQUIP_API_TOKEN   = "Zk0sUhvBN2XU13DGgeAwhm-H-rtmBcK1OwJR7NLc1VI";
-const ADMIN_PIN = "19630";
+function getAdminSession(){
+  try{ return sessionStorage.getItem("adm_session") || ""; }catch(e){ return ""; }
+}
+function saveAdminSession(token){
+  try{ sessionStorage.setItem("adm_session", token); }catch(e){}
+}
+function clearAdminSession(){
+  try{ sessionStorage.removeItem("adm_session"); }catch(e){}
+}
+
+const nativeFetch = window.fetch.bind(window);
+window.fetch = async function(){
+  const res = await nativeFetch.apply(null, arguments);
+  try{
+    const data = await res.clone().json();
+    if(data && data.code === "ADMIN_AUTH") handleAuthExpired();
+  }catch(e){}
+  return res;
+};
 
 const pinBack = document.getElementById("pinBack");
 const pinInput = document.getElementById("pinInput");
@@ -146,13 +175,47 @@ const threadsWrap = document.getElementById("threadsWrap");
 const emptyState = document.getElementById("emptyState");
 const refreshBtn = document.getElementById("refreshBtn");
 
-function checkPin(){
-  if(pinInput.value.trim() === ADMIN_PIN){
-    pinBack.style.display = "none";
-    appEl.style.display = "block";
-    loadThreads();
-  }else{
+function enterAdminApp(){
+  pinBack.style.display = "none";
+  appEl.style.display = "block";
+  loadMaintenanceStatus();
+  loadThreads();
+}
+
+function handleAuthExpired(){
+  clearAdminSession();
+  appEl.style.display = "none";
+  pinBack.style.display = "flex";
+  pinInput.value = "";
+  pinErr.textContent = "Sitzung abgelaufen. Bitte neu anmelden.";
+  pinErr.style.display = "block";
+}
+
+async function checkPin(){
+  const pin = pinInput.value.trim();
+  if(!pin) return;
+
+  pinBtn.disabled = true;
+  pinErr.style.display = "none";
+  try{
+    const res = await fetch(EQUIP_WEB_APP_URL, {
+      method: "POST",
+      body: JSON.stringify({ token: EQUIP_API_TOKEN, action: "adminLogin", pin: pin })
+    });
+    const r = await res.json();
+    if(r.status === "success" && r.session){
+      saveAdminSession(r.session);
+      pinInput.value = "";
+      enterAdminApp();
+    }else{
+      pinErr.textContent = r.message || "Anmeldung fehlgeschlagen";
+      pinErr.style.display = "block";
+    }
+  }catch(err){
+    pinErr.textContent = "Keine Verbindung: " + err.message;
     pinErr.style.display = "block";
+  }finally{
+    pinBtn.disabled = false;
   }
 }
 pinBtn.addEventListener("click", checkPin);
@@ -212,7 +275,7 @@ async function runSearch(query){
   try{
     const res = await fetch(EQUIP_WEB_APP_URL, {
       method: "POST",
-      body: JSON.stringify({ token: EQUIP_API_TOKEN, action: "searchEmployee", query: query })
+      body: JSON.stringify({ token: EQUIP_API_TOKEN, adminSession: getAdminSession(), action: "searchEmployee", query: query })
     });
     const data = await res.json();
     if(data.status !== "success" || !data.results || data.results.length === 0){
@@ -262,7 +325,7 @@ uploadBtn.addEventListener("click", async ()=>{
     const res = await fetch(EQUIP_WEB_APP_URL, {
       method: "POST",
       body: JSON.stringify({
-        token: EQUIP_API_TOKEN,
+        token: EQUIP_API_TOKEN, adminSession: getAdminSession(),
         action: "uploadDocument",
         pin: selectedPin,
         filename: file.name,
@@ -308,7 +371,7 @@ async function loadVermerkeList(){
   try{
     const res = await fetch(EQUIP_WEB_APP_URL, {
       method: "POST",
-      body: JSON.stringify({ token: EQUIP_API_TOKEN, action: "adminGetVermerke", pin: selectedPin })
+      body: JSON.stringify({ token: EQUIP_API_TOKEN, adminSession: getAdminSession(), action: "adminGetVermerke", pin: selectedPin })
     });
     const data = await res.json();
     if(data.status !== "success" || !data.vermerke || data.vermerke.length === 0){
@@ -346,7 +409,7 @@ vermerkAddBtn.addEventListener("click", async ()=>{
   try{
     const res = await fetch(EQUIP_WEB_APP_URL, {
       method: "POST",
-      body: JSON.stringify({ token: EQUIP_API_TOKEN, action: "addVermerk", pin: selectedPin, text: text })
+      body: JSON.stringify({ token: EQUIP_API_TOKEN, adminSession: getAdminSession(), action: "addVermerk", pin: selectedPin, text: text })
     });
     const result = await res.json();
     if(result.status === "success"){
@@ -372,7 +435,7 @@ async function loadThreads(){
   try{
     const res = await fetch(EQUIP_WEB_APP_URL, {
       method: "POST",
-      body: JSON.stringify({ token: EQUIP_API_TOKEN, action: "adminListMessages" })
+      body: JSON.stringify({ token: EQUIP_API_TOKEN, adminSession: getAdminSession(), action: "adminListMessages" })
     });
     const data = await res.json();
 
@@ -448,7 +511,7 @@ function renderThreads(messages){
       try{
         const res = await fetch(EQUIP_WEB_APP_URL, {
           method: "POST",
-          body: JSON.stringify({ token: EQUIP_API_TOKEN, action: "adminDeleteChatHistory", pin: pin })
+          body: JSON.stringify({ token: EQUIP_API_TOKEN, adminSession: getAdminSession(), action: "adminDeleteChatHistory", pin: pin })
         });
         const result = await res.json();
         if(result.status === "success"){
@@ -479,7 +542,7 @@ function renderThreads(messages){
       try{
         const res = await fetch(EQUIP_WEB_APP_URL, {
           method: "POST",
-          body: JSON.stringify({ token: EQUIP_API_TOKEN, action: "adminReply", pin: pin, text: text })
+          body: JSON.stringify({ token: EQUIP_API_TOKEN, adminSession: getAdminSession(), action: "adminReply", pin: pin, text: text })
         });
         const result = await res.json();
         if(result.status === "success"){
@@ -526,7 +589,7 @@ async function loadOverview(){
   try{
     const res = await fetch(EQUIP_WEB_APP_URL, {
       method: "POST",
-      body: JSON.stringify({ token: EQUIP_API_TOKEN, action: "adminGetOverview", month: month })
+      body: JSON.stringify({ token: EQUIP_API_TOKEN, adminSession: getAdminSession(), action: "adminGetOverview", month: month })
     });
     const data = await res.json();
     if(data.status !== "success"){
@@ -598,6 +661,11 @@ function buildEmployeeCard(emp, month){
         <div class="empSumBox">Offiziell<b>${emp.summeOffiziell ?? 0} Std.</b></div>
         <div class="empSumBox">Eingereicht<b>${emp.summeEingereicht ?? 0} Std.</b></div>
       </div>
+      ${emp.mitarbeiterNotiz ? `
+      <div style="padding:10px 12px; margin-bottom:12px; border-radius:10px; background:#faf9ff; border:1px solid var(--border); font-size:13px;">
+        <div style="font-weight:800; margin-bottom:4px; color:#3D3A87;">💬 Bemerkung vom Mitarbeiter:</div>
+        <div style="white-space:pre-wrap;">${escapeHtml(emp.mitarbeiterNotiz)}</div>
+      </div>` : ""}
       <label class="freigabeToggle">
         <input type="checkbox" class="freigabeCheckbox" ${emp.freigegeben ? "checked" : ""}>
         Für diesen Monat freigegeben
@@ -626,7 +694,7 @@ function buildEmployeeCard(emp, month){
       try{
         await fetch(EQUIP_WEB_APP_URL, {
           method: "POST",
-          body: JSON.stringify({ token: EQUIP_API_TOKEN, action: "adminSetFreigabe", pin: emp.pin, monat: month, value: freigabeCheckbox.checked })
+          body: JSON.stringify({ token: EQUIP_API_TOKEN, adminSession: getAdminSession(), action: "adminSetFreigabe", pin: emp.pin, monat: month, value: freigabeCheckbox.checked })
         });
       }catch(err){
         alert("Fehler: " + err.message);
@@ -645,7 +713,7 @@ function buildEmployeeCard(emp, month){
       try{
         const res = await fetch(EQUIP_WEB_APP_URL, {
           method: "POST",
-          body: JSON.stringify({ token: EQUIP_API_TOKEN, action: "adminDeleteBlock", pin: emp.pin, monat: month })
+          body: JSON.stringify({ token: EQUIP_API_TOKEN, adminSession: getAdminSession(), action: "adminDeleteBlock", pin: emp.pin, monat: month })
         });
         const result = await res.json();
         if(result.status === "success"){
@@ -673,7 +741,7 @@ function buildEmployeeCard(emp, month){
       try{
         const res = await fetch(EQUIP_WEB_APP_URL, {
           method: "POST",
-          body: JSON.stringify({ token: EQUIP_API_TOKEN, action: "adminSetMonthComment", pin: emp.pin, monat: month, comment: monthCommentInput.value })
+          body: JSON.stringify({ token: EQUIP_API_TOKEN, adminSession: getAdminSession(), action: "adminSetMonthComment", pin: emp.pin, monat: month, comment: monthCommentInput.value })
         });
         const result = await res.json();
         if(result.status === "success"){
@@ -723,7 +791,7 @@ function buildEmployeeCard(emp, month){
           const res = await fetch(EQUIP_WEB_APP_URL, {
             method: "POST",
             body: JSON.stringify({
-              token: EQUIP_API_TOKEN, action: "adminEditDay",
+              token: EQUIP_API_TOKEN, adminSession: getAdminSession(), action: "adminEditDay",
               pin: emp.pin, monat: month, day: d.day,
               standort: newStandort, beginn: newBeginn, ende: newEnde,
               stunden: newStunden, kommentar: kommentar
@@ -751,7 +819,7 @@ function buildEmployeeCard(emp, month){
         try{
           const res = await fetch(EQUIP_WEB_APP_URL, {
             method: "POST",
-            body: JSON.stringify({ token: EQUIP_API_TOKEN, action: "adminDeleteDay", pin: emp.pin, monat: month, day: d.day })
+            body: JSON.stringify({ token: EQUIP_API_TOKEN, adminSession: getAdminSession(), action: "adminDeleteDay", pin: emp.pin, monat: month, day: d.day })
           });
           const result = await res.json();
           if(result.status === "success"){
@@ -784,6 +852,72 @@ function buildEmployeeCard(emp, month){
 
   return card;
 }
+
+// ===== Wartungsmodus =====
+const maintBar = document.getElementById("maintBar");
+const maintTitle = document.getElementById("maintTitle");
+const maintSub = document.getElementById("maintSub");
+const maintToggleBtn = document.getElementById("maintToggleBtn");
+const maintMessageInput = document.getElementById("maintMessageInput");
+let maintOn = false;
+
+function renderMaintenance(on, message){
+  maintOn = on;
+  maintToggleBtn.disabled = false;
+  if(on){
+    maintBar.style.background = "#fdecea";
+    maintBar.style.borderColor = "#c0392b";
+    maintTitle.style.color = "#c0392b";
+    maintTitle.textContent = "🔴 WARTUNGSMODUS AKTIV";
+    maintSub.textContent = "Mitarbeiter sehen den Sperrbildschirm und können nichts senden.";
+    maintToggleBtn.textContent = "Wartungsmodus beenden";
+    maintToggleBtn.style.background = "#2f9e44";
+  }else{
+    maintBar.style.background = "#fff";
+    maintBar.style.borderColor = "var(--border)";
+    maintTitle.style.color = "#2f9e44";
+    maintTitle.textContent = "🟢 Website ist online";
+    maintSub.textContent = "Mitarbeiter können normal arbeiten.";
+    maintToggleBtn.textContent = "Wartungsmodus einschalten";
+    maintToggleBtn.style.background = "#c0392b";
+  }
+  if(document.activeElement !== maintMessageInput){
+    maintMessageInput.value = message || "";
+  }
+}
+
+async function maintRequest(payload){
+  const res = await fetch(EQUIP_WEB_APP_URL, {
+    method: "POST",
+    body: JSON.stringify(Object.assign({ token: EQUIP_API_TOKEN, adminSession: getAdminSession() }, payload))
+  });
+  return res.json();
+}
+
+async function loadMaintenanceStatus(){
+  try{
+    const r = await maintRequest({ action: "getStatus" });
+    if(r.status === "success") renderMaintenance(r.maintenance, r.message);
+    else maintTitle.textContent = "Status konnte nicht geladen werden";
+  }catch(err){
+    maintTitle.textContent = "Status konnte nicht geladen werden";
+  }
+}
+
+maintToggleBtn.addEventListener("click", async ()=>{
+  maintToggleBtn.disabled = true;
+  maintSub.textContent = "Wird gespeichert…";
+  try{
+    const r = await maintRequest({ action: "setMaintenance", on: !maintOn, message: maintMessageInput.value });
+    if(r.status === "success") renderMaintenance(r.maintenance, r.message);
+    else{ maintSub.textContent = "Fehler: " + (r.message || "unbekannt"); maintToggleBtn.disabled = false; }
+  }catch(err){
+    maintSub.textContent = "Fehler: " + err.message;
+    maintToggleBtn.disabled = false;
+  }
+});
+
+if(getAdminSession()){ enterAdminApp(); }
 </script>
 </body>
 </html>
