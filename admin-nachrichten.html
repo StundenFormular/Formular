@@ -156,13 +156,13 @@
   </div>
 
   <div class="tabPanel" id="tabEmployees">
-    <div style="font-size:13px; color:#555; margin-bottom:12px; line-height:1.4;">Jedes Handy gehört genau einem Mitarbeiter. Hier siehst du die PINs und die eingerichteten Handys. Pro Mitarbeiter sind maximal <b id="empMaxDevices">2</b> Handys möglich.</div>
+    <div style="font-size:13px; color:#555; margin-bottom:12px; line-height:1.4;">Jedes Handy gehört genau einem Mitarbeiter. Hier siehst du die PINs und die registrierten Handys. Pro Mitarbeiter sind maximal <b id="empMaxDevices">2</b> Handys möglich. Setzt du ein Handy zurück, merkt es das beim nächsten Öffnen selbst und fragt wieder nach der PIN.</div>
     <div style="display:flex; gap:8px; margin-bottom:14px; flex-wrap:wrap;">
       <input id="empSearchInput" type="text" placeholder="Name oder PIN suchen …" style="flex:1; min-width:180px; padding:10px 12px; border-radius:10px; border:1px solid var(--border); font-size:14px;">
       <button id="empRefreshBtn" type="button" style="padding:10px 16px; border-radius:10px; border:none; background:var(--purple); color:#fff; font-weight:700; cursor:pointer;">🔄 Aktualisieren</button>
     </div>
     <div id="empListWrap"></div>
-    <button id="empResetAllBtn" type="button" style="width:100%; margin-top:18px; padding:11px; border-radius:10px; border:1px solid #c0392b; background:#fff; color:#c0392b; font-weight:800; cursor:pointer;">⚠️ Alle Handys aller Mitarbeiter zurücksetzen</button>
+    <button id="empResetAllBtn" type="button" style="width:100%; margin-top:18px; padding:11px; border-radius:10px; border:1px solid #c0392b; background:#fff; color:#c0392b; font-weight:800; cursor:pointer;">⚠️ Alle Handys aller Mitarbeiter zurücksetzen (nur im Notfall)</button>
   </div>
 
   <div class="tabPanel" id="tabHelp">
@@ -1045,6 +1045,19 @@ function shortDevice(info){
   return br ? os + " · " + br : os;
 }
 
+function relDay(iso){
+  if(!iso) return "–";
+  const d = new Date(iso);
+  if(isNaN(d.getTime())) return "–";
+  const pad = n => String(n).padStart(2, "0");
+  const time = pad(d.getHours()) + ":" + pad(d.getMinutes());
+  const start = x => new Date(x.getFullYear(), x.getMonth(), x.getDate()).getTime();
+  const days = Math.round((start(new Date()) - start(d)) / 86400000);
+  if(days === 0) return "heute " + time;
+  if(days === 1) return "gestern " + time;
+  return pad(d.getDate()) + "." + pad(d.getMonth() + 1) + "." + d.getFullYear() + " " + time;
+}
+
 async function loadEmployees(){
   empListWrap.innerHTML = `<div style="text-align:center; padding:20px; color:#777;">Lädt...</div>`;
   try{
@@ -1079,7 +1092,7 @@ function renderEmployees(){
 
     let lines = "";
     emp.devices.forEach(d => {
-      lines += `<div class="devLine" data-id="${escapeHtml(d.id)}"><span>📱 ${escapeHtml(shortDevice(d.info))}<small>eingerichtet ${escapeHtml(d.zeit)}</small></span><button type="button" class="devRemoveBtn">Entfernen</button></div>`;
+      lines += `<div class="devLine" data-id="${escapeHtml(d.id)}"><span>📱 ${escapeHtml(shortDevice(d.info))} · ID ${escapeHtml(d.kurzId || "")}…<small>registriert ${escapeHtml(d.zeit)} · zuletzt aktiv ${escapeHtml(relDay(d.zuletztIso))}</small></span><button type="button" class="devRemoveBtn">Zurücksetzen</button></div>`;
     });
     if(emp.legacy){
       lines += `<div class="devLine"><span>📱 Altes Handy (vor dem Update)<small>wird beim Zurücksetzen entfernt</small></span></div>`;
@@ -1095,7 +1108,7 @@ function renderEmployees(){
 
     card.querySelectorAll(".devRemoveBtn").forEach(btn => {
       btn.addEventListener("click", async ()=>{
-        if(!confirm("Dieses Handy von " + emp.name + " entfernen? Es muss danach neu eingerichtet werden.")) return;
+        if(!confirm("Dieses Handy von " + emp.name + " zurücksetzen? Es fragt danach wieder nach der PIN und muss neu eingerichtet werden.")) return;
         const id = btn.closest(".devLine").getAttribute("data-id");
         const r = await helpRequest({ action: "adminRemoveDevice", id: id });
         if(r.status === "success") loadEmployees(); else alert("Fehler: " + (r.message || ""));

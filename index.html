@@ -3343,7 +3343,7 @@ if("serviceWorker" in navigator){
   });
 }
 
-const APP_VERSION = "v20261001f";
+const APP_VERSION = "v20261001g";
 document.getElementById("loginVersion").textContent = "Version " + APP_VERSION;
 
 (function setupUpdateCheck(){
@@ -3508,6 +3508,38 @@ function renderIdentityBars(){
     nameEl.style.opacity = bound ? ".8" : "";
   }
   if(bound && newPinToggleWrap) newPinToggleWrap.style.display = "none";
+}
+
+const DEVICE_PERSONAL_KEYS = ["sad_personal_pin", "sad_device_secret", "sad_device_label", "sad_seen_count", "sad_equip_name"];
+const DEVICE_PERSONAL_PREFIXES = [STORAGE_PREFIX, "stundenformular_note_"];
+
+// Der Server kennt dieses Handy nicht mehr (z. B. vom Admin zurückgesetzt):
+// lokale Zuordnung samt Entwurf löschen und das PIN-Feld wieder freigeben.
+// Die Geräte-Kennung (sad_device_id) bleibt, damit sich das Handy neu einrichten kann.
+function clearDeviceAssignment(){
+  DEVICE_PERSONAL_KEYS.forEach(function(k){ localStorage.removeItem(k); });
+  Object.keys(localStorage).forEach(function(k){
+    if(DEVICE_PERSONAL_PREFIXES.some(function(p){ return k.indexOf(p) === 0; })) localStorage.removeItem(k);
+  });
+  Object.keys(sessionStorage).forEach(function(k){
+    if(k.indexOf("sad_equip_ok_") === 0) sessionStorage.removeItem(k);
+  });
+  if(nameEl) nameEl.value = "";
+  renderIdentityBars();
+  if(newPinToggleWrap) newPinToggleWrap.style.display = "";
+}
+
+let deviceResetNoticeShown = false;
+async function handleUnknownDevice(){
+  if(deviceResetNoticeShown) return;
+  deviceResetNoticeShown = true;
+  clearDeviceAssignment();
+  await dlgAlert(
+    "Dieses Handy ist nicht mehr zugeordnet. Der Admin hat es zurückgesetzt. Bitte richte es neu ein: PIN eingeben und Namen bestätigen.",
+    "Handy zurückgesetzt"
+  );
+  clearDeviceAssignment();
+  location.reload();
 }
 
 nameEl.addEventListener("click", ()=>{
@@ -3688,6 +3720,12 @@ function setNameError(on){
 
 function openDialog({ title="Hinweis", message="", mode="confirm", okText="OK", cancelText="Abbrechen" }){
   return new Promise((resolve)=>{
+    // Eigene Fenster (Handy einrichten, Deine PIN) ersetzen die Knöpfe: Standard-Knöpfe wiederherstellen.
+    if(dlgOkBtn.parentNode !== dlgBtnsEl || dlgCancelBtn.parentNode !== dlgBtnsEl){
+      while(dlgBtnsEl.firstChild) dlgBtnsEl.removeChild(dlgBtnsEl.firstChild);
+      dlgBtnsEl.appendChild(dlgCancelBtn);
+      dlgBtnsEl.appendChild(dlgOkBtn);
+    }
     dlgTitleEl.textContent = title;
     dlgMsgEl.textContent = message;
 
@@ -4859,6 +4897,12 @@ async function sendenDirekt(){
   try{
     let result = await postHours(boundPin === nm ? (boundSecret || "") : "");
 
+    if(result.status !== "success" && result.code === "DEVICE_MISMATCH" && boundPin === nm && boundSecret){
+      hideSendLoading();
+      await handleUnknownDevice();
+      return;
+    }
+
     if(result.status !== "success" && result.code === "DEVICE_MISMATCH"){
       hideSendLoading();
       const claimed = await confirmIdentity(nm);
@@ -5166,6 +5210,7 @@ async function checkForHoursUpdates(){
     const result = await res.json();
     if(result.status !== "success"){
       badge.style.display = "none";
+      if(result.code === "DEVICE_MISMATCH") handleUnknownDevice();
       return;
     }
 
@@ -5319,12 +5364,12 @@ async function loadMyHours(pin, secret){
     const result = await res.json();
 
     if(result.status !== "success"){
+      if(result.code === "DEVICE_MISMATCH"){
+        hoursTableWrap.innerHTML = "";
+        handleUnknownDevice();
+        return;
+      }
       hoursTableWrap.innerHTML = `<div style="color:#ff9a9a;">Fehler: ${result.message}</div>`;
-      hoursLoginPanel.style.display = "block";
-      hoursContentPanel.style.display = "none";
-      hoursLoginStatus.style.color = "#c0392b";
-      hoursLoginStatus.textContent = "Dieses Gerät ist nicht mehr erkannt. Bitte erneut bestätigen.";
-      hoursLoginBtn.disabled = false;
       return;
     }
 
@@ -5468,6 +5513,8 @@ hoursSendMessageBtn.addEventListener("click", async ()=>{
       hoursMessageInput.value = "";
       hoursMessageStatus.textContent = "";
       loadMyHours(pin, secret);
+    }else if(result.code === "DEVICE_MISMATCH"){
+      handleUnknownDevice();
     }else{
       hoursMessageStatus.style.color = "#c0392b";
       hoursMessageStatus.textContent = "Fehler: " + result.message;
