@@ -33,6 +33,20 @@
   #emptyState{ color:#777; padding:20px; text-align:center; }
 
   .tabBar{ display:flex; flex-wrap:wrap; gap:8px; margin-bottom:16px; }
+  .viewBtn{ flex:1; padding:9px 10px; border-radius:10px; border:1px solid var(--border); background:#fff; font-weight:700; font-size:13px; cursor:pointer; }
+  .viewBtn.active{ background:var(--purple); color:#fff; border-color:var(--purple); }
+  .thisDevice{ margin-bottom:14px; padding:12px 14px; border-radius:14px; border:1px solid var(--border); background:#fff; font-size:13px; line-height:1.4; }
+  .thisDevice.reg{ border:2px solid var(--gold); background:rgba(232,163,61,.10); }
+  .thisDevice small{ display:block; color:#777; margin-top:4px; }
+  .phoneCard{ display:flex; justify-content:space-between; align-items:center; gap:12px; background:#fff; border:1px solid var(--border); border-left:5px solid #2f9e44; border-radius:14px; padding:12px 14px; margin-bottom:10px; }
+  .phoneCard.current{ border:2px solid var(--gold); border-left:5px solid var(--gold); background:rgba(232,163,61,.10); }
+  .phoneCard.old{ border-left-color:#999; }
+  .phoneMain{ min-width:0; }
+  .phoneTop{ font-weight:800; font-size:14px; }
+  .phoneEmp{ font-size:13px; margin-top:2px; }
+  .phoneMeta{ font-size:11px; color:#777; margin-top:3px; line-height:1.4; }
+  .phoneBadge{ display:inline-block; margin-left:6px; font-size:11px; font-weight:800; padding:2px 8px; border-radius:20px; background:var(--gold); color:#2b1f04; }
+  .phoneResetBtn{ flex:0 0 auto; padding:8px 12px; border-radius:8px; border:1px solid #c0392b; background:#fff; color:#c0392b; font-weight:700; font-size:12px; cursor:pointer; }
   .empDev{ background:#fff; border:1px solid var(--border); border-radius:14px; padding:12px 14px; margin-bottom:10px; }
   .empDev.none{ border-left:5px solid #c0392b; }
   .empDev.ok{ border-left:5px solid #2f9e44; }
@@ -122,7 +136,7 @@
     <button class="tabBtn" id="tabUploadBtn" type="button">📎 Dokument hochladen</button>
     <button class="tabBtn" id="tabOverviewBtn" type="button">📊 Stundenübersicht</button>
     <button class="tabBtn" id="tabHelpBtn" type="button">🛟 Hilfe</button>
-    <button class="tabBtn" id="tabEmployeesBtn" type="button">👥 Mitarbeiter</button>
+    <button class="tabBtn" id="tabEmployeesBtn" type="button">📱 Handys</button>
   </div>
 
   <div class="tabPanel active" id="tabNachrichten">
@@ -156,9 +170,14 @@
   </div>
 
   <div class="tabPanel" id="tabEmployees">
+    <div id="empThisDevice" class="thisDevice"></div>
+    <div style="display:flex; gap:8px; margin-bottom:12px;">
+      <button class="viewBtn active" id="empViewPhonesBtn" type="button">📱 Alle Handys</button>
+      <button class="viewBtn" id="empViewEmpBtn" type="button">👥 Nach Mitarbeiter</button>
+    </div>
     <div style="font-size:13px; color:#555; margin-bottom:12px; line-height:1.4;">Jedes Handy gehört genau einem Mitarbeiter. Hier siehst du die PINs und die registrierten Handys. Pro Mitarbeiter sind maximal <b id="empMaxDevices">2</b> Handys möglich. Setzt du ein Handy zurück, merkt es das beim nächsten Öffnen selbst und fragt wieder nach der PIN.</div>
     <div style="display:flex; gap:8px; margin-bottom:14px; flex-wrap:wrap;">
-      <input id="empSearchInput" type="text" placeholder="Name oder PIN suchen …" style="flex:1; min-width:180px; padding:10px 12px; border-radius:10px; border:1px solid var(--border); font-size:14px;">
+      <input id="empSearchInput" type="text" placeholder="Name, PIN oder Handy suchen …" style="flex:1; min-width:180px; padding:10px 12px; border-radius:10px; border:1px solid var(--border); font-size:14px;">
       <button id="empRefreshBtn" type="button" style="padding:10px 16px; border-radius:10px; border:none; background:var(--purple); color:#fff; font-weight:700; cursor:pointer;">🔄 Aktualisieren</button>
     </div>
     <div id="empListWrap"></div>
@@ -1038,6 +1057,20 @@ tabEmployeesBtn.addEventListener("click", ()=>{
 document.getElementById("empRefreshBtn").addEventListener("click", loadEmployees);
 empSearchInput.addEventListener("input", renderEmployees);
 
+let empView = "phones";
+function setEmpView(view){
+  empView = view;
+  document.getElementById("empViewPhonesBtn").classList.toggle("active", view === "phones");
+  document.getElementById("empViewEmpBtn").classList.toggle("active", view === "employees");
+  renderEmployees();
+}
+document.getElementById("empViewPhonesBtn").addEventListener("click", ()=> setEmpView("phones"));
+document.getElementById("empViewEmpBtn").addEventListener("click", ()=> setEmpView("employees"));
+
+function getMyDeviceId(){
+  try{ return localStorage.getItem("sad_device_id") || ""; }catch(e){ return ""; }
+}
+
 function shortDevice(info){
   const ua = String(info || "").split("|").pop();
   const os = /iPhone|iPad/.test(ua) ? "iPhone" : /Android/.test(ua) ? "Android" : /Windows/.test(ua) ? "Windows" : /Mac OS/.test(ua) ? "Mac" : "Handy";
@@ -1061,7 +1094,7 @@ function relDay(iso){
 async function loadEmployees(){
   empListWrap.innerHTML = `<div style="text-align:center; padding:20px; color:#777;">Lädt...</div>`;
   try{
-    const data = await helpRequest({ action: "adminListEmployees" });
+    const data = await helpRequest({ action: "adminListEmployees", myDeviceId: getMyDeviceId() });
     if(data.status !== "success"){
       empListWrap.innerHTML = `<div style="color:#c0392b;">Fehler: ${escapeHtml(data.message || "")}</div>`;
       return;
@@ -1075,6 +1108,86 @@ async function loadEmployees(){
 }
 
 function renderEmployees(){
+  renderThisDevice();
+  if(empView === "phones") renderPhones(); else renderByEmployee();
+}
+
+// Zurücksetzen eines einzelnen Handys (oder eines alten Handys vor dem Update)
+async function resetPhone(emp, d){
+  const text = d
+    ? "Dieses Handy von " + emp.name + " (PIN " + emp.pin + ") zurücksetzen? Es fragt danach wieder nach der PIN und muss neu eingerichtet werden."
+    : "Das alte Handy von " + emp.name + " (PIN " + emp.pin + ") zurücksetzen? Dabei werden auch alle neu eingerichteten Handys dieses Mitarbeiters zurückgesetzt.";
+  if(!confirm(text)) return;
+  const r = d
+    ? await helpRequest({ action: "adminRemoveDevice", id: d.id })
+    : await helpRequest({ action: "adminResetDevices", pin: emp.pin });
+  if(r.status === "success") loadEmployees(); else alert("Fehler: " + (r.message || ""));
+}
+
+// Box oben: Ist das Gerät, auf dem du gerade den Admin öffnest, registriert?
+function renderThisDevice(){
+  const box = document.getElementById("empThisDevice");
+  let found = null;
+  employeesCache.forEach(emp => emp.devices.forEach(d => { if(d.isCurrent) found = { emp: emp, d: d }; }));
+
+  if(found){
+    box.className = "thisDevice reg";
+    box.innerHTML = `📍 <b>Dieses Gerät</b> ist registriert für <b>${escapeHtml(found.emp.name)}</b> (PIN ${escapeHtml(found.emp.pin)}).<small>zuletzt aktiv ${escapeHtml(relDay(found.d.zuletztIso))}</small><button type="button" class="phoneResetBtn" style="margin-top:10px;">Dieses Gerät zurücksetzen</button>`;
+    box.querySelector("button").addEventListener("click", ()=> resetPhone(found.emp, found.d));
+  }else{
+    box.className = "thisDevice";
+    box.innerHTML = `📍 <b>Dieses Gerät</b> ist hier nicht registriert.<small>Tipp: Öffnest du die Admin-Seite im selben Browser wie die App auf deinem Testhandy, markiere ich dieses Handy in der Liste mit 📍. Sonst erkennst du es an Gerätetyp und „zuletzt aktiv“.</small>`;
+  }
+}
+
+// Alle Handys in einer Liste, zuletzt aktive zuerst
+function renderPhones(){
+  const q = empSearchInput.value.trim().toLowerCase();
+  const rows = [];
+  employeesCache.forEach(emp => {
+    emp.devices.forEach(d => rows.push({ emp: emp, d: d }));
+    if(emp.legacy) rows.push({ emp: emp, d: null });
+  });
+  rows.sort((a, b) => (b.d ? (Date.parse(b.d.zuletztIso) || 0) : -1) - (a.d ? (Date.parse(a.d.zuletztIso) || 0) : -1));
+
+  const list = rows.filter(r => {
+    if(!q) return true;
+    const hay = (r.emp.name + " " + r.emp.pin + " " + (r.d ? shortDevice(r.d.info) + " " + r.d.kurzId : "altes handy")).toLowerCase();
+    return hay.includes(q);
+  });
+
+  if(rows.length === 0){
+    empListWrap.innerHTML = `<div style="color:#777; padding:20px; text-align:center;">Noch kein Handy registriert.</div>`;
+    return;
+  }
+  if(list.length === 0){
+    empListWrap.innerHTML = `<div style="color:#777; padding:20px; text-align:center;">Keine Handys gefunden.</div>`;
+    return;
+  }
+
+  empListWrap.innerHTML = `<div style="font-size:12px; color:#777; margin-bottom:8px;">${rows.length} Handy${rows.length === 1 ? "" : "s"} registriert · zuletzt aktive zuerst</div>`;
+  list.forEach(r => {
+    const card = document.createElement("div");
+    card.className = "phoneCard" + (r.d && r.d.isCurrent ? " current" : "") + (r.d ? "" : " old");
+    const top = r.d
+      ? `📱 ${escapeHtml(shortDevice(r.d.info))}${r.d.isCurrent ? '<span class="phoneBadge">📍 Dieses Gerät</span>' : ""}`
+      : `📱 Altes Handy (vor dem Update)`;
+    const meta = r.d
+      ? `ID ${escapeHtml(r.d.kurzId || "")}… · registriert ${escapeHtml(r.d.zeit)} · zuletzt aktiv ${escapeHtml(relDay(r.d.zuletztIso))}`
+      : `ID unbekannt · Datum unbekannt`;
+    card.innerHTML = `
+      <div class="phoneMain">
+        <div class="phoneTop">${top}</div>
+        <div class="phoneEmp">${escapeHtml(r.emp.name)} · PIN <b>${escapeHtml(r.emp.pin)}</b></div>
+        <div class="phoneMeta">${meta}</div>
+      </div>
+      <button type="button" class="phoneResetBtn">Zurücksetzen</button>`;
+    card.querySelector(".phoneResetBtn").addEventListener("click", ()=> resetPhone(r.emp, r.d));
+    empListWrap.appendChild(card);
+  });
+}
+
+function renderByEmployee(){
   const q = empSearchInput.value.trim().toLowerCase();
   const list = employeesCache.filter(e => !q || e.name.toLowerCase().includes(q) || e.pin.includes(q));
   const max = parseInt(document.getElementById("empMaxDevices").textContent, 10) || 2;
