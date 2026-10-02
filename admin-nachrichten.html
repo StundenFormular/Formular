@@ -33,6 +33,15 @@
   #emptyState{ color:#777; padding:20px; text-align:center; }
 
   .tabBar{ display:flex; flex-wrap:wrap; gap:8px; margin-bottom:16px; }
+  .empDev{ background:#fff; border:1px solid var(--border); border-radius:14px; padding:12px 14px; margin-bottom:10px; }
+  .empDev.none{ border-left:5px solid #c0392b; }
+  .empDev.ok{ border-left:5px solid #2f9e44; }
+  .empDevTop{ display:flex; justify-content:space-between; align-items:center; gap:10px; margin-bottom:6px; }
+  .empDevBadge{ font-size:11px; font-weight:800; padding:3px 10px; border-radius:20px; background:#f0eefc; color:#3D3A87; white-space:nowrap; }
+  .devLine{ display:flex; justify-content:space-between; align-items:center; gap:10px; padding:7px 0; border-top:1px solid var(--border); font-size:13px; }
+  .devLine small{ color:#777; display:block; }
+  .devLine button, .empDevResetBtn{ padding:6px 10px; border-radius:8px; border:1px solid #c0392b; background:#fff; color:#c0392b; font-weight:700; font-size:12px; cursor:pointer; white-space:nowrap; }
+  .empDevResetBtn{ margin-top:8px; }
   .helpItem{ background:#fff; border:1px solid var(--border); border-left:5px solid var(--gold); border-radius:14px; padding:12px 14px; margin-bottom:10px; }
   .helpItem.done{ opacity:.6; border-left-color:#2f9e44; }
   .helpItemTop{ display:flex; justify-content:space-between; gap:10px; font-size:13px; margin-bottom:6px; }
@@ -113,6 +122,7 @@
     <button class="tabBtn" id="tabUploadBtn" type="button">📎 Dokument hochladen</button>
     <button class="tabBtn" id="tabOverviewBtn" type="button">📊 Stundenübersicht</button>
     <button class="tabBtn" id="tabHelpBtn" type="button">🛟 Hilfe</button>
+    <button class="tabBtn" id="tabEmployeesBtn" type="button">👥 Mitarbeiter</button>
   </div>
 
   <div class="tabPanel active" id="tabNachrichten">
@@ -143,6 +153,16 @@
         <div id="vermerkStatus" style="margin-top:10px; font-size:13px;"></div>
       </div>
     </div>
+  </div>
+
+  <div class="tabPanel" id="tabEmployees">
+    <div style="font-size:13px; color:#555; margin-bottom:12px; line-height:1.4;">Jedes Handy gehört genau einem Mitarbeiter. Hier siehst du die PINs und die eingerichteten Handys. Pro Mitarbeiter sind maximal <b id="empMaxDevices">2</b> Handys möglich.</div>
+    <div style="display:flex; gap:8px; margin-bottom:14px; flex-wrap:wrap;">
+      <input id="empSearchInput" type="text" placeholder="Name oder PIN suchen …" style="flex:1; min-width:180px; padding:10px 12px; border-radius:10px; border:1px solid var(--border); font-size:14px;">
+      <button id="empRefreshBtn" type="button" style="padding:10px 16px; border-radius:10px; border:none; background:var(--purple); color:#fff; font-weight:700; cursor:pointer;">🔄 Aktualisieren</button>
+    </div>
+    <div id="empListWrap"></div>
+    <button id="empResetAllBtn" type="button" style="width:100%; margin-top:18px; padding:11px; border-radius:10px; border:1px solid #c0392b; background:#fff; color:#c0392b; font-weight:800; cursor:pointer;">⚠️ Alle Handys aller Mitarbeiter zurücksetzen</button>
   </div>
 
   <div class="tabPanel" id="tabHelp">
@@ -248,10 +268,12 @@ const tabUpload = document.getElementById("tabUpload");
 const tabOverview = document.getElementById("tabOverview");
 const tabHelpBtn = document.getElementById("tabHelpBtn");
 const tabHelp = document.getElementById("tabHelp");
+const tabEmployeesBtn = document.getElementById("tabEmployeesBtn");
+const tabEmployees = document.getElementById("tabEmployees");
 
 function activateTab(btn, panel){
-  [tabNachrichtenBtn, tabUploadBtn, tabOverviewBtn, tabHelpBtn].forEach(b => b.classList.remove("active"));
-  [tabNachrichten, tabUpload, tabOverview, tabHelp].forEach(p => p.classList.remove("active"));
+  [tabNachrichtenBtn, tabUploadBtn, tabOverviewBtn, tabHelpBtn, tabEmployeesBtn].forEach(b => b.classList.remove("active"));
+  [tabNachrichten, tabUpload, tabOverview, tabHelp, tabEmployees].forEach(p => p.classList.remove("active"));
   btn.classList.add("active");
   panel.classList.add("active");
 }
@@ -1003,6 +1025,100 @@ function renderHelp(items){
     helpListWrap.appendChild(card);
   });
 }
+
+// ===== Mitarbeiter & Handys =====
+const empListWrap = document.getElementById("empListWrap");
+const empSearchInput = document.getElementById("empSearchInput");
+let employeesCache = [];
+
+tabEmployeesBtn.addEventListener("click", ()=>{
+  activateTab(tabEmployeesBtn, tabEmployees);
+  loadEmployees();
+});
+document.getElementById("empRefreshBtn").addEventListener("click", loadEmployees);
+empSearchInput.addEventListener("input", renderEmployees);
+
+function shortDevice(info){
+  const ua = String(info || "").split("|").pop();
+  const os = /iPhone|iPad/.test(ua) ? "iPhone" : /Android/.test(ua) ? "Android" : /Windows/.test(ua) ? "Windows" : /Mac OS/.test(ua) ? "Mac" : "Handy";
+  const br = /SamsungBrowser/.test(ua) ? "Samsung Internet" : /Edg\//.test(ua) ? "Edge" : /Firefox|FxiOS/.test(ua) ? "Firefox" : /Chrome|CriOS/.test(ua) ? "Chrome" : /Safari/.test(ua) ? "Safari" : "";
+  return br ? os + " · " + br : os;
+}
+
+async function loadEmployees(){
+  empListWrap.innerHTML = `<div style="text-align:center; padding:20px; color:#777;">Lädt...</div>`;
+  try{
+    const data = await helpRequest({ action: "adminListEmployees" });
+    if(data.status !== "success"){
+      empListWrap.innerHTML = `<div style="color:#c0392b;">Fehler: ${escapeHtml(data.message || "")}</div>`;
+      return;
+    }
+    employeesCache = data.employees || [];
+    document.getElementById("empMaxDevices").textContent = data.maxDevices || 2;
+    renderEmployees();
+  }catch(err){
+    empListWrap.innerHTML = `<div style="color:#c0392b;">Fehler: ${escapeHtml(err.message)}</div>`;
+  }
+}
+
+function renderEmployees(){
+  const q = empSearchInput.value.trim().toLowerCase();
+  const list = employeesCache.filter(e => !q || e.name.toLowerCase().includes(q) || e.pin.includes(q));
+  const max = parseInt(document.getElementById("empMaxDevices").textContent, 10) || 2;
+
+  if(list.length === 0){
+    empListWrap.innerHTML = `<div style="color:#777; padding:20px; text-align:center;">Keine Mitarbeiter gefunden.</div>`;
+    return;
+  }
+
+  empListWrap.innerHTML = "";
+  list.forEach(emp => {
+    const count = emp.devices.length;
+    const card = document.createElement("div");
+    card.className = "empDev " + ((count > 0 || emp.legacy) ? "ok" : "none");
+
+    let lines = "";
+    emp.devices.forEach(d => {
+      lines += `<div class="devLine" data-id="${escapeHtml(d.id)}"><span>📱 ${escapeHtml(shortDevice(d.info))}<small>eingerichtet ${escapeHtml(d.zeit)}</small></span><button type="button" class="devRemoveBtn">Entfernen</button></div>`;
+    });
+    if(emp.legacy){
+      lines += `<div class="devLine"><span>📱 Altes Handy (vor dem Update)<small>wird beim Zurücksetzen entfernt</small></span></div>`;
+    }
+    if(!lines){
+      lines = `<div class="devLine"><span style="color:#999;">Noch kein Handy eingerichtet</span></div>`;
+    }
+
+    card.innerHTML = `
+      <div class="empDevTop"><span><b>${escapeHtml(emp.name)}</b> · PIN <b>${escapeHtml(emp.pin)}</b></span><span class="empDevBadge">${count}/${max} Handys</span></div>
+      ${lines}
+      ${(count > 0 || emp.legacy) ? `<button type="button" class="empDevResetBtn">Alle Handys dieses Mitarbeiters zurücksetzen</button>` : ""}`;
+
+    card.querySelectorAll(".devRemoveBtn").forEach(btn => {
+      btn.addEventListener("click", async ()=>{
+        if(!confirm("Dieses Handy von " + emp.name + " entfernen? Es muss danach neu eingerichtet werden.")) return;
+        const id = btn.closest(".devLine").getAttribute("data-id");
+        const r = await helpRequest({ action: "adminRemoveDevice", id: id });
+        if(r.status === "success") loadEmployees(); else alert("Fehler: " + (r.message || ""));
+      });
+    });
+    const resetBtn = card.querySelector(".empDevResetBtn");
+    if(resetBtn){
+      resetBtn.addEventListener("click", async ()=>{
+        if(!confirm("Alle Handys von " + emp.name + " (PIN " + emp.pin + ") zurücksetzen? Jedes Handy muss danach einmal neu mit PIN und Name eingerichtet werden.")) return;
+        const r = await helpRequest({ action: "adminResetDevices", pin: emp.pin });
+        if(r.status === "success") loadEmployees(); else alert("Fehler: " + (r.message || ""));
+      });
+    }
+    empListWrap.appendChild(card);
+  });
+}
+
+document.getElementById("empResetAllBtn").addEventListener("click", async ()=>{
+  if(!confirm("ALLE Handys ALLER Mitarbeiter zurücksetzen?\n\nDanach muss jeder Mitarbeiter sein Handy einmal neu mit PIN und Name einrichten.")) return;
+  if(!confirm("Wirklich sicher? Das betrifft alle Mitarbeiter.")) return;
+  const r = await helpRequest({ action: "adminResetDevices", all: true });
+  if(r.status === "success") loadEmployees(); else alert("Fehler: " + (r.message || ""));
+});
 
 if(getAdminSession()){ enterAdminApp(); }
 </script>

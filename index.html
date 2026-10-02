@@ -3005,20 +3005,24 @@ tbody tr:nth-child(odd){
     <p class="pinHint">Hier siehst du deine korrigierten Stunden und kannst Nachrichten schreiben.</p>
 
     <div id="hoursLoginPanel">
+      <div style="font-size:13px; color:rgba(255,255,255,.85); margin-bottom:12px; line-height:1.4;">Einmalig dieses Handy einrichten: PIN und Name eingeben. Danach gehört das Handy zu dir.</div>
+      <div class="pinRow" style="margin-bottom:10px;">
+        <input id="hoursPinInput" type="text" inputmode="numeric" maxlength="2" autocomplete="off" placeholder="Deine PIN (2 Ziffern)">
+      </div>
       <div class="pinRow" style="margin-bottom:10px;">
         <input id="hoursVornameInput" type="text" placeholder="Vorname">
       </div>
       <div class="pinRow" style="margin-bottom:10px;">
         <input id="hoursNachnameInput" type="text" placeholder="Nachname">
       </div>
-      <button class="pinOk" id="hoursLoginBtn" type="button" style="width:100%;">Bestätigen</button>
+      <button class="pinOk" id="hoursLoginBtn" type="button" style="width:100%;">Handy einrichten</button>
       <div id="hoursLoginStatus" style="margin-top:8px; font-size:12px;"></div>
+      <div style="margin-top:10px; font-size:12px; color:rgba(255,255,255,.65);">Noch keine PIN? Fordere sie im Stundenformular an („PIN vergessen oder noch keine?“).</div>
     </div>
 
     <div id="hoursContentPanel" style="display:none;">
-      <div id="hoursIdentityBar" style="display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:12px; padding:10px 12px; border-radius:12px; background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.12); font-size:12px; color:rgba(255,255,255,.85);">
+      <div id="hoursIdentityBar" style="display:flex; align-items:center; justify-content:flex-start; gap:10px; margin-bottom:12px; padding:10px 12px; border-radius:12px; background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.12); font-size:12px; color:rgba(255,255,255,.85);">
         <span id="hoursIdentityText"></span>
-        <button type="button" id="hoursLogoutBtn" style="background:none; border:none; padding:2px 0; color:#FFD54A; font-size:12px; font-weight:800; text-decoration:underline; cursor:pointer; white-space:nowrap;">Nicht du? Abmelden</button>
       </div>
       <div id="hoursDocumentsWrap" style="margin-bottom:14px;"></div>
       <div id="hoursSummaryWrap" style="margin-bottom:14px;"></div>
@@ -3171,9 +3175,8 @@ tbody tr:nth-child(odd){
         Bitte gültige PIN (2 Ziffern) eingeben.
       </div>
 
-      <div id="formIdentityBar" style="display:none; align-items:center; justify-content:space-between; gap:10px; margin-top:8px; padding:8px 10px; border-radius:10px; background:#f3f2fb; border:1px solid var(--border); font-size:12px; font-weight:700; color:#3D3A87;">
+      <div id="formIdentityBar" style="display:none; align-items:center; justify-content:flex-start; gap:10px; margin-top:8px; padding:8px 10px; border-radius:10px; background:#f3f2fb; border:1px solid var(--border); font-size:12px; font-weight:700; color:#3D3A87;">
         <span id="formIdentityText"></span>
-        <button type="button" id="formLogoutBtn" style="background:none; border:none; padding:2px 0; color:#c0392b; font-size:12px; font-weight:800; text-decoration:underline; cursor:pointer; white-space:nowrap;">Nicht du? Abmelden</button>
       </div>
 
       <div id="newPinToggleWrap" style="margin-top:8px;">
@@ -3340,7 +3343,7 @@ if("serviceWorker" in navigator){
   });
 }
 
-const APP_VERSION = "v20261001e";
+const APP_VERSION = "v20261001f";
 document.getElementById("loginVersion").textContent = "Version " + APP_VERSION;
 
 (function setupUpdateCheck(){
@@ -3468,17 +3471,13 @@ newPinToggleBtn?.addEventListener("click", ()=>{
   newPinPanel.style.display = newPinPanel.style.display === "none" ? "block" : "none";
 });
 
-const DEVICE_PERSONAL_KEYS = ["sad_personal_pin", "sad_device_secret", "sad_device_label", "sad_seen_count", "sad_equip_name"];
-const DEVICE_PERSONAL_PREFIXES = [STORAGE_PREFIX, "stundenformular_note_"];
-
-function wipeDeviceIdentity(){
-  DEVICE_PERSONAL_KEYS.forEach(function(k){ localStorage.removeItem(k); });
-  Object.keys(localStorage).forEach(function(k){
-    if(DEVICE_PERSONAL_PREFIXES.some(function(p){ return k.indexOf(p) === 0; })) localStorage.removeItem(k);
-  });
-  Object.keys(sessionStorage).forEach(function(k){
-    if(k.indexOf("sad_equip_ok_") === 0) sessionStorage.removeItem(k);
-  });
+function getDeviceClientId(){
+  let id = localStorage.getItem("sad_device_id");
+  if(!id){
+    id = "d" + Math.random().toString(36).slice(2, 12) + Date.now().toString(36);
+    localStorage.setItem("sad_device_id", id);
+  }
+  return id;
 }
 
 function deviceLabelText(){
@@ -3487,37 +3486,38 @@ function deviceLabelText(){
   return label ? `PIN ${pin} (${label})` : `PIN ${pin}`;
 }
 
+function isDeviceBound(){
+  return !!(localStorage.getItem("sad_personal_pin") && localStorage.getItem("sad_device_secret"));
+}
+
+// Ein Handy gehört genau einem Mitarbeiter: ist es eingerichtet, ist das
+// PIN-Feld gesperrt und die PIN-Anforderung ausgeblendet.
 function renderIdentityBars(){
-  const bound = !!(localStorage.getItem("sad_personal_pin") && localStorage.getItem("sad_device_secret"));
+  const bound = isDeviceBound();
   const text = bound ? deviceLabelText() : "";
   const formBar = document.getElementById("formIdentityBar");
   if(formBar){
     formBar.style.display = bound ? "flex" : "none";
-    document.getElementById("formIdentityText").textContent = "Dieses Handy ist bestätigt für " + text;
+    document.getElementById("formIdentityText").textContent = "🔒 Dieses Handy gehört zu " + text;
   }
   const hoursText = document.getElementById("hoursIdentityText");
-  if(hoursText) hoursText.textContent = "Angemeldet als " + text;
+  if(hoursText) hoursText.textContent = "Dieses Handy gehört zu " + text;
+  if(nameEl){
+    nameEl.readOnly = bound;
+    if(bound) nameEl.value = localStorage.getItem("sad_personal_pin");
+    nameEl.style.opacity = bound ? ".8" : "";
+  }
+  if(bound && newPinToggleWrap) newPinToggleWrap.style.display = "none";
 }
 
-async function logoutDevice(){
-  if(!localStorage.getItem("sad_personal_pin")) return;
-  const ok = await openDialog({
-    title: "Abmelden?",
-    message: `Auf diesem Handy werden ${deviceLabelText()}, der gespeicherte Name und ungesendete Eingaben gelöscht. Danach kann sich jemand anderes anmelden.`,
-    mode: "confirm",
-    okText: "Ja, abmelden",
-    cancelText: "Abbrechen"
-  });
-  if(!ok) return;
-  wipeDeviceIdentity();
-  location.reload();
-}
+nameEl.addEventListener("click", ()=>{
+  if(!nameEl.readOnly) return;
+  dlgAlert(`Dieses Handy gehört zu ${deviceLabelText()}. Jedes Handy gehört genau einem Mitarbeiter. Andere Mitarbeiter bitte ihr eigenes Handy benutzen.`, "Dieses Handy ist fest zugeordnet");
+});
 
-document.getElementById("formLogoutBtn").addEventListener("click", logoutDevice);
-document.getElementById("hoursLogoutBtn").addEventListener("click", logoutDevice);
 renderIdentityBars();
 
-async function requestPin(vorname, nachname, forceNew){
+async function requestPin(vorname, nachname){
   const res = await fetch(EQUIP_WEB_APP_URL, {
     method: "POST",
     body: JSON.stringify({
@@ -3525,35 +3525,15 @@ async function requestPin(vorname, nachname, forceNew){
       action: "assignPin",
       vorname: vorname,
       nachname: nachname,
-      forceNew: !!forceNew
+      deviceId: getDeviceClientId(),
+      app: APP_VERSION,
+      ua: (navigator.userAgent || "").slice(0, 160)
     })
   });
   return res.json();
 }
 
 async function applyAssignedPin(pin, message, secret, label){
-  const curPin = localStorage.getItem("sad_personal_pin");
-  const curSecret = localStorage.getItem("sad_device_secret");
-  let switched = false;
-
-  if(curPin && curSecret && curPin !== pin){
-    const proceed = await openDialog({
-      title: "Handy wechseln?",
-      message: `Dieses Handy gehört aktuell zu dem Mitarbeiter mit der PIN ${curPin}${localStorage.getItem("sad_device_label") ? " (" + localStorage.getItem("sad_device_label") + ")" : ""}. Wenn du fortfährst, wird sein Zugang auf diesem Handy beendet und sein ungesendeter Entwurf gelöscht. Danach gehört das Handy zu dir.`,
-      mode: "confirm",
-      okText: "Ja, Handy wechseln",
-      cancelText: "Abbrechen"
-    });
-    if(!proceed){
-      newPinStatus.style.color = "#c0392b";
-      newPinStatus.textContent = "Abgebrochen. Dieses Handy bleibt beim bisherigen Mitarbeiter.";
-      newPinRequestBtn.disabled = false;
-      return;
-    }
-    wipeDeviceIdentity();
-    switched = true;
-  }
-
   nameEl.value = pin;
   localStorage.setItem("sad_personal_pin", pin);
   if(secret){
@@ -3572,7 +3552,7 @@ async function applyAssignedPin(pin, message, secret, label){
   dlgTitleEl.textContent = "Deine PIN";
   dlgMsgEl.innerHTML = `
     <div style="font-size:28px; font-weight:900; color:#3D3A87; margin-bottom:10px;">${pin}</div>
-    <div>Bitte immer diese PIN nutzen.</div>
+    <div>Bitte immer diese PIN nutzen. Dieses Handy gehört jetzt zu dir.</div>
   `;
   dlgBtnsEl.innerHTML = `<button id="dlgOkBtn" style="grid-column:1 / -1;">OK</button>`;
   dlgBack.style.display = "flex";
@@ -3582,8 +3562,6 @@ async function applyAssignedPin(pin, message, secret, label){
       resolve();
     }, { once:true });
   });
-
-  if(switched) location.reload();
 }
 
 newPinRequestBtn?.addEventListener("click", async ()=>{
@@ -3601,58 +3579,33 @@ newPinRequestBtn?.addEventListener("click", async ()=>{
   newPinStatus.textContent = "PIN wird angefordert...";
 
   try{
-    const result = await requestPin(vorname, nachname, false);
+    const result = await requestPin(vorname, nachname);
 
     if(result.status === "success"){
       await applyAssignedPin(
         result.pin,
-        result.existing
-          ? `Du hattest schon eine PIN: ${result.pin} (jetzt eingetragen).`
-          : `Deine neue PIN lautet: ${result.pin} – ist automatisch eingetragen und wird ab jetzt gemerkt.`,
+        `Deine neue PIN lautet: ${result.pin} – dieses Handy gehört jetzt zu dir.`,
         result.secret,
         result.nameMasked
       );
-    }else if(result.status === "confirm"){
+    }else if(result.code === "NAME_EXISTS"){
+      newPinStatus.style.color = "#c0392b";
+      newPinStatus.textContent = result.message + " ";
+      const askBtn = document.createElement("button");
+      askBtn.type = "button";
+      askBtn.textContent = "🛟 Admin fragen";
+      askBtn.style.cssText = "background:none; border:none; padding:0; color:#3D3A87; font-size:12px; font-weight:800; text-decoration:underline; cursor:pointer;";
+      askBtn.addEventListener("click", ()=> openHelp("Ich habe meine PIN vergessen. Bitte nenne mir meine PIN.", vorname + " " + nachname));
+      newPinStatus.appendChild(askBtn);
+      newPinRequestBtn.disabled = false;
+    }else if(result.code === "MAINTENANCE"){
       newPinStatus.textContent = "";
-      let confirmedPin = null;
-      let confirmedCandidate = null;
-
-      for(const candidate of result.candidates){
-        const isSamePerson = await openDialog({
-          title: "Bist du das?",
-          message: `Es gibt schon einen Eintrag "${candidate.storedName}". Bist du das?`,
-          mode: "confirm",
-          okText: "Ja, das bin ich",
-          cancelText: "Nein"
-        });
-        if(isSamePerson){
-          confirmedPin = candidate.pin;
-          confirmedCandidate = candidate;
-          break;
-        }
-      }
-
-      if(confirmedPin){
-        const parts = confirmedCandidate.storedName.split(" ");
-        const confVorname = parts.shift();
-        const confNachname = parts.join(" ");
-        const confirmedResult = await requestPin(confVorname, confNachname, false);
-        await applyAssignedPin(confirmedPin, `Deine PIN lautet: ${confirmedPin} (jetzt eingetragen).`, confirmedResult.secret, confirmedResult.nameMasked);
-      }else{
-        newPinStatus.style.color = "#666";
-        newPinStatus.textContent = "Neue PIN wird angelegt...";
-        const retryResult = await requestPin(vorname, nachname, true);
-        if(retryResult.status === "success"){
-          await applyAssignedPin(retryResult.pin, `Deine neue PIN lautet: ${retryResult.pin} – ist automatisch eingetragen und wird ab jetzt gemerkt.`, retryResult.secret, retryResult.nameMasked);
-        }else{
-          newPinStatus.style.color = "#c0392b";
-          newPinStatus.textContent = "Fehler: " + retryResult.message;
-          newPinRequestBtn.disabled = false;
-        }
-      }
+      showMaintenance("");
+      checkMaintenance();
+      newPinRequestBtn.disabled = false;
     }else{
       newPinStatus.style.color = "#c0392b";
-      newPinStatus.textContent = "Fehler: " + result.message;
+      newPinStatus.textContent = result.message || "Fehler beim Anfordern der PIN.";
       newPinRequestBtn.disabled = false;
     }
   }catch(err){
@@ -4740,12 +4693,13 @@ function hideSendLoading(){
 
 function confirmIdentity(pin){
   return new Promise((resolve)=>{
-    dlgTitleEl.textContent = "Bestätige deinen Namen";
+    dlgTitleEl.textContent = "Handy einrichten";
     dlgMsgEl.innerHTML = `
-      <div style="margin-bottom:12px; font-weight:700;">Dieses Gerät kennt PIN ${pin} noch nicht. Bitte bestätige einmalig deinen Namen. Danach bleibt alles auf diesem Gerät gespeichert.</div>
+      <div style="margin-bottom:12px; font-weight:700;">Dieses Handy kennt PIN ${pin} noch nicht. Bitte bestätige einmalig deinen Namen. Danach gehört dieses Handy zu dir.</div>
       <input id="idVorname" type="text" autocomplete="off" placeholder="Vorname" style="width:100%; padding:11px 12px; margin-bottom:8px; border-radius:10px; border:1px solid var(--border); font-size:15px; box-sizing:border-box;">
       <input id="idNachname" type="text" autocomplete="off" placeholder="Nachname" style="width:100%; padding:11px 12px; margin-bottom:6px; border-radius:10px; border:1px solid var(--border); font-size:15px; box-sizing:border-box;">
       <div id="idError" style="min-height:18px; color:#c0392b; font-size:12px; font-weight:700;"></div>
+      <button id="idHelpBtn" type="button" style="background:none; border:none; padding:4px 0; color:#3D3A87; font-size:12px; font-weight:800; text-decoration:underline; cursor:pointer;">🛟 Probleme? Admin um Hilfe bitten</button>
     `;
     dlgBtnsEl.innerHTML = `<button id="idCancelBtn" type="button">Abbrechen</button><button id="idOkBtn" type="button">Bestätigen</button>`;
     dlgBack.style.display = "flex";
@@ -4764,6 +4718,10 @@ function confirmIdentity(pin){
     }
 
     cancelBtn.addEventListener("click", ()=> close(null));
+    document.getElementById("idHelpBtn").addEventListener("click", ()=>{
+      close(null);
+      openHelp("Ich kann mein Handy nicht einrichten (PIN " + pin + ").");
+    });
 
     okBtn.addEventListener("click", async ()=>{
       const vorname = vornameEl.value.trim();
@@ -4780,7 +4738,16 @@ function confirmIdentity(pin){
       try{
         const res = await fetch(EQUIP_WEB_APP_URL, {
           method: "POST",
-          body: JSON.stringify({ token: EQUIP_API_TOKEN, action: "claimPin", pin: pin, vorname: vorname, nachname: nachname })
+          body: JSON.stringify({
+            token: EQUIP_API_TOKEN,
+            action: "claimPin",
+            pin: pin,
+            vorname: vorname,
+            nachname: nachname,
+            deviceId: getDeviceClientId(),
+            app: APP_VERSION,
+            ua: (navigator.userAgent || "").slice(0, 160)
+          })
         });
         const result = await res.json();
         if(result.status === "success" && result.secret){
@@ -4794,7 +4761,7 @@ function confirmIdentity(pin){
           return;
         }
         errorEl.style.color = "#c0392b";
-        errorEl.textContent = result.message || "Bestätigung fehlgeschlagen.";
+        errorEl.textContent = result.message || "Einrichtung fehlgeschlagen.";
       }catch(err){
         errorEl.style.color = "#c0392b";
         errorEl.textContent = "Fehler: " + err.message;
@@ -4818,11 +4785,9 @@ async function sendenDirekt(){
   if(boundPin && boundSecret && boundPin !== nm){
     setNameError(true);
     nameEl.value = boundPin;
-    if(newPinToggleWrap) newPinToggleWrap.style.display = "block";
-    const labelNow = localStorage.getItem("sad_device_label") || "";
     await dlgAlert(
-      `Dieses Handy gehört aktuell zu dem Mitarbeiter mit der PIN ${boundPin}${labelNow ? " (" + labelNow + ")" : ""}. Du hast PIN ${nm} eingegeben. Falls du eine andere Person bist, tippe auf "PIN vergessen oder noch keine?" und bestätige deinen Namen. Falls dieses Handy dir gehört, nutze bitte deine PIN ${boundPin}.`,
-      "Dieses Handy gehört jemand anderem"
+      `Dieses Handy gehört zu ${deviceLabelText()}. Jedes Handy gehört genau einem Mitarbeiter. Andere Mitarbeiter bitte ihr eigenes Handy benutzen.`,
+      "Dieses Handy ist fest zugeordnet"
     );
     return;
   }
@@ -5043,17 +5008,19 @@ const helpSendBtn = document.getElementById("helpSendBtn");
 const helpStatus = document.getElementById("helpStatus");
 
 function getHelpDeviceId(){
-  let id = localStorage.getItem("sad_help_device");
-  if(!id){
-    id = "d" + Math.random().toString(36).slice(2, 12) + Date.now().toString(36);
-    localStorage.setItem("sad_help_device", id);
-  }
-  return id;
+  return getDeviceClientId();
 }
 
-function openHelp(){
+function openHelp(prefill, name){
   helpStatus.className = "helpStatus";
   helpStatus.textContent = "";
+  if(typeof prefill === "string" && prefill){
+    helpText.value = prefill;
+    helpCount.textContent = helpText.value.length + " / 1500";
+  }
+  if(typeof name === "string" && name){
+    helpName.value = name;
+  }
   helpBack.style.display = "flex";
   setTimeout(()=> helpText.focus(), 60);
 }
@@ -5214,6 +5181,7 @@ async function checkForHoursUpdates(){
 let formularHistoryPushed = false;
 
 function openStundenformular(){
+  renderIdentityBars();
   chooserBack.style.display = "none";
   mainWrap.style.display = "block";
   if(!formularHistoryPushed){
@@ -5277,9 +5245,15 @@ function openMyHours(){
 chooserHoursBtn.addEventListener("click", openMyHours);
 
 hoursLoginBtn.addEventListener("click", async ()=>{
+  const pin = (document.getElementById("hoursPinInput").value || "").trim();
   const vorname = (hoursVornameInput.value || "").trim();
   const nachname = (hoursNachnameInput.value || "").trim();
 
+  if(!/^\d{2}$/.test(pin)){
+    hoursLoginStatus.style.color = "#c0392b";
+    hoursLoginStatus.textContent = "Bitte deine PIN (2 Ziffern) eingeben.";
+    return;
+  }
   if(!vorname || !nachname){
     hoursLoginStatus.style.color = "#c0392b";
     hoursLoginStatus.textContent = "Bitte Vor- und Nachname eingeben.";
@@ -5291,15 +5265,22 @@ hoursLoginBtn.addEventListener("click", async ()=>{
   hoursLoginStatus.textContent = "Wird geprüft...";
 
   try{
-    const result = await requestPin(vorname, nachname, false);
+    const res = await fetch(EQUIP_WEB_APP_URL, {
+      method: "POST",
+      body: JSON.stringify({
+        token: EQUIP_API_TOKEN,
+        action: "claimPin",
+        pin: pin,
+        vorname: vorname,
+        nachname: nachname,
+        deviceId: getDeviceClientId(),
+        app: APP_VERSION,
+        ua: (navigator.userAgent || "").slice(0, 160)
+      })
+    });
+    const result = await res.json();
 
-    if(result.status === "success"){
-      if(!result.secret){
-        hoursLoginStatus.style.color = "#c0392b";
-        hoursLoginStatus.textContent = "Dieses Gerät ist schon einem anderen verknüpft. Bitte den Admin bitten, das zurückzusetzen.";
-        hoursLoginBtn.disabled = false;
-        return;
-      }
+    if(result.status === "success" && result.secret){
       localStorage.setItem("sad_personal_pin", result.pin);
       localStorage.setItem("sad_device_secret", result.secret);
       if(result.nameMasked) localStorage.setItem("sad_device_label", result.nameMasked);
@@ -5307,49 +5288,18 @@ hoursLoginBtn.addEventListener("click", async ()=>{
       hoursLoginPanel.style.display = "none";
       hoursContentPanel.style.display = "block";
       loadMyHours(result.pin, result.secret);
-    }else if(result.status === "confirm"){
-      let confirmed = null;
-      for(const candidate of result.candidates){
-        const isSamePerson = await openDialog({
-          title: "Bist du das?",
-          message: `Es gibt schon einen Eintrag "${candidate.storedName}". Bist du das?`,
-          mode: "confirm",
-          okText: "Ja, das bin ich",
-          cancelText: "Nein"
-        });
-        if(isSamePerson){ confirmed = candidate; break; }
-      }
-      if(confirmed){
-        const parts = confirmed.storedName.split(" ");
-        const confVorname = parts.shift();
-        const confNachname = parts.join(" ");
-        const confirmedResult = await requestPin(confVorname, confNachname, false);
-        if(!confirmedResult.secret){
-          hoursLoginStatus.style.color = "#c0392b";
-          hoursLoginStatus.textContent = "Dieses Gerät ist schon einem anderen verknüpft. Bitte den Admin bitten, das zurückzusetzen.";
-          hoursLoginBtn.disabled = false;
-          return;
-        }
-        localStorage.setItem("sad_personal_pin", confirmedResult.pin);
-        localStorage.setItem("sad_device_secret", confirmedResult.secret);
-        if(confirmedResult.nameMasked) localStorage.setItem("sad_device_label", confirmedResult.nameMasked);
-        renderIdentityBars();
-        hoursLoginPanel.style.display = "none";
-        hoursContentPanel.style.display = "block";
-        loadMyHours(confirmedResult.pin, confirmedResult.secret);
-      }else{
-        hoursLoginStatus.style.color = "#c0392b";
-        hoursLoginStatus.textContent = "Kein Eintrag gefunden. Bitte zuerst im Stundenformular eine PIN anfordern.";
-        hoursLoginBtn.disabled = false;
-      }
     }else{
+      if(result.code === "MAINTENANCE"){
+        showMaintenance("");
+        checkMaintenance();
+      }
       hoursLoginStatus.style.color = "#c0392b";
-      hoursLoginStatus.textContent = "Fehler: " + result.message;
-      hoursLoginBtn.disabled = false;
+      hoursLoginStatus.textContent = result.message || "Einrichtung fehlgeschlagen.";
     }
   }catch(err){
     hoursLoginStatus.style.color = "#c0392b";
     hoursLoginStatus.textContent = "Fehler: " + err.message;
+  }finally{
     hoursLoginBtn.disabled = false;
   }
 });
