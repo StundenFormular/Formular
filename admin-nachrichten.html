@@ -126,7 +126,10 @@
         <div id="maintTitle" style="font-weight:900; font-size:15px;">Status wird geladen…</div>
         <div id="maintSub" style="font-size:12px; color:#777; margin-top:2px;"></div>
       </div>
+      <div style="display:flex; gap:8px; flex-wrap:wrap;">
       <button id="maintToggleBtn" type="button" style="padding:11px 18px; border-radius:12px; border:none; background:var(--purple); color:#fff; font-weight:800; font-size:14px; cursor:pointer;" disabled>…</button>
+      <button id="maintSleepBtn" type="button" style="padding:11px 18px; border-radius:12px; border:none; background:linear-gradient(135deg,#6b63c9,#3D3A87); color:#fff; font-weight:800; font-size:14px; cursor:pointer;" disabled>😴 Admin schläft einschalten</button>
+      </div>
     </div>
     <input id="maintMessageInput" type="text" placeholder="Hinweis für die Mitarbeiter (optional), z.B. Wieder erreichbar ab 14:00 Uhr" style="width:100%; margin-top:10px; padding:10px 12px; border-radius:10px; border:1px solid var(--border); font-size:13px; box-sizing:border-box;">
   </div>
@@ -919,12 +922,25 @@ const maintTitle = document.getElementById("maintTitle");
 const maintSub = document.getElementById("maintSub");
 const maintToggleBtn = document.getElementById("maintToggleBtn");
 const maintMessageInput = document.getElementById("maintMessageInput");
+const maintSleepBtn = document.getElementById("maintSleepBtn");
 let maintOn = false;
+let maintStyle = "serious";
 
-function renderMaintenance(on, message){
+function renderMaintenance(on, message, style){
   maintOn = on;
+  maintStyle = style === "sleep" ? "sleep" : "serious";
   maintToggleBtn.disabled = false;
-  if(on){
+  maintSleepBtn.disabled = false;
+  if(on && maintStyle === "sleep"){
+    maintBar.style.background = "#f1eefc";
+    maintBar.style.borderColor = "#6b63c9";
+    maintTitle.style.color = "#3D3A87";
+    maintTitle.textContent = "😴 „ADMIN SCHLÄFT“-MODUS AKTIV";
+    maintSub.textContent = "Mitarbeiter sehen den lustigen Schlaf-Bildschirm und können nichts senden.";
+    maintToggleBtn.textContent = "Admin aufwecken (Modus beenden)";
+    maintToggleBtn.style.background = "#2f9e44";
+    maintSleepBtn.style.display = "none";
+  }else if(on){
     maintBar.style.background = "#fdecea";
     maintBar.style.borderColor = "#c0392b";
     maintTitle.style.color = "#c0392b";
@@ -932,6 +948,7 @@ function renderMaintenance(on, message){
     maintSub.textContent = "Mitarbeiter sehen den Sperrbildschirm und können nichts senden.";
     maintToggleBtn.textContent = "Wartungsmodus beenden";
     maintToggleBtn.style.background = "#2f9e44";
+    maintSleepBtn.style.display = "none";
   }else{
     maintBar.style.background = "#fff";
     maintBar.style.borderColor = "var(--border)";
@@ -940,6 +957,7 @@ function renderMaintenance(on, message){
     maintSub.textContent = "Mitarbeiter können normal arbeiten.";
     maintToggleBtn.textContent = "Wartungsmodus einschalten";
     maintToggleBtn.style.background = "#c0392b";
+    maintSleepBtn.style.display = "";
   }
   if(document.activeElement !== maintMessageInput){
     maintMessageInput.value = message || "";
@@ -957,25 +975,30 @@ async function maintRequest(payload){
 async function loadMaintenanceStatus(){
   try{
     const r = await maintRequest({ action: "getStatus" });
-    if(r.status === "success") renderMaintenance(r.maintenance, r.message);
+    if(r.status === "success") renderMaintenance(r.maintenance, r.message, r.style);
     else maintTitle.textContent = "Status konnte nicht geladen werden";
   }catch(err){
     maintTitle.textContent = "Status konnte nicht geladen werden";
   }
 }
 
-maintToggleBtn.addEventListener("click", async ()=>{
+async function setMaintenanceMode(on, style){
   maintToggleBtn.disabled = true;
+  maintSleepBtn.disabled = true;
   maintSub.textContent = "Wird gespeichert…";
   try{
-    const r = await maintRequest({ action: "setMaintenance", on: !maintOn, message: maintMessageInput.value });
-    if(r.status === "success") renderMaintenance(r.maintenance, r.message);
-    else{ maintSub.textContent = "Fehler: " + (r.message || "unbekannt"); maintToggleBtn.disabled = false; }
+    const r = await maintRequest({ action: "setMaintenance", on: on, style: style, message: maintMessageInput.value });
+    if(r.status === "success") renderMaintenance(r.maintenance, r.message, r.style);
+    else{ maintSub.textContent = "Fehler: " + (r.message || "unbekannt"); maintToggleBtn.disabled = false; maintSleepBtn.disabled = false; }
   }catch(err){
     maintSub.textContent = "Fehler: " + err.message;
     maintToggleBtn.disabled = false;
+    maintSleepBtn.disabled = false;
   }
-});
+}
+
+maintToggleBtn.addEventListener("click", ()=> setMaintenanceMode(!maintOn, "serious"));
+maintSleepBtn.addEventListener("click", ()=> setMaintenanceMode(true, "sleep"));
 
 // ===== Hilfe-Nachrichten =====
 const helpListWrap = document.getElementById("helpListWrap");
