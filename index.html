@@ -579,6 +579,31 @@ select.ort option{
   box-shadow: 0 0 0 3px rgba(239,68,68,.18);
 }
 
+
+/* ===== "Neu hier?" ===== */
+.chooserNew{
+  width:100%; display:flex; align-items:center; gap:12px; margin-bottom:14px; padding:14px 16px; box-sizing:border-box;
+  border-radius:18px; border:1.5px solid rgba(232,163,61,.75); cursor:pointer; text-align:left; color:#fff;
+  font-family:inherit; font-size:15px;
+  background:linear-gradient(135deg, rgba(232,163,61,.28), rgba(232,163,61,.10));
+  animation:chooserNewPulse 2.6s ease-in-out infinite;
+}
+.chooserNew small{ color:rgba(255,255,255,.78); font-size:12px; font-weight:500; line-height:1.35; }
+.chooserNewIcon{ font-size:26px; }
+.chooserNewArrow{ margin-left:auto; font-size:26px; font-weight:300; opacity:.8; }
+@keyframes chooserNewPulse{ 0%,100%{ box-shadow:0 0 0 0 rgba(232,163,61,.35); } 50%{ box-shadow:0 0 0 7px rgba(232,163,61,0); } }
+@media (prefers-reduced-motion:reduce){ .chooserNew{ animation:none; } }
+
+.newPinRow{ margin-top:10px; display:flex; flex-direction:column; gap:6px; }
+.newPinBtn{
+  width:100%; box-sizing:border-box; padding:12px 14px; border-radius:14px; border:1.5px solid #E8A33D;
+  background:rgba(232,163,61,.14); color:var(--text); font-weight:800; font-size:14px; text-align:left; cursor:pointer; font-family:inherit;
+}
+.forgotPinLink{
+  background:none; border:none; padding:2px 0; color:inherit; opacity:.75; font-size:12px; font-weight:700;
+  text-decoration:underline; cursor:pointer; text-align:left; font-family:inherit;
+}
+
 /* ===== Login-Bildschirm (nur #pinBack) ===== */
 #pinBack{ background:#070816; overflow:hidden; }
 #pinBack::before{
@@ -3028,7 +3053,8 @@ tbody tr:nth-child(odd){
       </div>
       <button class="pinOk" id="hoursLoginBtn" type="button" style="width:100%;">Handy einrichten</button>
       <div id="hoursLoginStatus" style="margin-top:8px; font-size:12px;"></div>
-      <div style="margin-top:10px; font-size:12px; color:rgba(255,255,255,.65);">Noch keine PIN? Fordere sie im Stundenformular an („PIN vergessen oder noch keine?“).</div>
+      <div style="margin-top:12px; font-size:12px; color:rgba(255,255,255,.7);">Noch keine PIN?</div>
+      <button type="button" id="hoursNewPinBtn" class="helpEntry" style="margin-top:6px;">🆕 Neu hier? Eigene PIN anfordern</button>
     </div>
 
     <div id="hoursContentPanel" style="display:none;">
@@ -3062,6 +3088,12 @@ tbody tr:nth-child(odd){
   <div class="pinCard">
     <div class="pinTitle">Was möchtest du tun?</div>
     <p class="pinHint">Stundenformular wird einmal im Monat ausgefüllt, der Ausrüstungs-Check jeden Tag.</p>
+
+    <button class="chooserNew" id="chooserNewBtn" type="button" style="display:none;">
+      <span class="chooserNewIcon">🆕</span>
+      <span><b>Neu hier? Eigene PIN anfordern</b><br><small>Du hast schon eine PIN? Dann trag sie einfach im Stundenformular ein.</small></span>
+      <span class="chooserNewArrow">›</span>
+    </button>
 
     <button class="pinOk" id="chooserFormularBtn" type="button" style="width:100%; margin-bottom:10px; text-align:left; padding:16px;">
       📋 Stundenformular<br><span style="font-weight:400; font-size:12px; opacity:.8;">Monatliche Zeiterfassung</span>
@@ -3412,10 +3444,9 @@ tbody tr:nth-child(odd){
         <span id="formIdentityText"></span>
       </div>
 
-      <div id="newPinToggleWrap" style="margin-top:8px;">
-        <button type="button" id="newPinToggleBtn" style="background:none; border:none; padding:4px 0; color:var(--purple, #3D3A87); font-size:12px; font-weight:800; text-decoration:underline; cursor:pointer;">
-          PIN vergessen oder noch keine?
-        </button>
+      <div id="newPinToggleWrap" class="newPinRow">
+        <button type="button" id="newPinToggleBtn" class="newPinBtn">🆕 Neu hier? PIN anfordern</button>
+        <button type="button" id="forgotPinBtn" class="forgotPinLink">PIN vergessen? → Admin fragen</button>
       </div>
 
       <div id="newPinPanel" style="display:none; margin-top:10px; padding:12px; border-radius:14px; border:1px solid var(--border); background:#faf9ff;">
@@ -3576,7 +3607,7 @@ if("serviceWorker" in navigator){
   });
 }
 
-const APP_VERSION = "v20261001i";
+const APP_VERSION = "v20261001j";
 document.getElementById("loginVersion").textContent = "Version " + APP_VERSION;
 
 (function setupUpdateCheck(){
@@ -3701,7 +3732,15 @@ const newPinToggleWrap = document.getElementById("newPinToggleWrap");
 })();
 
 newPinToggleBtn?.addEventListener("click", ()=>{
-  newPinPanel.style.display = newPinPanel.style.display === "none" ? "block" : "none";
+  const willOpen = newPinPanel.style.display === "none";
+  newPinPanel.style.display = willOpen ? "block" : "none";
+  if(willOpen) setTimeout(()=> newPinVornameInput.focus(), 50);
+});
+
+document.getElementById("forgotPinBtn")?.addEventListener("click", ()=>{
+  const v = (newPinVornameInput.value || "").trim();
+  const n = (newPinNachnameInput.value || "").trim();
+  openHelp("Ich habe meine PIN vergessen. Bitte nenne mir meine PIN.", (v + " " + n).trim());
 });
 
 function getDeviceClientId(){
@@ -3725,7 +3764,13 @@ function isDeviceBound(){
 
 // Ein Handy gehört genau einem Mitarbeiter: ist es eingerichtet, ist das
 // PIN-Feld gesperrt und die PIN-Anforderung ausgeblendet.
+function updateChooserNewCard(){
+  const btn = document.getElementById("chooserNewBtn");
+  if(btn) btn.style.display = localStorage.getItem("sad_personal_pin") ? "none" : "flex";
+}
+
 function renderIdentityBars(){
+  updateChooserNewCard();
   const bound = isDeviceBound();
   const text = bound ? deviceLabelText() : "";
   const formBar = document.getElementById("formIdentityBar");
@@ -5093,8 +5138,8 @@ async function sendenDirekt(){
 
   if(!pinIsRegistered){
     setNameError(true);
-    await dlgAlert("Diese PIN ist noch nicht registriert. Bitte fordere zuerst über \"PIN vergessen oder noch keine?\" eine PIN an, bevor du Stunden sendest.", "PIN nicht erkannt");
-    if(newPinToggleWrap) newPinToggleWrap.style.display = "block";
+    await dlgAlert("Diese PIN ist noch nicht registriert. Bitte fordere zuerst über „Neu hier? PIN anfordern“ eine PIN an, bevor du Stunden sendest.", "PIN nicht erkannt");
+    if(newPinToggleWrap) newPinToggleWrap.style.display = "";
     nameEl.focus();
     return;
   }
@@ -5270,9 +5315,25 @@ function showChooser(){
     chooserEquipBtn.style.cursor = "pointer";
   }
 
+  updateChooserNewCard();
   chooserBack.style.display = "flex";
   checkForHoursUpdates();
 }
+
+// "Neu hier?": Formular öffnen, Namensfelder aufklappen, Cursor in "Vorname"
+function openNewPinFlow(){
+  openStundenformular();
+  newPinPanel.style.display = "block";
+  setTimeout(()=>{
+    if(newPinPanel.scrollIntoView) newPinPanel.scrollIntoView({ behavior: "smooth", block: "center" });
+    newPinVornameInput.focus();
+  }, 150);
+}
+document.getElementById("chooserNewBtn").addEventListener("click", openNewPinFlow);
+document.getElementById("hoursNewPinBtn").addEventListener("click", ()=>{
+  hoursBack.style.display = "none";
+  openNewPinFlow();
+});
 
 // Zählt Kommentare + Nachrichten + Vermerke + Dokumente zusammen, um zu
 // erkennen, ob es seit dem letzten Öffnen von "Meine Stunden ansehen"
