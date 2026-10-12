@@ -101,6 +101,9 @@
   .dayRow{ display:grid; grid-template-columns:90px 1fr 70px 70px 70px 64px; gap:6px; align-items:center; padding:6px 4px; border-bottom:1px solid var(--border); font-size:12px; }
   .dayRow input{ width:100%; padding:5px 6px; border-radius:6px; border:1px solid var(--border); font-size:12px; box-sizing:border-box; }
   .dayRow.diverges{ background:rgba(255,213,74,.12); }
+  .dayRow.off{ grid-template-columns:130px 1fr; background:#eceef2; color:#7b8494; }
+  .dayRow.off .dayWd{ margin-left:4px; font-weight:700; }
+  .dayRow.off .dayOffLabel{ font-style:italic; }
   .dayEditBtn{ border:none; background:var(--purple); color:#fff; border-radius:6px; padding:4px 6px; cursor:pointer; font-size:11px; }
   .dayComment{ grid-column:1 / -1; font-size:11px; color:#8A5A15; background:rgba(232,163,61,.12); padding:4px 8px; border-radius:6px; margin-top:2px; }
 </style>
@@ -700,6 +703,344 @@ function renderOverview(results, month){
   }
 }
 
+/* ===== SadPdf: kleiner PDF-Erzeuger ohne Bibliothek (funktioniert auch offline) ===== */
+const SadPdf = (function(){
+  const W_REG = [278,278,355,556,556,889,667,191,333,333,389,584,278,333,278,278,556,556,556,556,556,556,556,556,556,556,278,278,584,584,584,556,1015,667,667,722,722,667,611,778,722,278,500,667,556,833,722,778,667,778,722,667,611,722,667,944,667,667,611,278,278,278,469,556,333,556,556,500,556,556,278,556,556,222,222,500,222,833,556,556,556,556,333,500,278,556,500,722,500,500,500,334,260,334,584];
+  const W_BOLD = [278,333,474,556,556,889,722,238,333,333,389,584,278,333,278,278,556,556,556,556,556,556,556,556,556,556,333,333,584,584,584,611,975,722,722,722,722,667,611,778,722,278,556,722,611,833,722,778,667,778,722,667,611,722,667,944,667,667,611,333,278,333,584,556,333,556,611,556,611,556,333,611,611,278,278,556,278,889,611,611,611,611,389,556,333,611,556,778,556,556,500,389,280,389,584];
+  const SPECIAL = { 0xE4:[556,556], 0xF6:[556,611], 0xFC:[556,611], 0xC4:[667,722], 0xD6:[778,778], 0xDC:[722,722], 0xDF:[611,611], 0x96:[556,556], 0x97:[1000,1000], 0x85:[1000,1000], 0x95:[350,350], 0xB7:[278,278], 0x80:[556,556] };
+  const CP1252 = {0x20AC:0x80,0x201A:0x82,0x0192:0x83,0x201E:0x84,0x2026:0x85,0x2020:0x86,0x2021:0x87,0x02C6:0x88,0x2030:0x89,0x0160:0x8A,0x2039:0x8B,0x0152:0x8C,0x017D:0x8E,0x2018:0x91,0x2019:0x92,0x201C:0x93,0x201D:0x94,0x2022:0x95,0x2013:0x96,0x2014:0x97,0x02DC:0x98,0x2122:0x99,0x0161:0x9A,0x203A:0x9B,0x0153:0x9C,0x017E:0x9E,0x0178:0x9F};
+
+  const BASE_LETTER = { 0x131: "i", 0x141: "L", 0x142: "l", 0x110: "D", 0x111: "d" };
+
+  function bytesOf(str){
+    const out = [];
+    for(const ch of String(str == null ? "" : str)){
+      const c = ch.codePointAt(0);
+      if((c >= 0x1F000 && c <= 0x1FAFF) || (c >= 0x2600 && c <= 0x27BF) || c === 0xFE0F || c === 0x200D) continue;
+      if(c === 9) out.push(32);
+      else if(c >= 32 && c < 127) out.push(c);
+      else if(c >= 160 && c <= 255) out.push(c);
+      else if(CP1252[c]) out.push(CP1252[c]);
+      else {
+        // Buchstaben ohne Platz in der Standardschrift (z. B. ş, ğ, ı, İ, ł) -> Grundbuchstabe
+        let alt = BASE_LETTER[c];
+        if(!alt){ const dec = ch.normalize("NFD"); if(dec.length > 1 && dec.charCodeAt(0) < 128) alt = dec[0]; }
+        out.push(alt ? alt.charCodeAt(0) : 63);
+      }
+    }
+    return out;
+  }
+  function charW(b, bold){
+    if(b >= 32 && b <= 126) return (bold ? W_BOLD : W_REG)[b - 32];
+    const s = SPECIAL[b];
+    return s ? s[bold ? 1 : 0] : 556;
+  }
+  function width(str, size, bold){
+    let w = 0;
+    bytesOf(str).forEach(b => { w += charW(b, bold); });
+    return w * size / 1000;
+  }
+  function fit(str, size, bold, maxW){
+    str = String(str == null ? "" : str);
+    if(width(str, size, bold) <= maxW) return str;
+    let s = str;
+    while(s.length > 1 && width(s + "\u2026", size, bold) > maxW) s = s.slice(0, -1);
+    return s + "\u2026";
+  }
+  function wrap(text, size, bold, maxW){
+    const lines = [];
+    String(text == null ? "" : text).replace(/\r/g, "").split("\n").forEach(par => {
+      if(par.trim() === ""){ lines.push(""); return; }
+      let cur = "";
+      par.split(/ +/).forEach(word => {
+        while(width(word, size, bold) > maxW){
+          let cut = word.length;
+          while(cut > 1 && width(word.slice(0, cut), size, bold) > maxW) cut--;
+          if(cur){ lines.push(cur); cur = ""; }
+          lines.push(word.slice(0, cut));
+          word = word.slice(cut);
+        }
+        const test = cur ? cur + " " + word : word;
+        if(cur && width(test, size, bold) > maxW){ lines.push(cur); cur = word; }
+        else cur = test;
+      });
+      lines.push(cur);
+    });
+    return lines;
+  }
+  function lit(str){
+    let s = "(";
+    bytesOf(str).forEach(b => {
+      if(b === 40 || b === 41 || b === 92) s += "\\" + String.fromCharCode(b);
+      else if(b < 32 || b > 126) s += "\\" + b.toString(8).padStart(3, "0");
+      else s += String.fromCharCode(b);
+    });
+    return s + ")";
+  }
+  const num = v => String(Math.round(v * 100) / 100);
+  function rgb(hex){
+    const h = hex.replace("#", "");
+    return [0, 2, 4].map(i => (parseInt(h.slice(i, i + 2), 16) / 255).toFixed(3)).join(" ");
+  }
+
+  function Page(H){ this.ops = []; this.H = H; }
+  Page.prototype.rect = function(x, yTop, w, h, color){
+    this.ops.push(rgb(color) + " rg " + num(x) + " " + num(this.H - yTop - h) + " " + num(w) + " " + num(h) + " re f");
+  };
+  Page.prototype.line = function(x1, y1, x2, y2, color, wd){
+    this.ops.push(num(wd) + " w " + rgb(color) + " RG " + num(x1) + " " + num(this.H - y1) + " m " + num(x2) + " " + num(this.H - y2) + " l S");
+  };
+  Page.prototype.text = function(str, x, baseTop, size, bold, color){
+    if(String(str) === "") return;
+    this.ops.push("BT /F" + (bold ? 2 : 1) + " " + num(size) + " Tf " + rgb(color) + " rg " + num(x) + " " + num(this.H - baseTop) + " Td " + lit(str) + " Tj ET");
+  };
+
+  function build(d){
+    const PW = 595.28, PH = 841.89, M = 36, CW = PW - 2 * M;
+    const pages = [];
+    let pg = new Page(PH);
+    pages.push(pg);
+    let y = M;
+
+    pg.text(d.title || "Stundenformular", M, y + 18, 20, true, "#3D3A87");
+    pg.text(d.subtitle || "", M, y + 36, 11, false, "#374151");
+    (d.meta || []).forEach((m, i) => {
+      pg.text(m, PW - M - width(m, 8.5, false), y + 12 + i * 11, 8.5, false, "#6B7280");
+    });
+    y += 48;
+    pg.line(M, y, PW - M, y, "#3D3A87", 1.2);
+    y += 10;
+
+    // Legende
+    const anyCorrected = (d.rows || []).some(r => r.corrected);
+    let legend = "= nicht gearbeitet";
+    const lw = width(legend, 8, false);
+    pg.rect(PW - M - lw - 16, y, 11, 8, "#D1D5DB");
+    pg.text(legend, PW - M - lw, y + 7, 8, false, "#6B7280");
+    if(anyCorrected){
+      const l2 = "* = vom Admin korrigiert";
+      pg.text(l2, M, y + 7, 8, false, "#6B7280");
+    }
+    y += 14;
+
+    // Tabellenkopf
+    const cols = [
+      { k: "date",  t: "Datum",    w: 92,  a: "l" },
+      { k: "ort",   t: "Standort", w: 215, a: "l" },
+      { k: "start", t: "Beginn",   w: 62,  a: "c" },
+      { k: "end",   t: "Ende",     w: 62,  a: "c" },
+      { k: "hours", t: "Stunden",  w: 92,  a: "r" }
+    ];
+    const rows = d.rows || [];
+    const rowH = rows.length > 31 ? 13.6 : 14.4;
+    const headH = 18;
+    pg.rect(M, y, CW, headH, "#3D3A87");
+    let x = M;
+    cols.forEach(c => {
+      const tw = width(c.t, 9, true);
+      const tx = c.a === "l" ? x + 6 : c.a === "c" ? x + (c.w - tw) / 2 : x + c.w - tw - 8;
+      pg.text(c.t, tx, y + 12.5, 9, true, "#FFFFFF");
+      x += c.w;
+    });
+    y += headH;
+    const tableTop = y;
+
+    rows.forEach((r, i) => {
+      const top = tableTop + i * rowH;
+      const off = !!r.off;
+      pg.rect(M, top, CW, rowH, off ? "#E5E7EB" : (i % 2 ? "#FAFAFD" : "#FFFFFF"));
+      pg.line(M, top + rowH, M + CW, top + rowH, "#D1D5DB", 0.4);
+      const base = top + rowH - 4.2;
+      const ink = off ? "#6B7280" : "#111827";
+      let cx = M;
+      cols.forEach(c => {
+        let val;
+        if(c.k === "date") val = (r.date || "") + (r.wd ? "  " + r.wd : "");
+        else if(c.k === "ort") val = off ? "nicht gearbeitet" : (r.ort || "–");
+        else if(c.k === "hours") val = off ? "–" : ((r.hours === "" || r.hours == null) ? "–" : String(r.hours) + (r.corrected ? " *" : ""));
+        else val = off ? "–" : (r[c.k] || "–");
+        const bold = !off && (c.k === "date" || c.k === "hours");
+        val = fit(val, 8.6, bold, c.w - 12);
+        const tw = width(val, 8.6, bold);
+        const tx = c.a === "l" ? cx + 6 : c.a === "c" ? cx + (c.w - tw) / 2 : cx + c.w - tw - 8;
+        pg.text(val, tx, base, 8.6, bold, off ? "#6B7280" : ink);
+        cx += c.w;
+      });
+    });
+    y = tableTop + rows.length * rowH;
+    pg.line(M, tableTop, M, y, "#D1D5DB", 0.5);
+    pg.line(M + CW, tableTop, M + CW, y, "#D1D5DB", 0.5);
+    y += 6;
+
+    // Summen
+    (d.totals || []).forEach(t => {
+      pg.rect(M, y, CW, 19, "#F3E8FF");
+      pg.text(t.label, M + 8, y + 13, 10, true, "#3D3A87");
+      const vw = width(t.value, 11, true);
+      pg.text(t.value, M + CW - vw - 8, y + 13.5, 11, true, "#3D3A87");
+      y += 21;
+    });
+    y += 6;
+
+    // Textabschnitte (Bemerkung, Kommentar, Korrekturen) mit Seitenumbruch
+    const limit = PH - M - 24;
+    function ensure(h){
+      if(y + h > limit){
+        pg = new Page(PH);
+        pages.push(pg);
+        y = M;
+      }
+    }
+    (d.sections || []).forEach(sec => {
+      if(!sec.text || !String(sec.text).trim()) return;
+      const lines = wrap(sec.text, 9.5, false, CW - 16);
+      ensure(30);
+      pg.text(sec.title, M, y + 10, 10, true, "#3D3A87");
+      y += 15;
+      let i = 0;
+      while(i < lines.length){
+        const room = Math.max(1, Math.floor((limit - y - 10) / 12.2));
+        if(room < 2 && i < lines.length){ ensure(1e9); continue; }
+        const chunk = lines.slice(i, i + room);
+        const boxH = chunk.length * 12.2 + 8;
+        pg.rect(M, y, CW, boxH, "#F9FAFB");
+        pg.line(M, y, M, y + boxH, "#E8A33D", 2.2);
+        chunk.forEach((ln, k) => pg.text(ln, M + 8, y + 12 + k * 12.2, 9.5, false, "#111827"));
+        y += boxH + 4;
+        i += chunk.length;
+        if(i < lines.length) ensure(1e9);
+      }
+      y += 6;
+    });
+
+    // Fußzeile
+    pages.forEach((p, i) => {
+      p.line(M, PH - M - 12, PW - M, PH - M - 12, "#D1D5DB", 0.5);
+      p.text(d.footer || "", M, PH - M - 1, 7.5, false, "#9CA3AF");
+      const pn = "Seite " + (i + 1) + " / " + pages.length;
+      p.text(pn, PW - M - width(pn, 7.5, false), PH - M - 1, 7.5, false, "#9CA3AF");
+    });
+
+    // Dokument zusammensetzen
+    const objs = [];
+    objs[1] = "<< /Type /Catalog /Pages 2 0 R >>";
+    objs[2] = "<< /Type /Pages /Kids [" + pages.map((_, i) => (5 + i * 2) + " 0 R").join(" ") + "] /Count " + pages.length + " >>";
+    objs[3] = "<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >>";
+    objs[4] = "<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold /Encoding /WinAnsiEncoding >>";
+    pages.forEach((p, i) => {
+      const pid = 5 + i * 2, cid = pid + 1;
+      const stream = p.ops.join("\n");
+      objs[pid] = "<< /Type /Page /Parent 2 0 R /MediaBox [0 0 " + num(PW) + " " + num(PH) + "] /Resources << /Font << /F1 3 0 R /F2 4 0 R >> >> /Contents " + cid + " 0 R >>";
+      objs[cid] = "<< /Length " + stream.length + " >>\nstream\n" + stream + "\nendstream";
+    });
+    const infoId = 5 + pages.length * 2;
+    const now = new Date();
+    const p2 = n => String(n).padStart(2, "0");
+    const cd = "D:" + now.getFullYear() + p2(now.getMonth() + 1) + p2(now.getDate()) + p2(now.getHours()) + p2(now.getMinutes()) + p2(now.getSeconds());
+    objs[infoId] = "<< /Title " + lit(d.docTitle || d.title || "Stundenformular") + " /Creator (Stundenformular) /Producer (Stundenformular) /CreationDate (" + cd + ") >>";
+
+    let out = "%PDF-1.4\n%" + String.fromCharCode(0xE2, 0xE3, 0xCF, 0xD3) + "\n";
+    const offs = [];
+    for(let i = 1; i <= infoId; i++){
+      offs[i] = out.length;
+      out += i + " 0 obj\n" + objs[i] + "\nendobj\n";
+    }
+    const xref = out.length;
+    out += "xref\n0 " + (infoId + 1) + "\n0000000000 65535 f \n";
+    for(let i = 1; i <= infoId; i++) out += String(offs[i]).padStart(10, "0") + " 00000 n \n";
+    out += "trailer\n<< /Size " + (infoId + 1) + " /Root 1 0 R /Info " + infoId + " 0 R >>\nstartxref\n" + xref + "\n%%EOF\n";
+    return Uint8Array.from(out, ch => ch.charCodeAt(0) & 255);
+  }
+
+  function download(bytes, filename){
+    const blob = new Blob([bytes], { type: "application/pdf" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = filename;
+    a.style.display = "none";
+    document.body.appendChild(a);
+    a.click();
+    setTimeout(function(){ a.remove(); URL.revokeObjectURL(url); }, 30000);
+  }
+
+  return { build: build, download: download, width: width };
+})();
+
+const WD_NAMES = ["So", "Mo", "Di", "Mi", "Do", "Fr", "Sa"];
+const MONTH_NAMES = ["Januar", "Februar", "März", "April", "Mai", "Juni", "Juli", "August", "September", "Oktober", "November", "Dezember"];
+
+// Alle Tage des Monats (1..31), nicht gearbeitete Tage als { off:true } statt sie zu überspringen
+function fullMonthDays(days, month){
+  const parts = String(month).split("-");
+  const yy = parseInt(parts[0], 10);
+  const mm = parseInt(parts[1], 10);
+  const n = new Date(yy, mm, 0).getDate();
+  const byDay = {};
+  (days || []).forEach(d => { byDay[d.day] = d; });
+  const p2 = v => String(v).padStart(2, "0");
+  const out = [];
+  for(let i = 1; i <= n; i++){
+    const wd = WD_NAMES[new Date(yy, mm - 1, i).getDay()];
+    if(byDay[i]) out.push(Object.assign({ wd: wd }, byDay[i]));
+    else out.push({ day: i, off: true, wd: wd, datum: p2(i) + "." + p2(mm) + "." + yy });
+  }
+  return out;
+}
+
+function fmtHours(v){
+  return (v === "" || v == null) ? "" : String(v).replace(".", ",");
+}
+
+function downloadEmployeePdf(emp, month){
+  const parts = String(month).split("-");
+  const yy = parts[0];
+  const mm = parseInt(parts[1], 10);
+  const days = fullMonthDays(emp.days, month);
+
+  const rows = days.map(d => d.off
+    ? { date: d.datum, wd: d.wd, off: true }
+    : {
+        date: d.datum, wd: d.wd, off: false,
+        ort: d.standort, start: d.beginn, end: d.ende,
+        hours: fmtHours(d.stunden),
+        corrected: String(d.stunden) !== String(d.eingereicht) || !!d.kommentar
+      });
+
+  const sent = fmtHours(emp.summeEingereicht ?? 0);
+  const official = fmtHours(emp.summeOffiziell ?? 0);
+  const totals = (sent === official)
+    ? [{ label: "Gesamtstunden", value: official + " h" }]
+    : [{ label: "Gesendet vom Mitarbeiter", value: sent + " h" }, { label: "Erfasst (vom Admin korrigiert)", value: official + " h" }];
+
+  const corrections = days.filter(d => !d.off && (String(d.stunden) !== String(d.eingereicht) || d.kommentar)).map(d => {
+    const change = String(d.stunden) !== String(d.eingereicht) ? "von " + fmtHours(d.eingereicht) + " auf " + fmtHours(d.stunden) + " Std." : "";
+    return d.datum + ": " + [change, d.kommentar].filter(Boolean).join(" – ");
+  }).join("\n");
+
+  const now = new Date();
+  const p2 = v => String(v).padStart(2, "0");
+  const stamp = p2(now.getDate()) + "." + p2(now.getMonth() + 1) + "." + now.getFullYear();
+  const monthLabel = MONTH_NAMES[mm - 1] + " " + yy;
+
+  const bytes = SadPdf.build({
+    title: "Stundenübersicht",
+    subtitle: emp.name + " · PIN " + emp.pin + " · " + monthLabel,
+    docTitle: "Stunden " + emp.name + " " + yy + "-" + p2(mm),
+    meta: ["Status: " + (emp.freigegeben ? "freigegeben" : "noch nicht freigegeben"), "Erstellt: " + stamp],
+    rows: rows,
+    totals: totals,
+    sections: [
+      { title: "Bemerkung vom Mitarbeiter", text: emp.mitarbeiterNotiz },
+      { title: "Kommentar zum Monat", text: emp.monatsKommentar },
+      { title: "Korrekturen", text: corrections }
+    ],
+    footer: "Erstellt am " + stamp + " " + p2(now.getHours()) + ":" + p2(now.getMinutes())
+  });
+  const safeName = String(emp.name).replace(/[^A-Za-z0-9ÄÖÜäöüß_-]+/g, "_");
+  SadPdf.download(bytes, "Stunden_" + safeName + "_" + yy + "-" + p2(mm) + ".pdf");
+}
+
 function buildEmployeeCard(emp, month){
   const card = document.createElement("div");
   card.className = "empCard";
@@ -733,6 +1074,7 @@ function buildEmployeeCard(emp, month){
         <input type="checkbox" class="freigabeCheckbox" ${emp.freigegeben ? "checked" : ""}>
         Für diesen Monat freigegeben
       </label>
+      <button type="button" class="pdfDownloadBtn" style="width:100%; margin-bottom:8px; padding:9px; border-radius:8px; border:1.5px solid var(--purple); background:#fff; color:var(--purple); font-weight:800; cursor:pointer; font-size:13px;">📄 PDF herunterladen</button>
       <button type="button" class="deleteBlockBtn" style="width:100%; margin-bottom:12px; padding:8px; border-radius:8px; border:1px solid #c0392b; background:#fff; color:#c0392b; font-weight:700; cursor:pointer; font-size:12px;">🗑️ Diesen Monat komplett löschen</button>
       <div class="dayList"></div>
       <div class="deleteFeedback" style="display:none; margin-top:10px; padding:10px 12px; border-radius:8px; background:rgba(47,158,68,.12); border:1px solid rgba(47,158,68,.4); color:#2f9e44; font-size:12px; font-weight:700;"></div>
@@ -750,6 +1092,8 @@ function buildEmployeeCard(emp, month){
       feedback.textContent = pendingDeleteFeedback.message;
       pendingDeleteFeedback = null;
     }
+
+    body.querySelector(".pdfDownloadBtn").addEventListener("click", ()=> downloadEmployeePdf(emp, month));
 
     const freigabeCheckbox = body.querySelector(".freigabeCheckbox");
     freigabeCheckbox.addEventListener("change", async ()=>{
@@ -823,7 +1167,14 @@ function buildEmployeeCard(emp, month){
     });
 
     const dayList = body.querySelector(".dayList");
-    emp.days.forEach(d => {
+    fullMonthDays(emp.days, month).forEach(d => {
+      if(d.off){
+        const offRow = document.createElement("div");
+        offRow.className = "dayRow off";
+        offRow.innerHTML = `<div>${escapeHtml(d.datum)}<span class="dayWd">${escapeHtml(d.wd)}</span></div><div class="dayOffLabel">nicht gearbeitet</div>`;
+        dayList.appendChild(offRow);
+        return;
+      }
       const diverges = String(d.stunden) !== String(d.eingereicht);
       const row = document.createElement("div");
       row.className = "dayRow" + (diverges ? " diverges" : "");
