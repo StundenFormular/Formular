@@ -98,14 +98,32 @@
   .empSumBox{ background:#faf9ff; border-radius:10px; padding:8px 14px; font-size:13px; }
   .empSumBox b{ display:block; font-size:16px; }
   .freigabeToggle{ display:flex; align-items:center; gap:8px; margin-bottom:14px; font-weight:700; font-size:13px; }
-  .dayRow{ display:grid; grid-template-columns:90px 1fr 70px 70px 70px 64px; gap:6px; align-items:center; padding:6px 4px; border-bottom:1px solid var(--border); font-size:12px; }
+  .dayRow{ display:grid; grid-template-columns:90px 1fr 70px 70px 70px 104px; gap:6px; align-items:center; padding:6px 4px; border-bottom:1px solid var(--border); font-size:12px; }
   .dayRow input{ width:100%; padding:5px 6px; border-radius:6px; border:1px solid var(--border); font-size:12px; box-sizing:border-box; }
   .dayRow.diverges{ background:rgba(255,213,74,.12); }
+  .dayRow input.invalid{ border-color:#c0392b; background:#fdecea; }
+  .dayRow input:focus{ outline:2px solid #6b63c9; outline-offset:0; }
+  .dayActions{ display:flex; gap:4px; align-items:center; justify-content:flex-end; }
+  .saveState{ display:inline-block; min-width:16px; text-align:center; font-size:13px; font-weight:800; }
+  .saveState.busy{ color:#999; }
+  .saveState.ok{ color:#2f9e44; }
+  .saveState.err{ color:#c0392b; cursor:help; }
+  .dayCommentBtn, .dayDeleteBtn{ border:1px solid var(--border); background:#fff; border-radius:6px; padding:3px 6px; cursor:pointer; font-size:12px; }
+  .dayCommentRow{ grid-column:1 / -1; display:none; }
+  .dayCommentRow.show{ display:block; }
+  .dayCommentRow input{ background:rgba(232,163,61,.12); }
+  .empSumBox.flash{ animation:sumFlash .7s ease; }
+  @keyframes sumFlash{ 0%{ background:#ffe9a8; } 100%{ background:#faf9ff; } }
   .dayRow.off{ grid-template-columns:130px 1fr; background:#eceef2; color:#7b8494; }
   .dayRow.off .dayWd{ margin-left:4px; font-weight:700; }
   .dayRow.off .dayOffLabel{ font-style:italic; }
   .dayEditBtn{ border:none; background:var(--purple); color:#fff; border-radius:6px; padding:4px 6px; cursor:pointer; font-size:11px; }
   .dayComment{ grid-column:1 / -1; font-size:11px; color:#8A5A15; background:rgba(232,163,61,.12); padding:4px 8px; border-radius:6px; margin-top:2px; }
+  @media (max-width:640px){
+    .dayRow{ grid-template-columns:72px 1fr 54px 54px 50px 92px; gap:4px; font-size:11px; }
+    .dayRow.off{ grid-template-columns:100px 1fr; }
+    .dayRow input{ padding:4px 3px; font-size:11px; }
+  }
 </style>
 </head>
 <body>
@@ -645,6 +663,7 @@ const overviewWrap = document.getElementById("overviewWrap");
 overviewLoadBtn.addEventListener("click", loadOverview);
 
 async function loadOverview(){
+  await flushAllPending();
   const month = overviewMonthInput.value;
   if(!month){
     overviewWrap.innerHTML = `<div style="color:#c0392b;">Bitte einen Monat wählen.</div>`;
@@ -982,7 +1001,7 @@ function fullMonthDays(days, month){
   const out = [];
   for(let i = 1; i <= n; i++){
     const wd = WD_NAMES[new Date(yy, mm - 1, i).getDay()];
-    if(byDay[i]) out.push(Object.assign({ wd: wd }, byDay[i]));
+    if(byDay[i]){ byDay[i].wd = wd; out.push(byDay[i]); }
     else out.push({ day: i, off: true, wd: wd, datum: p2(i) + "." + p2(mm) + "." + yy });
   }
   return out;
@@ -1004,7 +1023,7 @@ function downloadEmployeePdf(emp, month){
         date: d.datum, wd: d.wd, off: false,
         ort: d.standort, start: d.beginn, end: d.ende,
         hours: fmtHours(d.stunden),
-        corrected: String(d.stunden) !== String(d.eingereicht) || !!d.kommentar
+        corrected: !sameHours(d.stunden, d.eingereicht) || !!d.kommentar
       });
 
   const sent = fmtHours(emp.summeEingereicht ?? 0);
@@ -1013,8 +1032,8 @@ function downloadEmployeePdf(emp, month){
     ? [{ label: "Gesamtstunden", value: official + " h" }]
     : [{ label: "Gesendet vom Mitarbeiter", value: sent + " h" }, { label: "Erfasst (vom Admin korrigiert)", value: official + " h" }];
 
-  const corrections = days.filter(d => !d.off && (String(d.stunden) !== String(d.eingereicht) || d.kommentar)).map(d => {
-    const change = String(d.stunden) !== String(d.eingereicht) ? "von " + fmtHours(d.eingereicht) + " auf " + fmtHours(d.stunden) + " Std." : "";
+  const corrections = days.filter(d => !d.off && (!sameHours(d.stunden, d.eingereicht) || d.kommentar)).map(d => {
+    const change = !sameHours(d.stunden, d.eingereicht) ? "von " + fmtHours(d.eingereicht) + " auf " + fmtHours(d.stunden) + " Std." : "";
     return d.datum + ": " + [change, d.kommentar].filter(Boolean).join(" – ");
   }).join("\n");
 
@@ -1041,6 +1060,292 @@ function downloadEmployeePdf(emp, month){
   SadPdf.download(bytes, "Stunden_" + safeName + "_" + yy + "-" + p2(mm) + ".pdf");
 }
 
+
+// ===== Live-Bearbeitung der Tage (wie in einer Tabelle) =====
+function numOrEmpty(v){
+  if(typeof v === "number") return isNaN(v) ? "" : v;
+  const s = String(v == null ? "" : v).trim().replace(",", ".");
+  if(s === "" || !/^\d+(\.\d+)?$/.test(s)) return "";
+  return parseFloat(s);
+}
+function round2(v){ return Math.round(v * 100) / 100; }
+function sameHours(a, b){
+  const x = numOrEmpty(a), y = numOrEmpty(b);
+  if(x === "" || y === "") return x === y;
+  return Math.abs(x - y) < 0.005;
+}
+function normalizeTime(v){
+  v = String(v == null ? "" : v).trim();
+  let m = v.match(/^(\d{1,2})[:.,hH](\d{2})$/), h, mi;
+  if(m){ h = +m[1]; mi = +m[2]; }
+  else if((m = v.match(/^(\d{1,2})$/))){ h = +m[1]; mi = 0; }
+  else if((m = v.match(/^(\d{3,4})$/))){ const s = v.padStart(4, "0"); h = +s.slice(0, 2); mi = +s.slice(2); }
+  else return null;
+  if(h > 23 || mi > 59) return null;
+  return String(h).padStart(2, "0") + ":" + String(mi).padStart(2, "0");
+}
+function timeToMin(t){
+  const m = /^(\d{2}):(\d{2})$/.exec(String(t || ""));
+  return m ? (+m[1]) * 60 + (+m[2]) : null;
+}
+// gleiche Formel wie in der Mitarbeiter-App: Ende minus Beginn, über Mitternacht +24 Std.
+function calcHours(startMin, endMin){
+  let diff = endMin - startMin;
+  if(diff < 0) diff += 1440;
+  return round2(diff / 60);
+}
+function updateSumBoxes(emp, body, flash){
+  const off = body.querySelector('[data-sum="off"]');
+  const sent = body.querySelector('[data-sum="sent"]');
+  if(off){
+    const txt = (emp.summeOffiziell ?? 0) + " Std.";
+    if(off.querySelector("b").textContent !== txt && flash){ off.classList.remove("flash"); void off.offsetWidth; off.classList.add("flash"); }
+    off.querySelector("b").textContent = txt;
+  }
+  if(sent) sent.querySelector("b").textContent = (emp.summeEingereicht ?? 0) + " Std.";
+}
+function refreshOfficialSum(emp, body){
+  emp.summeOffiziell = round2((emp.days || []).reduce((a, x) => a + (typeof x.stunden === "number" ? x.stunden : 0), 0));
+  updateSumBoxes(emp, body, true);
+}
+
+const dirtyRows = new Set();
+async function flushAllPending(){
+  await Promise.all(Array.from(dirtyRows).map(r => r._flush ? r._flush() : null));
+}
+window.addEventListener("beforeunload", (e) => {
+  if(dirtyRows.size > 0){ e.preventDefault(); e.returnValue = ""; }
+});
+
+function buildOffRow(d){
+  const offRow = document.createElement("div");
+  offRow.className = "dayRow off";
+  offRow.innerHTML = `<div>${escapeHtml(d.datum)}<span class="dayWd">${escapeHtml(d.wd)}</span></div><div class="dayOffLabel">nicht gearbeitet</div>`;
+  return offRow;
+}
+
+function buildDayRow(emp, month, d, body){
+  const row = document.createElement("div");
+  row.className = "dayRow" + (sameHours(d.stunden, d.eingereicht) ? "" : " diverges");
+  const hasComment = !!(d.kommentar && String(d.kommentar).trim());
+  row.innerHTML = `
+    <div>${escapeHtml(d.datum)}</div>
+    <input type="text" class="editStandort" value="${escapeHtml(d.standort)}">
+    <input type="text" class="editBeginn" inputmode="numeric" placeholder="HH:MM" value="${escapeHtml(d.beginn)}">
+    <input type="text" class="editEnde" inputmode="numeric" placeholder="HH:MM" value="${escapeHtml(d.ende)}">
+    <input type="text" class="editStunden" inputmode="decimal" value="${escapeHtml(d.stunden)}">
+    <div class="dayActions">
+      <span class="saveState" aria-live="polite"></span>
+      <button class="dayCommentBtn" type="button" title="Kommentar zu diesem Tag">📝</button>
+      <button class="dayDeleteBtn" type="button" title="Eintrag löschen">🗑️</button>
+    </div>
+    <div class="dayCommentRow${hasComment ? " show" : ""}"><input type="text" class="editKommentar" placeholder="Kommentar zu dieser Korrektur (der Mitarbeiter sieht ihn)" value="${escapeHtml(d.kommentar || "")}"></div>
+  `;
+
+  const inS = row.querySelector(".editStandort");
+  const inB = row.querySelector(".editBeginn");
+  const inE = row.querySelector(".editEnde");
+  const inH = row.querySelector(".editStunden");
+  const inK = row.querySelector(".editKommentar");
+  const stateEl = row.querySelector(".saveState");
+
+  d._saved = { standort: d.standort || "", beginn: d.beginn || "", ende: d.ende || "", stunden: d.stunden, kommentar: d.kommentar || "" };
+
+  let timer = null;
+  let queue = Promise.resolve();
+
+  function setState(kind, msg){
+    stateEl.className = "saveState " + kind;
+    stateEl.textContent = kind === "busy" ? "…" : kind === "ok" ? "✓" : kind === "err" ? "⚠" : "";
+    stateEl.title = msg || "";
+    if(kind === "ok") setTimeout(() => { if(stateEl.classList.contains("ok")){ stateEl.className = "saveState"; stateEl.textContent = ""; } }, 2500);
+  }
+  function timeValue(el){
+    const v = el.value.trim();
+    if(v === "") return "";
+    return /^\d{2}:\d{2}$/.test(v) && normalizeTime(v) === v ? v : null;
+  }
+  function hoursValue(){
+    const v = inH.value.trim();
+    if(v === "") return "";
+    return /^\d+([.,]\d+)?$/.test(v) ? numOrEmpty(v) : null;
+  }
+  function hoursChanged(){
+    const h = hoursValue();
+    if(h === null) return;
+    d.stunden = h;
+    row.classList.toggle("diverges", !sameHours(d.stunden, d.eingereicht));
+    refreshOfficialSum(emp, body);
+  }
+  function recalcFromTimes(){
+    const s = timeToMin(timeValue(inB)), e = timeToMin(timeValue(inE));
+    if(s == null || e == null) return false;
+    inH.value = String(calcHours(s, e));
+    inH.classList.remove("invalid");
+    hoursChanged();
+    return true;
+  }
+  function schedule(){
+    dirtyRows.add(row);
+    setState("busy");
+    clearTimeout(timer);
+    timer = setTimeout(flush, 700);
+  }
+  function flush(){
+    clearTimeout(timer);
+    queue = queue.then(doSave);
+    return queue;
+  }
+  row._flush = flush;
+
+  async function doSave(){
+    const saved = d._saved;
+    const payload = {};
+    const b = timeValue(inB), e = timeValue(inE), h = hoursValue();
+    if(inS.value !== saved.standort) payload.standort = inS.value;
+    if(b !== null && b !== saved.beginn) payload.beginn = b;
+    if(e !== null && e !== saved.ende) payload.ende = e;
+    if(h !== null && !sameHours(h, saved.stunden)) payload.stunden = h;
+    if(inK.value !== saved.kommentar) payload.kommentar = inK.value;
+
+    if(Object.keys(payload).length === 0){
+      dirtyRows.delete(row);
+      if(!stateEl.classList.contains("err")) setState("");
+      return;
+    }
+    setState("busy");
+    try{
+      const res = await fetch(EQUIP_WEB_APP_URL, {
+        method: "POST",
+        body: JSON.stringify(Object.assign({ token: EQUIP_API_TOKEN, adminSession: getAdminSession(), action: "adminEditDay", pin: emp.pin, monat: month, day: d.day }, payload))
+      });
+      const result = await res.json();
+      if(result.status === "success"){
+        Object.keys(payload).forEach(k => { saved[k] = payload[k]; });
+        if("standort" in payload) d.standort = payload.standort;
+        if("beginn" in payload) d.beginn = payload.beginn;
+        if("ende" in payload) d.ende = payload.ende;
+        if("kommentar" in payload) d.kommentar = payload.kommentar;
+        const stillDirty = inS.value !== saved.standort || (timeValue(inB) !== null && timeValue(inB) !== saved.beginn) || (timeValue(inE) !== null && timeValue(inE) !== saved.ende) || (hoursValue() !== null && !sameHours(hoursValue(), saved.stunden)) || inK.value !== saved.kommentar;
+        if(!stillDirty) dirtyRows.delete(row);
+        setState(stillDirty ? "busy" : "ok");
+      }else if(result.code !== "ADMIN_AUTH"){
+        setState("err", "Nicht gespeichert: " + (result.message || "Fehler") + " – bitte erneut ändern.");
+      }
+    }catch(err){
+      setState("err", "Nicht gespeichert (keine Verbindung) – bitte erneut ändern.");
+    }
+  }
+
+  // Beim Tippen: nur vollständige Zeiten (HH:MM) rechnen sofort mit
+  [inB, inE].forEach(el => {
+    el.addEventListener("input", () => {
+      el.classList.remove("invalid");
+      if(recalcFromTimes()) schedule();
+    });
+    el.addEventListener("change", () => {
+      const v = el.value.trim();
+      if(v === ""){
+        el.classList.remove("invalid");
+        inH.value = "";
+        hoursChanged();
+      }else{
+        const n = normalizeTime(v);
+        if(n === null){
+          el.classList.add("invalid");
+          setState("err", "Ungültige Uhrzeit – bitte als HH:MM eingeben (z. B. 22:30).");
+          return;
+        }
+        el.value = n;
+        el.classList.remove("invalid");
+        if(!recalcFromTimes() && (timeValue(inB) === "" || timeValue(inE) === "")){ inH.value = ""; hoursChanged(); }
+      }
+      schedule();
+      flush();
+    });
+  });
+  inH.addEventListener("input", () => {
+    inH.classList.remove("invalid");
+    if(hoursValue() !== null){ hoursChanged(); schedule(); }
+  });
+  inH.addEventListener("change", () => {
+    const h = hoursValue();
+    if(h === null){
+      inH.classList.add("invalid");
+      setState("err", "Ungültige Stundenzahl – bitte eine Zahl eingeben (z. B. 8,5).");
+      return;
+    }
+    inH.classList.remove("invalid");
+    inH.value = h === "" ? "" : String(h);
+    hoursChanged();
+    schedule();
+    flush();
+  });
+  [inS, inK].forEach(el => {
+    el.addEventListener("input", schedule);
+    el.addEventListener("change", () => { schedule(); flush(); });
+  });
+
+  // Tastatur wie in Excel: Enter / Pfeil runter = nächste Zeile, Pfeil hoch = vorherige Zeile; Klick wählt alles aus
+  row.addEventListener("focusin", (ev) => { if(ev.target.tagName === "INPUT") ev.target.select(); });
+  row.addEventListener("keydown", (ev) => {
+    const el = ev.target;
+    if(el.tagName !== "INPUT" || !["Enter", "ArrowDown", "ArrowUp"].includes(ev.key)) return;
+    const cls = Array.from(el.classList).find(x => /^edit/.test(x));
+    let sib = ev.key === "ArrowUp" ? row.previousElementSibling : row.nextElementSibling;
+    while(sib && !(sib.classList.contains("dayRow") && !sib.classList.contains("off"))){
+      sib = ev.key === "ArrowUp" ? sib.previousElementSibling : sib.nextElementSibling;
+    }
+    ev.preventDefault();
+    el.blur();
+    const target = sib && sib.querySelector("." + cls);
+    if(target) target.focus();
+  });
+
+  row.querySelector(".dayCommentBtn").addEventListener("click", () => {
+    const wrap = row.querySelector(".dayCommentRow");
+    wrap.classList.toggle("show");
+    if(wrap.classList.contains("show")) inK.focus();
+  });
+
+  // Löschen direkt in der Zeile, ohne die Liste neu zu laden
+  const deleteBtn = row.querySelector(".dayDeleteBtn");
+  deleteBtn.addEventListener("click", async () => {
+    if(!confirm(`Eintrag vom ${d.datum} wirklich löschen?`)) return;
+    deleteBtn.disabled = true;
+    setState("busy");
+    try{
+      await flush();
+      clearTimeout(timer);
+      const res = await fetch(EQUIP_WEB_APP_URL, {
+        method: "POST",
+        body: JSON.stringify({ token: EQUIP_API_TOKEN, adminSession: getAdminSession(), action: "adminDeleteDay", pin: emp.pin, monat: month, day: d.day })
+      });
+      const result = await res.json();
+      if(result.status === "success"){
+        dirtyRows.delete(row);
+        emp.days = emp.days.filter(x => x !== d);
+        if(typeof result.nachher === "number") emp.summeOffiziell = result.nachher; else refreshOfficialSum(emp, body);
+        if(typeof result.nachherEingereicht === "number") emp.summeEingereicht = result.nachherEingereicht;
+        else emp.summeEingereicht = round2((emp.days || []).reduce((a, x) => a + (typeof x.eingereicht === "number" ? x.eingereicht : 0), 0));
+        row.replaceWith(buildOffRow(d));
+        updateSumBoxes(emp, body, true);
+        const feedback = body.querySelector(".deleteFeedback");
+        feedback.style.display = "block";
+        feedback.textContent = `Eintrag vom ${d.datum} gelöscht. Gesamtstunden vorher: ${result.vorher} Std. → jetzt: ${result.nachher} Std.`;
+      }else if(result.code !== "ADMIN_AUTH"){
+        setState("err", "Nicht gelöscht: " + (result.message || "Fehler"));
+        deleteBtn.disabled = false;
+      }
+    }catch(err){
+      setState("err", "Nicht gelöscht: " + err.message);
+      deleteBtn.disabled = false;
+    }
+  });
+
+  return row;
+}
+
 function buildEmployeeCard(emp, month){
   const card = document.createElement("div");
   card.className = "empCard";
@@ -1062,8 +1367,8 @@ function buildEmployeeCard(emp, month){
   if(emp.hasSubmitted){
     body.innerHTML = `
       <div class="empSums">
-        <div class="empSumBox">Offiziell<b>${emp.summeOffiziell ?? 0} Std.</b></div>
-        <div class="empSumBox">Eingereicht<b>${emp.summeEingereicht ?? 0} Std.</b></div>
+        <div class="empSumBox" data-sum="off">Offiziell<b>${emp.summeOffiziell ?? 0} Std.</b></div>
+        <div class="empSumBox" data-sum="sent">Eingereicht<b>${emp.summeEingereicht ?? 0} Std.</b></div>
       </div>
       ${emp.mitarbeiterNotiz ? `
       <div style="padding:10px 12px; margin-bottom:12px; border-radius:10px; background:#faf9ff; border:1px solid var(--border); font-size:13px;">
@@ -1103,6 +1408,7 @@ function buildEmployeeCard(emp, month){
           method: "POST",
           body: JSON.stringify({ token: EQUIP_API_TOKEN, adminSession: getAdminSession(), action: "adminSetFreigabe", pin: emp.pin, monat: month, value: freigabeCheckbox.checked })
         });
+        emp.freigegeben = freigabeCheckbox.checked;
       }catch(err){
         alert("Fehler: " + err.message);
         freigabeCheckbox.checked = !freigabeCheckbox.checked;
@@ -1141,19 +1447,27 @@ function buildEmployeeCard(emp, month){
     const monthCommentInput = body.querySelector(".monthCommentInput");
     const monthCommentSaveBtn = body.querySelector(".monthCommentSaveBtn");
     const monthCommentStatus = body.querySelector(".monthCommentStatus");
-    monthCommentSaveBtn.addEventListener("click", async ()=>{
-      monthCommentSaveBtn.disabled = true;
+    let monthTimer = null;
+    let monthSaved = emp.monatsKommentar || "";
+    const monthPending = { _flush: () => saveMonthComment() };
+    async function saveMonthComment(){
+      clearTimeout(monthTimer);
+      const value = monthCommentInput.value;
+      if(value === monthSaved){ dirtyRows.delete(monthPending); return; }
       monthCommentStatus.style.color = "#666";
       monthCommentStatus.textContent = "Wird gespeichert...";
       try{
         const res = await fetch(EQUIP_WEB_APP_URL, {
           method: "POST",
-          body: JSON.stringify({ token: EQUIP_API_TOKEN, adminSession: getAdminSession(), action: "adminSetMonthComment", pin: emp.pin, monat: month, comment: monthCommentInput.value })
+          body: JSON.stringify({ token: EQUIP_API_TOKEN, adminSession: getAdminSession(), action: "adminSetMonthComment", pin: emp.pin, monat: month, comment: value })
         });
         const result = await res.json();
         if(result.status === "success"){
+          monthSaved = value;
+          emp.monatsKommentar = value;
+          if(monthCommentInput.value === value) dirtyRows.delete(monthPending);
           monthCommentStatus.style.color = "#2f9e44";
-          monthCommentStatus.textContent = "Gespeichert.";
+          monthCommentStatus.textContent = "Gespeichert ✓";
         }else{
           monthCommentStatus.style.color = "#c0392b";
           monthCommentStatus.textContent = "Fehler: " + result.message;
@@ -1161,96 +1475,22 @@ function buildEmployeeCard(emp, month){
       }catch(err){
         monthCommentStatus.style.color = "#c0392b";
         monthCommentStatus.textContent = "Fehler: " + err.message;
-      }finally{
-        monthCommentSaveBtn.disabled = false;
       }
+    }
+    monthCommentInput.addEventListener("input", ()=>{
+      dirtyRows.add(monthPending);
+      monthCommentStatus.style.color = "#666";
+      monthCommentStatus.textContent = "…";
+      clearTimeout(monthTimer);
+      monthTimer = setTimeout(saveMonthComment, 1000);
     });
+    monthCommentInput.addEventListener("change", saveMonthComment);
+    monthCommentSaveBtn.addEventListener("click", saveMonthComment);
 
     const dayList = body.querySelector(".dayList");
+    (emp.days || []).forEach(x => { x.stunden = numOrEmpty(x.stunden); x.eingereicht = numOrEmpty(x.eingereicht); });
     fullMonthDays(emp.days, month).forEach(d => {
-      if(d.off){
-        const offRow = document.createElement("div");
-        offRow.className = "dayRow off";
-        offRow.innerHTML = `<div>${escapeHtml(d.datum)}<span class="dayWd">${escapeHtml(d.wd)}</span></div><div class="dayOffLabel">nicht gearbeitet</div>`;
-        dayList.appendChild(offRow);
-        return;
-      }
-      const diverges = String(d.stunden) !== String(d.eingereicht);
-      const row = document.createElement("div");
-      row.className = "dayRow" + (diverges ? " diverges" : "");
-      row.innerHTML = `
-        <div>${escapeHtml(d.datum)}</div>
-        <input type="text" class="editStandort" value="${escapeHtml(d.standort)}">
-        <input type="text" class="editBeginn" value="${escapeHtml(d.beginn)}">
-        <input type="text" class="editEnde" value="${escapeHtml(d.ende)}">
-        <input type="text" class="editStunden" value="${escapeHtml(d.stunden)}">
-        <div style="display:flex; gap:4px;">
-          <button class="dayEditBtn" type="button" title="Speichern">💾</button>
-          <button class="dayDeleteBtn" type="button" title="Eintrag löschen">🗑️</button>
-        </div>
-        ${d.kommentar ? `<div class="dayComment">📝 ${escapeHtml(d.kommentar)}</div>` : ""}
-      `;
-
-      const saveBtn = row.querySelector(".dayEditBtn");
-      saveBtn.addEventListener("click", async ()=>{
-        const newStunden = row.querySelector(".editStunden").value;
-        const newStandort = row.querySelector(".editStandort").value;
-        const newBeginn = row.querySelector(".editBeginn").value;
-        const newEnde = row.querySelector(".editEnde").value;
-        const kommentar = prompt("Kommentar zu dieser Korrektur (optional):", d.kommentar || "");
-        if(kommentar === null) return;
-
-        saveBtn.disabled = true;
-        try{
-          const res = await fetch(EQUIP_WEB_APP_URL, {
-            method: "POST",
-            body: JSON.stringify({
-              token: EQUIP_API_TOKEN, adminSession: getAdminSession(), action: "adminEditDay",
-              pin: emp.pin, monat: month, day: d.day,
-              standort: newStandort, beginn: newBeginn, ende: newEnde,
-              stunden: newStunden, kommentar: kommentar
-            })
-          });
-          const result = await res.json();
-          if(result.status === "success"){
-            expandedPin = emp.pin;
-            loadOverview();
-          }else{
-            alert("Fehler: " + result.message);
-          }
-        }catch(err){
-          alert("Fehler: " + err.message);
-        }finally{
-          saveBtn.disabled = false;
-        }
-      });
-
-      const deleteBtn = row.querySelector(".dayDeleteBtn");
-      deleteBtn.addEventListener("click", async ()=>{
-        if(!confirm(`Eintrag vom ${d.datum} wirklich löschen?`)) return;
-
-        deleteBtn.disabled = true;
-        try{
-          const res = await fetch(EQUIP_WEB_APP_URL, {
-            method: "POST",
-            body: JSON.stringify({ token: EQUIP_API_TOKEN, adminSession: getAdminSession(), action: "adminDeleteDay", pin: emp.pin, monat: month, day: d.day })
-          });
-          const result = await res.json();
-          if(result.status === "success"){
-            pendingDeleteFeedback = { pin: emp.pin, message: `Eintrag vom ${d.datum} gelöscht. Gesamtstunden vorher: ${result.vorher} Std. → jetzt: ${result.nachher} Std.` };
-            expandedPin = emp.pin;
-            loadOverview();
-          }else{
-            alert("Fehler: " + result.message);
-          }
-        }catch(err){
-          alert("Fehler: " + err.message);
-        }finally{
-          deleteBtn.disabled = false;
-        }
-      });
-
-      dayList.appendChild(row);
+      dayList.appendChild(d.off ? buildOffRow(d) : buildDayRow(emp, month, d, body));
     });
   }
 
