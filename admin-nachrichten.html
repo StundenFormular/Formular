@@ -99,10 +99,10 @@
   .empSumBox b{ display:block; font-size:16px; }
   .freigabeToggle{ display:flex; align-items:center; gap:8px; margin-bottom:14px; font-weight:700; font-size:13px; }
   .dayRow{ display:grid; grid-template-columns:90px 1fr 70px 70px 70px 104px; gap:6px; align-items:center; padding:6px 4px; border-bottom:1px solid var(--border); font-size:12px; }
-  .dayRow input{ width:100%; padding:5px 6px; border-radius:6px; border:1px solid var(--border); font-size:12px; box-sizing:border-box; }
+  .dayRow input, .dayRow select{ width:100%; padding:5px 6px; border-radius:6px; border:1px solid var(--border); font-size:12px; box-sizing:border-box; background:#fff; }
   .dayRow.diverges{ background:rgba(255,213,74,.12); }
   .dayRow input.invalid{ border-color:#c0392b; background:#fdecea; }
-  .dayRow input:focus{ outline:2px solid #6b63c9; outline-offset:0; }
+  .dayRow input:focus, .dayRow select:focus{ outline:2px solid #6b63c9; outline-offset:0; }
   .dayActions{ display:flex; gap:4px; align-items:center; justify-content:flex-end; }
   .saveState{ display:inline-block; min-width:16px; text-align:center; font-size:13px; font-weight:800; }
   .saveState.busy{ color:#999; }
@@ -127,7 +127,7 @@
   @media (max-width:640px){
     .dayRow{ grid-template-columns:72px 1fr 54px 54px 50px 92px; gap:4px; font-size:11px; }
     .dayRow.off{ grid-template-columns:100px 1fr; }
-    .dayRow input{ padding:4px 3px; font-size:11px; }
+    .dayRow input, .dayRow select{ padding:4px 3px; font-size:11px; }
   }
 </style>
 </head>
@@ -654,10 +654,11 @@ function renderThreads(messages){
   });
 }
 
+// Auch Anführungszeichen entschärfen: Der Wert steht oft in Attributen (value="…"), dort darf nichts ausbrechen können
 function escapeHtml(str){
   const div = document.createElement("div");
   div.textContent = str == null ? "" : String(str);
-  return div.innerHTML;
+  return div.innerHTML.replace(/"/g, "&quot;").replace(/'/g, "&#39;");
 }
 
 // ===== Stundenübersicht =====
@@ -1180,6 +1181,26 @@ function buildDeletedRow(d){
   return row;
 }
 
+// Standorte wie in der Mitarbeiter-App (dort: ORTE). Bei Änderungen dort bitte hier mitpflegen.
+const ADMIN_ORTE = [
+  { group: "🌙 Nachtschicht", values: ["Hagenbecks Tierpark", "Farmsen", "Ochsenzoll", "Volksdorf", "Großhandsdorf", "Volksdorf/Farmsen"] },
+  { group: "☀️ Tagschicht", values: ["Ochsenzoll (Tag)"] }
+];
+// Auswahlliste; ein bereits gespeicherter Wert, der nicht in der Liste steht (älterer Freitext), bleibt als eigene Option erhalten
+function ortOptionsHtml(current){
+  const cur = String(current == null ? "" : current);
+  const known = new Set();
+  ADMIN_ORTE.forEach(g => g.values.forEach(v => known.add(v)));
+  let html = `<option value=""${cur === "" ? " selected" : ""}>– kein Standort –</option>`;
+  if(cur !== "" && !known.has(cur)){
+    html += `<option value="${escapeHtml(cur)}" selected>${escapeHtml(cur)} (so eingetragen)</option>`;
+  }
+  ADMIN_ORTE.forEach(g => {
+    html += `<optgroup label="${g.group}">` + g.values.map(v => `<option value="${escapeHtml(v)}"${v === cur ? " selected" : ""}>${escapeHtml(v)}</option>`).join("") + `</optgroup>`;
+  });
+  return html;
+}
+
 function buildOffRow(d){
   const offRow = document.createElement("div");
   offRow.className = "dayRow off";
@@ -1193,7 +1214,7 @@ function buildDayRow(emp, month, d, body){
   const hasComment = !!(d.kommentar && String(d.kommentar).trim());
   row.innerHTML = `
     <div>${escapeHtml(d.datum)}</div>
-    <input type="text" class="editStandort" value="${escapeHtml(d.standort)}">
+    <select class="editStandort" title="Standort wählen">${ortOptionsHtml(d.standort)}</select>
     <input type="text" class="editBeginn" inputmode="numeric" placeholder="HH:MM" value="${escapeHtml(d.beginn)}">
     <input type="text" class="editEnde" inputmode="numeric" placeholder="HH:MM" value="${escapeHtml(d.ende)}">
     <input type="text" class="editStunden" inputmode="decimal" value="${escapeHtml(d.stunden)}">

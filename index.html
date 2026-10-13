@@ -594,6 +594,24 @@ select.ort option{
 @keyframes chooserNewPulse{ 0%,100%{ box-shadow:0 0 0 0 rgba(232,163,61,.35); } 50%{ box-shadow:0 0 0 7px rgba(232,163,61,0); } }
 @media (prefers-reduced-motion:reduce){ .chooserNew{ animation:none; } }
 
+/* ===== Hinweis "Neu für dich" (Freigabe / Korrekturen) ===== */
+.chooserNotice{
+  margin-bottom:14px; padding:14px 16px; border-radius:18px; box-sizing:border-box;
+  border:1.5px solid rgba(124,252,154,.7); text-align:left; color:#fff;
+  background:linear-gradient(135deg, rgba(124,252,154,.18), rgba(232,163,61,.12));
+  animation:noticePulse 2.8s ease-in-out infinite;
+}
+.chooserNotice .cnTitle{ font-size:15px; font-weight:900; margin-bottom:8px; }
+.chooserNotice .cnItem{ font-size:13.5px; line-height:1.45; margin-bottom:6px; color:rgba(255,255,255,.92); }
+.chooserNotice .cnBtns{ display:flex; gap:10px; margin-top:10px; align-items:center; }
+.chooserNotice .cnOpen{
+  flex:1; padding:12px; border:none; border-radius:14px; cursor:pointer; font-size:14px; font-weight:900; font-family:inherit;
+  color:#2b1f04; background:linear-gradient(135deg,#ffd23f,#ff9d3d);
+}
+.chooserNotice .cnLater{ background:none; border:none; color:rgba(255,255,255,.7); font-size:13px; font-weight:700; cursor:pointer; padding:8px 4px; font-family:inherit; text-decoration:underline; }
+@keyframes noticePulse{ 0%,100%{ box-shadow:0 0 0 0 rgba(124,252,154,.35); } 50%{ box-shadow:0 0 0 7px rgba(124,252,154,0); } }
+@media (prefers-reduced-motion:reduce){ .chooserNotice{ animation:none; } }
+
 .newPinRow{ margin-top:10px; display:flex; flex-direction:column; gap:6px; }
 .newPinBtn{
   width:100%; box-sizing:border-box; padding:12px 14px; border-radius:14px; border:1.5px solid #E8A33D;
@@ -3089,6 +3107,15 @@ tbody tr:nth-child(odd){
     <div class="pinTitle">Was möchtest du tun?</div>
     <p class="pinHint">Stundenformular wird einmal im Monat ausgefüllt, der Ausrüstungs-Check jeden Tag.</p>
 
+    <div class="chooserNotice" id="chooserNotice" style="display:none;" role="status">
+      <div class="cnTitle">🔔 Neu für dich</div>
+      <div id="chooserNoticeList"></div>
+      <div class="cnBtns">
+        <button type="button" class="cnOpen" id="chooserNoticeOpen">Jetzt ansehen</button>
+        <button type="button" class="cnLater" id="chooserNoticeLater">Später</button>
+      </div>
+    </div>
+
     <button class="chooserNew" id="chooserNewBtn" type="button" style="display:none;">
       <span class="chooserNewIcon">🆕</span>
       <span><b>Neu hier? Eigene PIN anfordern</b><br><small>Du hast schon eine PIN? Dann trag sie einfach im Stundenformular ein.</small></span>
@@ -3607,7 +3634,7 @@ if("serviceWorker" in navigator){
   });
 }
 
-const APP_VERSION = "v20261001m";
+const APP_VERSION = "v20261001n";
 document.getElementById("loginVersion").textContent = "Version " + APP_VERSION;
 
 (function setupUpdateCheck(){
@@ -3788,7 +3815,7 @@ function renderIdentityBars(){
   if(bound && newPinToggleWrap) newPinToggleWrap.style.display = "none";
 }
 
-const DEVICE_PERSONAL_KEYS = ["sad_personal_pin", "sad_device_secret", "sad_device_label", "sad_seen_count", "sad_equip_name"];
+const DEVICE_PERSONAL_KEYS = ["sad_personal_pin", "sad_device_secret", "sad_device_label", "sad_seen_count", "sad_hours_seen_v1", "sad_equip_name"];
 const DEVICE_PERSONAL_PREFIXES = [STORAGE_PREFIX, "stundenformular_note_"];
 
 // Der Server kennt dieses Handy nicht mehr (z. B. vom Admin zurückgesetzt):
@@ -5620,12 +5647,96 @@ function countHoursContent(result){
   return commentedDays + messages + vermerke + documents;
 }
 
+// ===== Hinweis "Neu für dich" =====
+// Die App merkt sich pro Monat, was der Mitarbeiter zuletzt in "Meine Stunden" gesehen hat
+// (Freigabe, korrigierte Tage, Hinweise). Weicht der Server davon ab, erscheint oben auf dem
+// Auswahlbildschirm ein Hinweis, bis er "Meine Stunden" geöffnet hat.
+const HOURS_SEEN_KEY = "sad_hours_seen_v1";
+const HOURS_MONTH_NAMES = ["Januar","Februar","März","April","Mai","Juni","Juli","August","September","Oktober","November","Dezember"];
+
+function hoursMonthLabel(m){
+  const p = String(m).split("-");
+  return (p.length === 2 && HOURS_MONTH_NAMES[parseInt(p[1], 10) - 1]) ? HOURS_MONTH_NAMES[parseInt(p[1], 10) - 1] + " " + p[0] : String(m);
+}
+function hashStr(s){
+  let h = 5381;
+  for(let i = 0; i < s.length; i++){ h = ((h << 5) + h + s.charCodeAt(i)) | 0; }
+  return (h >>> 0).toString(36);
+}
+function hoursMonthStates(result){
+  const state = {};
+  (result.summaries || []).forEach(s => {
+    const days = (result.hours || []).filter(h => h.monat === s.monat);
+    const corrected = days.filter(h => h.geaendert === true);
+    const commentOnly = days.filter(h => h.geaendert !== true && h.kommentar && String(h.kommentar).trim());
+    const sig = list => hashStr(list.map(h => [h.datum, h.geloescht ? 1 : 0, h.standort, h.beginn, h.ende, h.stunden, h.kommentar || ""].join("|")).join(";"));
+    state[s.monat] = {
+      f: !!s.freigegeben,
+      c: corrected.length ? sig(corrected) : "",
+      cn: corrected.length,
+      cd: corrected.filter(h => h.geloescht === true).length,
+      h: commentOnly.length ? sig(commentOnly) : "",
+      hn: commentOnly.length,
+      k: (s.kommentar && String(s.kommentar).trim()) ? hashStr(String(s.kommentar).trim()) : "",
+      o: s.summeOffiziell,
+      e: s.summeEingereicht
+    };
+  });
+  return state;
+}
+function loadHoursSeen(){
+  try{ return JSON.parse(localStorage.getItem(HOURS_SEEN_KEY) || "{}") || {}; }catch(e){ return {}; }
+}
+function markHoursSeen(result){
+  try{ localStorage.setItem(HOURS_SEEN_KEY, JSON.stringify(hoursMonthStates(result))); }catch(e){}
+}
+function computeHoursNotices(result){
+  const seen = loadHoursSeen();
+  const cur = hoursMonthStates(result);
+  const days = n => n + (n === 1 ? " Tag" : " Tage");
+  const lines = [];
+  Object.keys(cur).sort().reverse().forEach(m => {
+    const now = cur[m];
+    const was = seen[m] || {};
+    const label = "<b>" + hoursMonthLabel(m) + "</b>";
+    if(now.f && !was.f){
+      const hasNums = typeof now.o === "number" && typeof now.e === "number";
+      const extra = typeof now.o === "number"
+        ? " Offiziell erfasst: <b>" + now.o + " Std.</b>" + (hasNums && Math.abs(now.o - now.e) > 0.005 ? " (gesendet: " + now.e + " Std.)" : "")
+        : "";
+      lines.push("✅ " + label + ": Deine Stunden wurden <b>freigegeben</b>." + extra);
+    }
+    if(now.c && now.c !== was.c){
+      lines.push("✏️ " + label + ": Der Admin hat <b>" + days(now.cn) + "</b> korrigiert" + (now.cd ? " (davon " + now.cd + " gelöscht)" : "") + ".");
+    }
+    if(now.h && now.h !== was.h){
+      lines.push("📝 " + label + ": " + days(now.hn) + " mit Hinweis vom Admin.");
+    }
+    if(now.k && now.k !== was.k){
+      lines.push("📝 " + label + ": Neuer Hinweis vom Admin zum Monat.");
+    }
+  });
+  return lines;
+}
+function renderChooserNotice(lines){
+  const box = document.getElementById("chooserNotice");
+  if(!box) return;
+  let snoozed = false;
+  try{ snoozed = sessionStorage.getItem("sad_notice_later") === lines.join("|"); }catch(e){}
+  if(!lines.length || snoozed){ box.style.display = "none"; return; }
+  const shown = lines.slice(0, 6).map(l => '<div class="cnItem">' + l + '</div>').join("");
+  document.getElementById("chooserNoticeList").innerHTML = shown + (lines.length > 6 ? '<div class="cnItem">… und ' + (lines.length - 6) + ' weitere</div>' : "");
+  box.dataset.lines = lines.join("|");
+  box.style.display = "block";
+}
+
 async function checkForHoursUpdates(){
   const pin = localStorage.getItem("sad_personal_pin");
   const secret = localStorage.getItem("sad_device_secret");
   const badge = document.getElementById("hoursNewBadge");
   if(!pin || !secret){
     badge.style.display = "none";
+    renderChooserNotice([]);
     return;
   }
 
@@ -5637,6 +5748,7 @@ async function checkForHoursUpdates(){
     const result = await res.json();
     if(result.status !== "success"){
       badge.style.display = "none";
+      renderChooserNotice([]);
       if(result.code === "DEVICE_MISMATCH") handleUnknownDevice();
       return;
     }
@@ -5644,9 +5756,12 @@ async function checkForHoursUpdates(){
     if(result.nameMasked){ localStorage.setItem("sad_device_label", result.nameMasked); renderIdentityBars(); }
     const currentCount = countHoursContent(result);
     const seenCount = parseInt(localStorage.getItem("sad_seen_count") || "0", 10);
-    badge.style.display = currentCount > seenCount ? "block" : "none";
+    const notices = computeHoursNotices(result);
+    renderChooserNotice(notices);
+    badge.style.display = (currentCount > seenCount || notices.length > 0) ? "block" : "none";
   }catch(err){
     badge.style.display = "none";
+    renderChooserNotice([]);
   }
 }
 
@@ -5716,6 +5831,12 @@ function openMyHours(){
 }
 
 chooserHoursBtn.addEventListener("click", openMyHours);
+document.getElementById("chooserNoticeOpen").addEventListener("click", openMyHours);
+document.getElementById("chooserNoticeLater").addEventListener("click", ()=>{
+  const box = document.getElementById("chooserNotice");
+  try{ sessionStorage.setItem("sad_notice_later", box.dataset.lines || ""); }catch(e){}
+  box.style.display = "none";
+});
 
 hoursLoginBtn.addEventListener("click", async ()=>{
   const pin = (document.getElementById("hoursPinInput").value || "").trim();
@@ -5873,6 +5994,8 @@ async function loadMyHours(pin, secret){
 
     renderMyMessages(result.messages || []);
     localStorage.setItem("sad_seen_count", String(countHoursContent(result)));
+    markHoursSeen(result);
+    renderChooserNotice([]);
     if(result.nameMasked){ localStorage.setItem("sad_device_label", result.nameMasked); renderIdentityBars(); }
     const badgeEl = document.getElementById("hoursNewBadge");
     if(badgeEl) badgeEl.style.display = "none";
