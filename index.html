@@ -594,6 +594,10 @@ select.ort option{
 @keyframes chooserNewPulse{ 0%,100%{ box-shadow:0 0 0 0 rgba(232,163,61,.35); } 50%{ box-shadow:0 0 0 7px rgba(232,163,61,0); } }
 @media (prefers-reduced-motion:reduce){ .chooserNew{ animation:none; } }
 
+/* Auswahlbildschirm: ist der Inhalt höher als das Display, soll man scrollen können (sonst wird oben abgeschnitten) */
+#chooserBack{ overflow-y:auto; -webkit-overflow-scrolling:touch; align-items:flex-start; }
+#chooserBack .pinCard{ margin:auto; }
+
 /* ===== Hinweis "Neu für dich" (Freigabe / Korrekturen) ===== */
 .chooserNotice{
   margin-bottom:14px; padding:14px 16px; border-radius:18px; box-sizing:border-box;
@@ -3634,7 +3638,7 @@ if("serviceWorker" in navigator){
   });
 }
 
-const APP_VERSION = "v20261001n";
+const APP_VERSION = "v20261001o";
 document.getElementById("loginVersion").textContent = "Version " + APP_VERSION;
 
 (function setupUpdateCheck(){
@@ -3815,7 +3819,7 @@ function renderIdentityBars(){
   if(bound && newPinToggleWrap) newPinToggleWrap.style.display = "none";
 }
 
-const DEVICE_PERSONAL_KEYS = ["sad_personal_pin", "sad_device_secret", "sad_device_label", "sad_seen_count", "sad_hours_seen_v1", "sad_equip_name"];
+const DEVICE_PERSONAL_KEYS = ["sad_personal_pin", "sad_device_secret", "sad_device_label", "sad_seen_count", "sad_hours_seen_v1", "sad_notice_cache_v1", "sad_equip_name"];
 const DEVICE_PERSONAL_PREFIXES = [STORAGE_PREFIX, "stundenformular_note_"];
 
 // Der Server kennt dieses Handy nicht mehr (z. B. vom Admin zurückgesetzt):
@@ -5343,6 +5347,9 @@ function showChooser(){
   }
 
   updateChooserNewCard();
+  if(localStorage.getItem("sad_personal_pin") && localStorage.getItem("sad_device_secret")){
+    renderChooserNotice(loadNoticeCache());
+  }
   chooserBack.style.display = "flex";
   checkForHoursUpdates();
 }
@@ -5718,6 +5725,19 @@ function computeHoursNotices(result){
   });
   return lines;
 }
+// Letzter Stand des Hinweises: erscheint beim nächsten Öffnen sofort (der Server braucht ein paar Sekunden)
+function loadNoticeCache(){
+  try{
+    const v = JSON.parse(localStorage.getItem("sad_notice_cache_v1") || "[]");
+    return Array.isArray(v) ? v.filter(x => typeof x === "string") : [];
+  }catch(e){ return []; }
+}
+function saveNoticeCache(lines){
+  try{
+    if(lines && lines.length) localStorage.setItem("sad_notice_cache_v1", JSON.stringify(lines));
+    else localStorage.removeItem("sad_notice_cache_v1");
+  }catch(e){}
+}
 function renderChooserNotice(lines){
   const box = document.getElementById("chooserNotice");
   if(!box) return;
@@ -5730,12 +5750,15 @@ function renderChooserNotice(lines){
   box.style.display = "block";
 }
 
+let lastHoursCheck = 0;
 async function checkForHoursUpdates(){
+  lastHoursCheck = Date.now();
   const pin = localStorage.getItem("sad_personal_pin");
   const secret = localStorage.getItem("sad_device_secret");
   const badge = document.getElementById("hoursNewBadge");
   if(!pin || !secret){
     badge.style.display = "none";
+    saveNoticeCache([]);
     renderChooserNotice([]);
     return;
   }
@@ -5748,6 +5771,7 @@ async function checkForHoursUpdates(){
     const result = await res.json();
     if(result.status !== "success"){
       badge.style.display = "none";
+      saveNoticeCache([]);
       renderChooserNotice([]);
       if(result.code === "DEVICE_MISMATCH") handleUnknownDevice();
       return;
@@ -5757,13 +5781,24 @@ async function checkForHoursUpdates(){
     const currentCount = countHoursContent(result);
     const seenCount = parseInt(localStorage.getItem("sad_seen_count") || "0", 10);
     const notices = computeHoursNotices(result);
+    saveNoticeCache(notices);
     renderChooserNotice(notices);
     badge.style.display = (currentCount > seenCount || notices.length > 0) ? "block" : "none";
   }catch(err){
-    badge.style.display = "none";
-    renderChooserNotice([]);
+    // Keine Verbindung: Anzeige nicht verändern (ein bereits bekannter Hinweis bleibt stehen)
   }
 }
+
+// App wird aus dem Hintergrund zurückgeholt (häufigster Fall auf dem Handy: kein Neustart): auf Neuigkeiten prüfen
+function recheckHoursIfChooserVisible(){
+  if(document.visibilityState !== "visible") return;
+  if(chooserBack.style.display !== "flex") return;
+  if(Date.now() - lastHoursCheck < 2000) return;
+  checkForHoursUpdates();
+}
+document.addEventListener("visibilitychange", recheckHoursIfChooserVisible);
+window.addEventListener("focus", recheckHoursIfChooserVisible);
+window.addEventListener("pageshow", (e)=>{ if(e.persisted) recheckHoursIfChooserVisible(); });
 
 let formularHistoryPushed = false;
 
@@ -5995,6 +6030,7 @@ async function loadMyHours(pin, secret){
     renderMyMessages(result.messages || []);
     localStorage.setItem("sad_seen_count", String(countHoursContent(result)));
     markHoursSeen(result);
+    saveNoticeCache([]);
     renderChooserNotice([]);
     if(result.nameMasked){ localStorage.setItem("sad_device_label", result.nameMasked); renderIdentityBars(); }
     const badgeEl = document.getElementById("hoursNewBadge");
