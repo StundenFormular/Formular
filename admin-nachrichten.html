@@ -118,6 +118,9 @@
   @keyframes sumFlash{ 0%{ background:#ffe9a8; } 100%{ background:#faf9ff; } }
   .dayRow.off{ grid-template-columns:130px 1fr; background:#eceef2; color:#7b8494; }
   .dayRow.off .dayWd{ margin-left:4px; font-weight:700; }
+  .dayRow.deleted{ grid-template-columns:130px 1fr; background:#fdecea; color:#9b2c2c; }
+  .dayRow.deleted .dayWd{ margin-left:4px; font-weight:700; }
+  .dayRow.deleted .dayDelLabel{ font-weight:700; }
   .dayRow.off .dayOffLabel{ font-style:italic; }
   .dayEditBtn{ border:none; background:var(--purple); color:#fff; border-radius:6px; padding:4px 6px; cursor:pointer; font-size:11px; }
   .dayComment{ grid-column:1 / -1; font-size:11px; color:#8A5A15; background:rgba(232,163,61,.12); padding:4px 8px; border-radius:6px; margin-top:2px; }
@@ -834,10 +837,16 @@ const SadPdf = (function(){
 
     // Legende
     const anyCorrected = (d.rows || []).some(r => r.corrected);
-    let legend = "= nicht gearbeitet";
-    const lw = width(legend, 8, false);
-    pg.rect(PW - M - lw - 16, y, 11, 8, "#D1D5DB");
-    pg.text(legend, PW - M - lw, y + 7, 8, false, "#6B7280");
+    const anyDeleted = (d.rows || []).some(r => r.deleted);
+    const legends = [{ label: "= nicht gearbeitet", color: "#D1D5DB" }];
+    if(anyDeleted) legends.push({ label: "= vom Admin gelöscht", color: "#F5B5B1" });
+    let rx = PW - M;
+    legends.forEach(lg => {
+      const w = width(lg.label, 8, false);
+      pg.rect(rx - w - 16, y, 11, 8, lg.color);
+      pg.text(lg.label, rx - w, y + 7, 8, false, "#6B7280");
+      rx -= w + 16 + 14;
+    });
     if(anyCorrected){
       const l2 = "* = vom Admin korrigiert";
       pg.text(l2, M, y + 7, 8, false, "#6B7280");
@@ -868,23 +877,24 @@ const SadPdf = (function(){
 
     rows.forEach((r, i) => {
       const top = tableTop + i * rowH;
-      const off = !!r.off;
-      pg.rect(M, top, CW, rowH, off ? "#E5E7EB" : (i % 2 ? "#FAFAFD" : "#FFFFFF"));
+      const deleted = !!r.deleted;
+      const off = !!r.off || deleted;
+      pg.rect(M, top, CW, rowH, deleted ? "#FDECEA" : (off ? "#E5E7EB" : (i % 2 ? "#FAFAFD" : "#FFFFFF")));
       pg.line(M, top + rowH, M + CW, top + rowH, "#D1D5DB", 0.4);
       const base = top + rowH - 4.2;
-      const ink = off ? "#6B7280" : "#111827";
+      const ink = deleted ? "#9B2C2C" : (off ? "#6B7280" : "#111827");
       let cx = M;
       cols.forEach(c => {
         let val;
         if(c.k === "date") val = (r.date || "") + (r.wd ? "  " + r.wd : "");
-        else if(c.k === "ort") val = off ? "nicht gearbeitet" : (r.ort || "–");
+        else if(c.k === "ort") val = deleted ? "vom Admin gelöscht" : (off ? "nicht gearbeitet" : (r.ort || "–"));
         else if(c.k === "hours") val = off ? "–" : ((r.hours === "" || r.hours == null) ? "–" : String(r.hours) + (r.corrected ? " *" : ""));
         else val = off ? "–" : (r[c.k] || "–");
         const bold = !off && (c.k === "date" || c.k === "hours");
         val = fit(val, 8.6, bold, c.w - 12);
         const tw = width(val, 8.6, bold);
         const tx = c.a === "l" ? cx + 6 : c.a === "c" ? cx + (c.w - tw) / 2 : cx + c.w - tw - 8;
-        pg.text(val, tx, base, 8.6, bold, off ? "#6B7280" : ink);
+        pg.text(val, tx, base, 8.6, bold, ink);
         cx += c.w;
       });
     });
@@ -1021,6 +1031,8 @@ function downloadEmployeePdf(emp, month){
 
   const rows = days.map(d => d.off
     ? { date: d.datum, wd: d.wd, off: true }
+    : d.geloescht
+    ? { date: d.datum, wd: d.wd, off: true, deleted: true }
     : {
         date: d.datum, wd: d.wd, off: false,
         ort: d.standort, start: d.beginn, end: d.ende,
@@ -1034,7 +1046,11 @@ function downloadEmployeePdf(emp, month){
     ? [{ label: "Gesamtstunden", value: official + " h" }]
     : [{ label: "Gesendet vom Mitarbeiter", value: sent + " h" }, { label: "Erfasst (vom Admin korrigiert)", value: official + " h" }];
 
-  const corrections = days.filter(d => !d.off && (dayCorrected(d) || d.kommentar)).map(d => {
+  const corrections = days.filter(d => !d.off && (d.geloescht || dayCorrected(d) || d.kommentar)).map(d => {
+    if(d.geloescht){
+      const was = deletedSummary(d, true);
+      return d.datum + ": Eintrag gelöscht" + (was ? " (eingereicht: " + was + ")" : "");
+    }
     return d.datum + ": " + [correctionParts(d).join(", "), d.kommentar].filter(Boolean).join(" – ");
   }).join("\n");
 
@@ -1144,6 +1160,25 @@ async function flushAllPending(){
 window.addEventListener("beforeunload", (e) => {
   if(dirtyRows.size > 0){ e.preventDefault(); e.returnValue = ""; }
 });
+
+// Was der Mitarbeiter ursprünglich gesendet hatte, als lesbarer Text
+function deletedSummary(d, comma){
+  const o = d._orig;
+  const parts = [];
+  if(o){
+    if(o.standort) parts.push(o.standort);
+    if(o.beginn || o.ende) parts.push((o.beginn || "–") + " – " + (o.ende || "–"));
+  }
+  if(d.eingereicht !== "" && d.eingereicht != null) parts.push((comma ? String(d.eingereicht).replace(".", ",") : d.eingereicht) + " Std.");
+  return parts.join(comma ? ", " : " · ");
+}
+function buildDeletedRow(d){
+  const row = document.createElement("div");
+  row.className = "dayRow deleted";
+  const sum = deletedSummary(d);
+  row.innerHTML = `<div>${escapeHtml(d.datum)}<span class="dayWd">${escapeHtml(d.wd)}</span></div><div class="dayDelLabel">🗑️ vom Admin gelöscht${sum ? " · eingereicht: " + escapeHtml(sum) : ""}</div>`;
+  return row;
+}
 
 function buildOffRow(d){
   const offRow = document.createElement("div");
@@ -1351,7 +1386,7 @@ function buildDayRow(emp, month, d, body){
   // Löschen direkt in der Zeile, ohne die Liste neu zu laden
   const deleteBtn = row.querySelector(".dayDeleteBtn");
   deleteBtn.addEventListener("click", async () => {
-    if(!confirm(`Eintrag vom ${d.datum} wirklich löschen?`)) return;
+    if(!confirm(`Eintrag vom ${d.datum} wirklich löschen?\n\nDer Mitarbeiter sieht den Tag danach als „vom Admin gelöscht“.`)) return;
     deleteBtn.disabled = true;
     setState("busy");
     try{
@@ -1364,15 +1399,18 @@ function buildDayRow(emp, month, d, body){
       const result = await res.json();
       if(result.status === "success"){
         dirtyRows.delete(row);
-        emp.days = emp.days.filter(x => x !== d);
+        // Wie auf dem Server: Das Original (Eingereicht, Standort, Zeiten) bleibt erhalten, die aktuellen Werte werden geleert
+        if(d.eingereicht === "" && typeof d.stunden === "number") d.eingereicht = d.stunden;
+        d.geloescht = true;
+        d.standort = ""; d.beginn = ""; d.ende = ""; d.stunden = ""; d.kommentar = "";
         if(typeof result.nachher === "number") emp.summeOffiziell = result.nachher; else refreshOfficialSum(emp, body);
         if(typeof result.nachherEingereicht === "number") emp.summeEingereicht = result.nachherEingereicht;
         else emp.summeEingereicht = round2((emp.days || []).reduce((a, x) => a + (typeof x.eingereicht === "number" ? x.eingereicht : 0), 0));
-        row.replaceWith(buildOffRow(d));
+        row.replaceWith(buildDeletedRow(d));
         updateSumBoxes(emp, body, true);
         const feedback = body.querySelector(".deleteFeedback");
         feedback.style.display = "block";
-        feedback.textContent = `Eintrag vom ${d.datum} gelöscht. Gesamtstunden vorher: ${result.vorher} Std. → jetzt: ${result.nachher} Std.`;
+        feedback.textContent = `Eintrag vom ${d.datum} gelöscht. Gesamtstunden vorher: ${result.vorher} Std. → jetzt: ${result.nachher} Std. Der Mitarbeiter sieht den Tag als „vom Admin gelöscht“.`;
       }else if(result.code !== "ADMIN_AUTH"){
         setState("err", "Nicht gelöscht: " + (result.message || "Fehler"));
         deleteBtn.disabled = false;
@@ -1421,7 +1459,7 @@ function buildEmployeeCard(emp, month){
       </label>
       <button type="button" class="pdfDownloadBtn" style="width:100%; margin-bottom:8px; padding:9px; border-radius:8px; border:1.5px solid var(--purple); background:#fff; color:var(--purple); font-weight:800; cursor:pointer; font-size:13px;">📄 PDF herunterladen</button>
       <button type="button" class="deleteBlockBtn" style="width:100%; margin-bottom:12px; padding:8px; border-radius:8px; border:1px solid #c0392b; background:#fff; color:#c0392b; font-weight:700; cursor:pointer; font-size:12px;">🗑️ Diesen Monat komplett löschen</button>
-      <div style="font-size:11px; color:#777; margin:4px 0 6px;">Gelb = korrigiert. Der Mitarbeiter sieht „eingereicht“ und „korrigiert“ automatisch nebeneinander, ein Kommentar ist nicht nötig.</div>
+      <div style="font-size:11px; color:#777; margin:4px 0 6px;">Gelb = korrigiert, rot = vom Admin gelöscht. Der Mitarbeiter sieht „eingereicht“ und „korrigiert“ bzw. „gelöscht“ automatisch, ein Kommentar ist nicht nötig.</div>
       <div class="dayList"></div>
       <div class="deleteFeedback" style="display:none; margin-top:10px; padding:10px 12px; border-radius:8px; background:rgba(47,158,68,.12); border:1px solid rgba(47,158,68,.4); color:#2f9e44; font-size:12px; font-weight:700;"></div>
       <div style="margin-top:16px; padding-top:12px; border-top:1px solid var(--border);">
@@ -1542,7 +1580,7 @@ function buildEmployeeCard(emp, month){
       }
     });
     fullMonthDays(emp.days, month).forEach(d => {
-      dayList.appendChild(d.off ? buildOffRow(d) : buildDayRow(emp, month, d, body));
+      dayList.appendChild(d.off ? buildOffRow(d) : (d.geloescht ? buildDeletedRow(d) : buildDayRow(emp, month, d, body)));
     });
   }
 
