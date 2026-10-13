@@ -3607,7 +3607,7 @@ if("serviceWorker" in navigator){
   });
 }
 
-const APP_VERSION = "v20261001j";
+const APP_VERSION = "v20261001l";
 document.getElementById("loginVersion").textContent = "Version " + APP_VERSION;
 
 (function setupUpdateCheck(){
@@ -5530,8 +5530,85 @@ window.addEventListener("load", ()=>{
   scheduleMaintenanceCheck();
 });
 
+// Ein Tag zählt als "korrigiert", wenn der Admin etwas geändert hat (Server: geaendert) oder einen Hinweis geschrieben hat
+function isCorrectedDay(h){
+  return h.geaendert === true || !!(h.kommentar && String(h.kommentar).trim());
+}
+function escHtml(s){
+  return String(s == null ? "" : s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+}
+function hoursDiffer(a, b){
+  if(a === "" || a == null || b === "" || b == null) return String(a == null ? "" : a) !== String(b == null ? "" : b);
+  return Math.abs(Number(a) - Number(b)) > 0.005;
+}
+
+// Ein korrigierter Tag: "Eingereicht" (was der Mitarbeiter gesendet hat) und "Korrigiert" (was der Admin eingetragen hat) untereinander.
+// Geänderte Werte sind durchgestrichen (eingereicht) bzw. grün hervorgehoben (korrigiert).
+function renderCorrectedDay(h){
+  const freigegeben = !!h.korrigiert;
+  const known = h.origKnown === true;
+  const hasHoursOrig = h.eingereicht !== "" && h.eingereicht != null;
+  const chg = {
+    standort: known && String(h.standort || "") !== String(h.origStandort || ""),
+    beginn: known && String(h.beginn || "") !== String(h.origBeginn || ""),
+    ende: known && String(h.ende || "") !== String(h.origEnde || ""),
+    stunden: hasHoursOrig && hoursDiffer(h.stunden, h.eingereicht)
+  };
+  const showCompare = h.geaendert === true && (known || hasHoursOrig);
+
+  const mark = (txt, changed, mode) => {
+    const style = !changed ? "" : (mode === "old"
+      ? "text-decoration:line-through; color:#ff9a9a;"
+      : "background:rgba(124,252,154,.18); color:#7CFC9A; font-weight:900; border-radius:6px; padding:1px 6px;");
+    return `<span class="${changed ? (mode === "old" ? "chgOld" : "chgNew") : ""}" style="${style}">${escHtml(txt)}</span>`;
+  };
+  const hrs = v => (v === "" || v == null) ? "–" : v + " Std.";
+  const line = (v, mode, withTimes) => {
+    const parts = [];
+    if(withTimes){
+      parts.push(`<span>📍 ${mark(v.standort || "–", chg.standort, mode)}</span>`);
+      parts.push(`<span>🕒 ${mark(v.beginn || "–", chg.beginn, mode)} – ${mark(v.ende || "–", chg.ende, mode)}</span>`);
+    }
+    parts.push(`<span>${mark(hrs(v.stunden), chg.stunden, mode)}</span>`);
+    return `<div style="display:flex; flex-wrap:wrap; gap:4px 14px; font-size:13px;">${parts.join("")}</div>`;
+  };
+
+  const statusBg = freigegeben ? "rgba(124,252,154,.16)" : "rgba(255,213,74,.16)";
+  const statusBorder = freigegeben ? "rgba(124,252,154,.45)" : "rgba(255,213,74,.45)";
+  const statusColor = freigegeben ? "#7CFC9A" : "#FFD54A";
+  const statusText = freigegeben ? "✅ Freigegeben" : "⏳ Noch nicht freigegeben";
+  const kindText = h.geaendert === true ? "✏️ Vom Admin korrigiert" : "📝 Hinweis vom Admin";
+
+  let body;
+  if(showCompare){
+    const label = (t, color) => `<div style="font-size:11px; font-weight:800; letter-spacing:.04em; text-transform:uppercase; color:${color};">${t}</div>`;
+    body = `
+      <div style="display:grid; grid-template-columns:auto 1fr; gap:8px 12px; align-items:center; margin-top:4px;">
+        ${label("Eingereicht", "rgba(255,255,255,.55)")}
+        <div class="cmpOld" style="color:rgba(255,255,255,.7);">${line({ standort: h.origStandort, beginn: h.origBeginn, ende: h.origEnde, stunden: h.eingereicht }, "old", known)}</div>
+        ${label("Korrigiert", "#7CFC9A")}
+        <div class="cmpNew" style="color:#fff;">${line(h, "new", true)}</div>
+      </div>`;
+  }else{
+    body = `<div style="color:rgba(255,255,255,.85);">${line(h, "new", true)}</div>`;
+  }
+
+  return `
+    <div class="correctedDay" style="background:rgba(255,255,255,.05); border:2px solid #E8A33D; border-radius:14px; padding:12px 14px; margin-bottom:10px;">
+      <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:6px; margin-bottom:8px;">
+        <div style="font-weight:800; color:#fff; font-size:14px;">${escHtml(h.datum || "")}</div>
+        <div style="display:flex; gap:6px; flex-wrap:wrap;">
+          <span style="font-size:11px; font-weight:800; padding:3px 9px; border-radius:20px; background:rgba(232,163,61,.18); border:1px solid rgba(232,163,61,.5); color:#FFD54A; white-space:nowrap;">${kindText}</span>
+          <span style="font-size:11px; font-weight:800; padding:3px 9px; border-radius:20px; background:${statusBg}; border:1px solid ${statusBorder}; color:${statusColor}; white-space:nowrap;">${statusText}</span>
+        </div>
+      </div>
+      ${body}
+      ${h.kommentar && String(h.kommentar).trim() ? `<div style="margin-top:8px; padding:8px 10px; border-radius:8px; background:rgba(232,163,61,.15); color:#FFD54A; font-size:12px; white-space:pre-wrap;">📝 ${escHtml(h.kommentar)}</div>` : ""}
+    </div>`;
+}
+
 function countHoursContent(result){
-  const commentedDays = (result.hours || []).filter(h => h.kommentar && h.kommentar.trim()).length;
+  const commentedDays = (result.hours || []).filter(isCorrectedDay).length;
   const messages = (result.messages || []).length;
   const vermerke = (result.vermerke || []).length;
   const documents = (result.documents || []).length;
@@ -5768,41 +5845,25 @@ async function loadMyHours(pin, secret){
               <div style="font-size:20px; font-weight:900; color:#FFD54A;">${s.summeOffiziell ?? 0} Std.</div>
             </div>` : ""}
           </div>
+          ${(() => { const n = (result.hours || []).filter(h => h.monat === s.monat && h.geaendert === true).length; return n > 0 ? `<div class="monthCorrNote" style="margin-top:8px; font-size:12px; color:#FFD54A;">✏️ Der Admin hat in diesem Monat <b>${n}</b> ${n === 1 ? "Tag" : "Tage"} korrigiert (siehe unten).</div>` : ""; })()}
           ${s.kommentar && s.kommentar.trim() ? `
           <div style="margin-top:8px; padding:10px 12px; border-radius:10px; background:rgba(232,163,61,.15); border:1px solid rgba(232,163,61,.4); color:#FFD54A; font-size:12px; white-space:pre-wrap;">📝 <b>Hinweis Admin:</b><br>${s.kommentar.replace(/</g,"&lt;")}</div>` : ""}
         </div>`;
       }).join("");
     }
 
-    const commentedDays = (result.hours || []).filter(h => h.kommentar && h.kommentar.trim());
+    const correctedDays = (result.hours || []).filter(isCorrectedDay);
 
-    if(commentedDays.length === 0){
+    if(correctedDays.length === 0){
       hoursTableWrap.innerHTML = (result.summaries && result.summaries.length > 0)
         ? `<div style="color:rgba(255,255,255,.7); font-size:13px;">Keine einzelnen Korrekturen vorhanden.</div>`
         : `<div style="color:rgba(255,255,255,.7); font-size:13px;">Noch keine Stunden gesendet.</div>`;
     }else{
-      const sorted = [...commentedDays].sort((a,b)=> String(a.sortKey || a.datum).localeCompare(String(b.sortKey || b.datum)));
-      hoursTableWrap.innerHTML = sorted.map(h=>{
-        const korrigiert = !!h.korrigiert;
-        const badgeBg = korrigiert ? "rgba(124,252,154,.16)" : "rgba(255,213,74,.16)";
-        const badgeBorder = korrigiert ? "rgba(124,252,154,.45)" : "rgba(255,213,74,.45)";
-        const badgeColor = korrigiert ? "#7CFC9A" : "#FFD54A";
-        const badgeText = korrigiert ? "✅ Korrigiert" : "⏳ Ausstehend";
-
-        return `
-        <div style="background:rgba(255,255,255,.05); border:2px solid #E8A33D; border-radius:14px; padding:12px 14px; margin-bottom:10px;">
-          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
-            <div style="font-weight:800; color:#fff; font-size:14px;">${h.datum || ""}</div>
-            <span style="font-size:11px; font-weight:800; padding:3px 9px; border-radius:20px; background:${badgeBg}; border:1px solid ${badgeBorder}; color:${badgeColor}; white-space:nowrap;">${badgeText}</span>
-          </div>
-          <div style="color:rgba(255,255,255,.85); font-size:13px; margin-bottom:6px;">📍 ${h.standort || "–"}</div>
-          <div style="display:flex; gap:14px; font-size:13px; color:rgba(255,255,255,.85);">
-            <span>🕒 ${h.beginn || "–"} – ${h.ende || "–"}</span>
-            <span style="font-weight:800; color:#FFD54A;">${h.stunden || "–"} Std.</span>
-          </div>
-          <div style="margin-top:8px; padding:8px 10px; border-radius:8px; background:rgba(232,163,61,.15); color:#FFD54A; font-size:12px;">📝 ${h.kommentar.replace(/</g,"&lt;")}</div>
-        </div>`;
-      }).join("");
+      const sorted = [...correctedDays].sort((a,b)=> String(a.sortKey || a.datum).localeCompare(String(b.sortKey || b.datum)));
+      hoursTableWrap.innerHTML = `
+        <div style="font-weight:800; margin:2px 0 4px; color:#fff;">✏️ Korrigierte Tage</div>
+        <div style="font-size:12px; color:rgba(255,255,255,.6); margin-bottom:10px;">„Eingereicht“ ist das, was du gesendet hast. „Korrigiert“ ist das, was der Admin eingetragen hat. Geänderte Werte sind markiert.</div>
+        ${sorted.map(renderCorrectedDay).join("")}`;
     }
 
     renderMyMessages(result.messages || []);

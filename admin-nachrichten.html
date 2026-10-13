@@ -109,6 +109,8 @@
   .saveState.ok{ color:#2f9e44; }
   .saveState.err{ color:#c0392b; cursor:help; }
   .dayCommentBtn, .dayDeleteBtn{ border:1px solid var(--border); background:#fff; border-radius:6px; padding:3px 6px; cursor:pointer; font-size:12px; }
+  .dayOrig{ grid-column:1 / -1; display:none; font-size:11px; color:#8A5A15; background:rgba(255,213,74,.16); border-radius:6px; padding:3px 8px; }
+  .dayOrig.show{ display:block; }
   .dayCommentRow{ grid-column:1 / -1; display:none; }
   .dayCommentRow.show{ display:block; }
   .dayCommentRow input{ background:rgba(232,163,61,.12); }
@@ -1023,7 +1025,7 @@ function downloadEmployeePdf(emp, month){
         date: d.datum, wd: d.wd, off: false,
         ort: d.standort, start: d.beginn, end: d.ende,
         hours: fmtHours(d.stunden),
-        corrected: !sameHours(d.stunden, d.eingereicht) || !!d.kommentar
+        corrected: dayCorrected(d)
       });
 
   const sent = fmtHours(emp.summeEingereicht ?? 0);
@@ -1032,9 +1034,8 @@ function downloadEmployeePdf(emp, month){
     ? [{ label: "Gesamtstunden", value: official + " h" }]
     : [{ label: "Gesendet vom Mitarbeiter", value: sent + " h" }, { label: "Erfasst (vom Admin korrigiert)", value: official + " h" }];
 
-  const corrections = days.filter(d => !d.off && (!sameHours(d.stunden, d.eingereicht) || d.kommentar)).map(d => {
-    const change = !sameHours(d.stunden, d.eingereicht) ? "von " + fmtHours(d.eingereicht) + " auf " + fmtHours(d.stunden) + " Std." : "";
-    return d.datum + ": " + [change, d.kommentar].filter(Boolean).join(" – ");
+  const corrections = days.filter(d => !d.off && (dayCorrected(d) || d.kommentar)).map(d => {
+    return d.datum + ": " + [correctionParts(d).join(", "), d.kommentar].filter(Boolean).join(" – ");
   }).join("\n");
 
   const now = new Date();
@@ -1074,6 +1075,33 @@ function sameHours(a, b){
   if(x === "" || y === "") return x === y;
   return Math.abs(x - y) < 0.005;
 }
+// Ein Tag gilt als korrigiert, wenn sich Stunden, Standort, Beginn oder Ende vom Eingereichten unterscheiden.
+// d._orig = Originalwerte (Standort, Beginn, Ende); fehlen sie (älterer Eintrag), zählt nur die Stundenzahl.
+function dayCorrected(d, cur){
+  cur = cur || d;
+  if(d.eingereicht !== "" && d.eingereicht != null && !sameHours(cur.stunden, d.eingereicht)) return true;
+  const o = d._orig;
+  return !!o && (String(cur.standort || "") !== o.standort || String(cur.beginn || "") !== o.beginn || String(cur.ende || "") !== o.ende);
+}
+function correctionParts(d){
+  const parts = [];
+  const o = d._orig;
+  if(o){
+    if(String(d.standort || "") !== o.standort) parts.push("Standort von " + (o.standort || "–") + " auf " + (d.standort || "–"));
+    if(String(d.beginn || "") !== o.beginn) parts.push("Beginn von " + (o.beginn || "–") + " auf " + (d.beginn || "–"));
+    if(String(d.ende || "") !== o.ende) parts.push("Ende von " + (o.ende || "–") + " auf " + (d.ende || "–"));
+  }
+  if(d.eingereicht !== "" && d.eingereicht != null && !sameHours(d.stunden, d.eingereicht)) parts.push("Stunden von " + String(d.eingereicht).replace(".", ",") + " auf " + String(d.stunden === "" ? "–" : d.stunden).replace(".", ","));
+  return parts;
+}
+function origSummary(d){
+  const o = d._orig;
+  const parts = [];
+  if(o){ parts.push(o.standort || "–"); parts.push((o.beginn || "–") + " – " + (o.ende || "–")); }
+  if(d.eingereicht !== "" && d.eingereicht != null) parts.push(d.eingereicht + " Std.");
+  return "Eingereicht vom Mitarbeiter: " + parts.join(" · ") + (o ? "" : "  (Uhrzeiten dieses älteren Eintrags wurden damals nicht gespeichert)");
+}
+
 function normalizeTime(v){
   v = String(v == null ? "" : v).trim();
   let m = v.match(/^(\d{1,2})[:.,hH](\d{2})$/), h, mi;
@@ -1126,7 +1154,7 @@ function buildOffRow(d){
 
 function buildDayRow(emp, month, d, body){
   const row = document.createElement("div");
-  row.className = "dayRow" + (sameHours(d.stunden, d.eingereicht) ? "" : " diverges");
+  row.className = "dayRow" + (dayCorrected(d) ? " diverges" : "");
   const hasComment = !!(d.kommentar && String(d.kommentar).trim());
   row.innerHTML = `
     <div>${escapeHtml(d.datum)}</div>
@@ -1139,6 +1167,7 @@ function buildDayRow(emp, month, d, body){
       <button class="dayCommentBtn" type="button" title="Kommentar zu diesem Tag">📝</button>
       <button class="dayDeleteBtn" type="button" title="Eintrag löschen">🗑️</button>
     </div>
+    <div class="dayOrig${dayCorrected(d) ? " show" : ""}"></div>
     <div class="dayCommentRow${hasComment ? " show" : ""}"><input type="text" class="editKommentar" placeholder="Kommentar zu dieser Korrektur (der Mitarbeiter sieht ihn)" value="${escapeHtml(d.kommentar || "")}"></div>
   `;
 
@@ -1148,11 +1177,13 @@ function buildDayRow(emp, month, d, body){
   const inH = row.querySelector(".editStunden");
   const inK = row.querySelector(".editKommentar");
   const stateEl = row.querySelector(".saveState");
+  const origEl = row.querySelector(".dayOrig");
 
   d._saved = { standort: d.standort || "", beginn: d.beginn || "", ende: d.ende || "", stunden: d.stunden, kommentar: d.kommentar || "" };
 
   let timer = null;
   let queue = Promise.resolve();
+  origEl.textContent = origSummary(d);
 
   function setState(kind, msg){
     stateEl.className = "saveState " + kind;
@@ -1170,11 +1201,19 @@ function buildDayRow(emp, month, d, body){
     if(v === "") return "";
     return /^\d+([.,]\d+)?$/.test(v) ? numOrEmpty(v) : null;
   }
+  // Gelb + "Eingereicht vom Mitarbeiter: …" erscheint sofort, sobald irgendein Wert vom Original abweicht
+  function updateCorrection(){
+    const b = timeValue(inB), e = timeValue(inE);
+    const corrected = dayCorrected(d, { standort: inS.value, beginn: b === null ? d.beginn : b, ende: e === null ? d.ende : e, stunden: d.stunden });
+    row.classList.toggle("diverges", corrected);
+    origEl.classList.toggle("show", corrected);
+    if(corrected) origEl.textContent = origSummary(d);
+  }
   function hoursChanged(){
     const h = hoursValue();
     if(h === null) return;
     d.stunden = h;
-    row.classList.toggle("diverges", !sameHours(d.stunden, d.eingereicht));
+    updateCorrection();
     refreshOfficialSum(emp, body);
   }
   function recalcFromTimes(){
@@ -1186,6 +1225,7 @@ function buildDayRow(emp, month, d, body){
     return true;
   }
   function schedule(){
+    updateCorrection();
     dirtyRows.add(row);
     setState("busy");
     clearTimeout(timer);
@@ -1381,6 +1421,7 @@ function buildEmployeeCard(emp, month){
       </label>
       <button type="button" class="pdfDownloadBtn" style="width:100%; margin-bottom:8px; padding:9px; border-radius:8px; border:1.5px solid var(--purple); background:#fff; color:var(--purple); font-weight:800; cursor:pointer; font-size:13px;">📄 PDF herunterladen</button>
       <button type="button" class="deleteBlockBtn" style="width:100%; margin-bottom:12px; padding:8px; border-radius:8px; border:1px solid #c0392b; background:#fff; color:#c0392b; font-weight:700; cursor:pointer; font-size:12px;">🗑️ Diesen Monat komplett löschen</button>
+      <div style="font-size:11px; color:#777; margin:4px 0 6px;">Gelb = korrigiert. Der Mitarbeiter sieht „eingereicht“ und „korrigiert“ automatisch nebeneinander, ein Kommentar ist nicht nötig.</div>
       <div class="dayList"></div>
       <div class="deleteFeedback" style="display:none; margin-top:10px; padding:10px 12px; border-radius:8px; background:rgba(47,158,68,.12); border:1px solid rgba(47,158,68,.4); color:#2f9e44; font-size:12px; font-weight:700;"></div>
       <div style="margin-top:16px; padding-top:12px; border-top:1px solid var(--border);">
@@ -1398,7 +1439,7 @@ function buildEmployeeCard(emp, month){
       pendingDeleteFeedback = null;
     }
 
-    body.querySelector(".pdfDownloadBtn").addEventListener("click", ()=> downloadEmployeePdf(emp, month));
+    body.querySelector(".pdfDownloadBtn").addEventListener("click", async ()=>{ await flushAllPending(); downloadEmployeePdf(emp, month); });
 
     const freigabeCheckbox = body.querySelector(".freigabeCheckbox");
     freigabeCheckbox.addEventListener("change", async ()=>{
@@ -1488,7 +1529,18 @@ function buildEmployeeCard(emp, month){
     monthCommentSaveBtn.addEventListener("click", saveMonthComment);
 
     const dayList = body.querySelector(".dayList");
-    (emp.days || []).forEach(x => { x.stunden = numOrEmpty(x.stunden); x.eingereicht = numOrEmpty(x.eingereicht); });
+    (emp.days || []).forEach(x => {
+      x.stunden = numOrEmpty(x.stunden);
+      x.eingereicht = numOrEmpty(x.eingereicht);
+      if(x.origKnown){
+        x._orig = { standort: String(x.origStandort == null ? "" : x.origStandort), beginn: String(x.origBeginn == null ? "" : x.origBeginn), ende: String(x.origEnde == null ? "" : x.origEnde) };
+      }else if((x.eingereicht === "" || sameHours(x.stunden, x.eingereicht)) && (x.standort || x.beginn || x.ende)){
+        // Älterer, noch unkorrigierter Eintrag: der heutige Stand ist das Original (der Server sichert es bei der ersten Korrektur genauso)
+        x._orig = { standort: String(x.standort || ""), beginn: String(x.beginn || ""), ende: String(x.ende || "") };
+      }else{
+        x._orig = null;
+      }
+    });
     fullMonthDays(emp.days, month).forEach(d => {
       dayList.appendChild(d.off ? buildOffRow(d) : buildDayRow(emp, month, d, body));
     });
