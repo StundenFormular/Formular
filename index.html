@@ -280,7 +280,7 @@ select.ort option{
 
 @media print{
   body{ background:#fff; }
-  .topbar, .card, .total, .tableCard, .modalBack, .pinBack, .dlgBack, .timeSheetBack, .stickyTotalBar{ display:none !important; }
+  .topbar, .card, .total, .tableCard, .modalBack, .pinBack, .dlgBack, .timeSheetBack, .stickyTotalBar, #backToChooserWrap{ display:none !important; }
   .wrap{ max-width:100% !important; padding:0 !important; }
   #printArea{ 
     display:block !important;
@@ -609,7 +609,7 @@ select.ort option{
 .chooserNotice .cnItem{ font-size:13.5px; line-height:1.45; margin-bottom:6px; color:rgba(255,255,255,.92); }
 .chooserNotice .cnBtns{ display:flex; gap:10px; margin-top:10px; align-items:center; }
 .chooserNotice .cnOpen{
-  flex:1; padding:12px; border:none; border-radius:14px; cursor:pointer; font-size:14px; font-weight:900; font-family:inherit;
+  flex:1 1 auto; min-width:150px; white-space:nowrap; padding:12px; border:none; border-radius:14px; cursor:pointer; font-size:14px; font-weight:900; font-family:inherit;
   color:#2b1f04; background:linear-gradient(135deg,#ffd23f,#ff9d3d);
 }
 .chooserNotice .cnLater{ background:none; border:none; color:rgba(255,255,255,.7); font-size:13px; font-weight:700; cursor:pointer; padding:8px 4px; font-family:inherit; text-decoration:underline; }
@@ -3086,7 +3086,7 @@ tbody tr:nth-child(odd){
       <div id="hoursDocumentsWrap" style="margin-bottom:14px;"></div>
       <div id="hoursSummaryWrap" style="margin-bottom:14px;"></div>
 
-      <div id="hoursTableWrap" style="max-height:320px; overflow-y:auto; margin-bottom:14px;"></div>
+      <div id="hoursTableWrap" style="margin-bottom:14px;"></div>
 
       <div id="hoursVermerkeWrap" style="margin-bottom:14px;"></div>
 
@@ -3448,7 +3448,7 @@ tbody tr:nth-child(odd){
     </div>
   </div>
 
-  <div style="text-align:center; margin:8px 0 14px;">
+  <div id="backToChooserWrap" style="text-align:center; margin:8px 0 14px;">
     <button type="button" id="backToChooserBtn" style="width:auto; padding:9px 20px; border-radius:12px; border:1px solid rgba(232,163,61,.55); background:linear-gradient(135deg, rgba(232,163,61,.22), rgba(232,163,61,.12)); font-size:13px; font-weight:800; color:#8A5A15;">← Zurück zur Auswahl</button>
   </div>
 
@@ -3638,7 +3638,7 @@ if("serviceWorker" in navigator){
   });
 }
 
-const APP_VERSION = "v20261001o";
+const APP_VERSION = "v20261001p";
 document.getElementById("loginVersion").textContent = "Version " + APP_VERSION;
 
 (function setupUpdateCheck(){
