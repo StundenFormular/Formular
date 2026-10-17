@@ -109,6 +109,23 @@
   .saveState.ok{ color:#2f9e44; }
   .saveState.err{ color:#c0392b; cursor:help; }
   .dayCommentBtn, .dayDeleteBtn{ border:1px solid var(--border); background:#fff; border-radius:6px; padding:3px 6px; cursor:pointer; font-size:12px; }
+  /* ===== Benachrichtigungen ===== */
+  .notifBar{ background:#fff; border:2px solid var(--gold); border-radius:14px; padding:12px 14px; margin:0 0 14px; box-shadow:0 4px 18px rgba(232,163,61,.25); }
+  .notifHead{ display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap; }
+  .notifTitle{ font-weight:900; font-size:15px; color:var(--purple); }
+  .notifBtns{ display:flex; gap:8px; }
+  .notifBtn{ border:1px solid var(--border); background:#fff; border-radius:8px; padding:6px 10px; font-size:12px; font-weight:700; cursor:pointer; color:#333; }
+  .notifBtn.primary{ background:var(--purple); color:#fff; border-color:var(--purple); }
+  .notifList{ margin-top:10px; display:flex; flex-direction:column; gap:6px; }
+  .notifItem{ display:flex; gap:10px; align-items:flex-start; text-align:left; width:100%; border:1px solid var(--border); background:#faf9ff; border-radius:10px; padding:9px 11px; cursor:pointer; font:inherit; color:inherit; }
+  .notifItem:hover{ background:#f1eefc; border-color:var(--purple); }
+  .notifIcon{ font-size:18px; line-height:1.25; }
+  .notifText{ flex:1; font-size:13px; line-height:1.4; color:#222; min-width:0; overflow-wrap:anywhere; }
+  .notifSub{ display:block; font-size:12px; color:#666; margin-top:2px; }
+  .notifTime{ font-size:11px; color:#888; white-space:nowrap; padding-top:2px; }
+  .notifMore{ border:none; background:none; color:var(--purple); font-weight:700; font-size:12px; cursor:pointer; padding:6px 2px; text-align:left; }
+  .notifFlash{ animation:notifFlash 1.8s ease; }
+  @keyframes notifFlash{ 0%,60%{ box-shadow:0 0 0 4px rgba(232,163,61,.7); } 100%{ box-shadow:0 0 0 0 rgba(232,163,61,0); } }
   .dayOrig{ grid-column:1 / -1; display:none; font-size:11px; color:#8A5A15; background:rgba(255,213,74,.16); border-radius:6px; padding:3px 8px; }
   .dayOrig.show{ display:block; }
   .dayCommentRow{ grid-column:1 / -1; display:none; }
@@ -145,6 +162,17 @@
 
 <div id="app">
   <header style="margin:-16px -16px 16px -16px;">Admin-Bereich</header>
+
+  <div class="notifBar" id="notifBar" style="display:none;" role="status">
+    <div class="notifHead">
+      <div class="notifTitle" id="notifTitle">🔔 Neu seit deinem letzten Besuch</div>
+      <div class="notifBtns">
+        <button type="button" class="notifBtn" id="notifToggle">Einklappen ▴</button>
+        <button type="button" class="notifBtn primary" id="notifReadAll">Alle als gelesen</button>
+      </div>
+    </div>
+    <div class="notifList" id="notifList"></div>
+  </div>
 
   <div id="maintBar" style="margin-bottom:16px; padding:14px 16px; border-radius:14px; border:1px solid var(--border); background:#fff;">
     <div style="display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap;">
@@ -265,9 +293,11 @@ function enterAdminApp(){
   loadMaintenanceStatus();
   loadThreads();
   loadHelp();
+  startNotifications();
 }
 
 function handleAuthExpired(){
+  try{ stopNotifications(); }catch(e){}
   clearAdminSession();
   appEl.style.display = "none";
   pinBack.style.display = "flex";
@@ -559,6 +589,7 @@ function renderThreads(messages){
     const thread = grouped[pin];
     const card = document.createElement("div");
     card.className = "threadCard";
+    card.dataset.pin = pin;
 
     const lastMsg = thread.msgs[thread.msgs.length - 1];
     card.innerHTML = `
@@ -1448,6 +1479,7 @@ function buildDayRow(emp, month, d, body){
 function buildEmployeeCard(emp, month){
   const card = document.createElement("div");
   card.className = "empCard";
+  card.dataset.pin = emp.pin;
 
   const statusClass = emp.hasSubmitted ? "sent" : "notSent";
   const statusLabel = emp.hasSubmitted ? "🟢 Gesendet" : "🔴 Noch nicht gesendet";
@@ -1969,6 +2001,202 @@ document.getElementById("empResetAllBtn").addEventListener("click", async ()=>{
   if(!confirm("Wirklich sicher? Das betrifft alle Mitarbeiter.")) return;
   const r = await helpRequest({ action: "adminResetDevices", all: true });
   if(r.status === "success") loadEmployees(); else alert("Fehler: " + (r.message || ""));
+});
+
+// ===== Benachrichtigungen: "Neu seit deinem letzten Besuch" =====
+// Der Server liefert, was seit dem letzten "Alle als gelesen" passiert ist (Nachrichten, gesendete Stunden,
+// Hilfe-Anfragen, neue PINs und Handys). Wer es schon gesehen hat, wird pro Meldung im Browser gemerkt.
+const NOTIF_KEY = "adm_notif_v1";
+const BASE_TITLE = document.title;
+const notifBar = document.getElementById("notifBar");
+const notifListEl = document.getElementById("notifList");
+const notifTitleEl = document.getElementById("notifTitle");
+const notifToggleBtn = document.getElementById("notifToggle");
+const notifReadAllBtn = document.getElementById("notifReadAll");
+let notifItems = [];
+let notifGroups = [];
+let notifServerNow = 0;
+let notifTimer = null;
+let notifLastLoad = 0;
+let notifCollapsed = false;
+let notifExpandAll = false;
+
+function loadNotifState(){
+  try{
+    const v = JSON.parse(localStorage.getItem(NOTIF_KEY) || "{}") || {};
+    return { ts: Number(v.ts) || 0, dismissed: Array.isArray(v.dismissed) ? v.dismissed : [] };
+  }catch(e){ return { ts: 0, dismissed: [] }; }
+}
+function saveNotifState(s){
+  try{ localStorage.setItem(NOTIF_KEY, JSON.stringify({ ts: s.ts, dismissed: s.dismissed.slice(-300) })); }catch(e){}
+}
+function notifKey(it){
+  return [it.type, it.ts, it.pin || "", it.monat || "", it.id || ""].join("|");
+}
+function notifRelTime(ts){
+  const min = Math.floor((Date.now() - ts) / 60000);
+  if(min < 1) return "gerade eben";
+  if(min < 60) return "vor " + min + " Min.";
+  const h = Math.floor(min / 60);
+  if(h < 24) return "vor " + h + " Std.";
+  const d = new Date(ts);
+  const p = n => String(n).padStart(2, "0");
+  return p(d.getDate()) + "." + p(d.getMonth() + 1) + ". " + p(d.getHours()) + ":" + p(d.getMinutes());
+}
+function notifMonthLabel(m){
+  const p = String(m).split("-");
+  const i = parseInt(p[1], 10) - 1;
+  return MONTH_NAMES[i] ? MONTH_NAMES[i] + " " + p[0] : String(m);
+}
+// Gleichartige Meldungen zusammenfassen: Nachrichten pro Mitarbeiter, gesendete Stunden pro Mitarbeiter und Monat
+function groupNotifs(items){
+  const groups = [];
+  const byKey = {};
+  items.forEach(it => {
+    let gk;
+    if(it.type === "message") gk = "message|" + it.pin;
+    else if(it.type === "hours") gk = "hours|" + it.pin + "|" + it.monat;
+    else gk = notifKey(it);
+    if(!byKey[gk]){ byKey[gk] = { type: it.type, pin: it.pin, name: it.name, monat: it.monat, items: [], ts: 0, latest: it }; groups.push(byKey[gk]); }
+    const g = byKey[gk];
+    g.items.push(it);
+    if(it.ts >= g.ts){ g.ts = it.ts; g.latest = it; }
+  });
+  groups.sort((a, b) => b.ts - a.ts);
+  return groups;
+}
+function describeNotifGroup(g){
+  const n = g.items.length;
+  const l = g.latest;
+  const who = "<b>" + escapeHtml(g.name || "Unbekannt") + "</b>" + (g.pin ? " (PIN " + escapeHtml(g.pin) + ")" : "");
+  const num = v => String(v == null ? 0 : v).replace(".", ",");
+  if(g.type === "hours"){
+    const days = l.days + (l.days === 1 ? " Tag" : " Tage");
+    const sub = days + " · " + num(l.total) + " Std."
+      + (l.note ? " · 📝 „" + escapeHtml(l.note) + "“" : "")
+      + (n > 1 ? " · " + n + "× gesendet" : "");
+    return { icon: "📥", html: who + " hat die <b>Stunden für " + escapeHtml(notifMonthLabel(g.monat)) + "</b> " + (l.resubmit ? "erneut " : "") + "gesendet", sub: sub };
+  }
+  if(g.type === "message"){
+    return { icon: "💬", html: who + " hat " + (n === 1 ? "eine <b>Nachricht</b>" : "<b>" + n + " Nachrichten</b>") + " geschickt", sub: "„" + escapeHtml(l.text) + "“" };
+  }
+  if(g.type === "help"){
+    return { icon: "🛟", html: "<b>" + escapeHtml(g.name || "Unbekannt") + "</b> braucht <b>Hilfe</b>", sub: "„" + escapeHtml(l.text) + "“" };
+  }
+  if(g.type === "newpin"){
+    return { icon: "🆕", html: "Neue PIN <b>" + escapeHtml(g.pin) + "</b> für <b>" + escapeHtml(g.name || "Unbekannt") + "</b> vergeben", sub: "" };
+  }
+  return { icon: "📱", html: who + ": <b>neues Handy</b> eingerichtet", sub: l.info ? escapeHtml(l.info) : "" };
+}
+function renderNotifs(){
+  const st = loadNotifState();
+  const visible = notifItems.filter(it => st.dismissed.indexOf(notifKey(it)) === -1);
+  const total = visible.length;
+  document.title = total ? "(" + total + ") " + BASE_TITLE : BASE_TITLE;
+  if(!total){ notifBar.style.display = "none"; notifGroups = []; return; }
+
+  const groups = groupNotifs(visible);
+  const MAX = 8;
+  const shown = notifExpandAll ? groups : groups.slice(0, MAX);
+  notifGroups = shown;
+  notifBar.style.display = "block";
+  notifTitleEl.textContent = "🔔 Neu seit deinem letzten Besuch · " + total + (total === 1 ? " Meldung" : " Meldungen");
+  notifListEl.style.display = notifCollapsed ? "none" : "flex";
+  notifToggleBtn.textContent = notifCollapsed ? "Anzeigen ▾" : "Einklappen ▴";
+  notifListEl.innerHTML = shown.map((g, i) => {
+    const d = describeNotifGroup(g);
+    return '<button type="button" class="notifItem" data-gi="' + i + '"><span class="notifIcon">' + d.icon + '</span><span class="notifText">' + d.html
+      + (d.sub ? '<span class="notifSub">' + d.sub + '</span>' : '') + '</span><span class="notifTime">' + notifRelTime(g.ts) + '</span></button>';
+  }).join("") + (groups.length > shown.length ? '<button type="button" class="notifMore" id="notifMore">… und ' + (groups.length - shown.length) + ' weitere anzeigen</button>' : "");
+}
+
+function notifFlashCard(el){
+  if(!el) return;
+  if(el.scrollIntoView) el.scrollIntoView({ behavior: "smooth", block: "start" });
+  el.classList.remove("notifFlash");
+  void el.offsetWidth;
+  el.classList.add("notifFlash");
+}
+async function notifGoto(g){
+  const pin = /^\d{1,3}$/.test(String(g.pin || "")) ? String(g.pin) : "";
+  if(g.type === "message"){
+    activateTab(tabNachrichtenBtn, tabNachrichten);
+    await loadThreads();
+    notifFlashCard(threadsWrap.querySelector('.threadCard[data-pin="' + pin + '"]'));
+  }else if(g.type === "hours"){
+    overviewMonthInput.value = g.monat;
+    expandedPin = pin;
+    activateTab(tabOverviewBtn, tabOverview);
+    await loadOverview();
+    notifFlashCard(overviewWrap.querySelector('.empCard[data-pin="' + pin + '"]'));
+  }else if(g.type === "help"){
+    tabHelpBtn.click();
+  }else{
+    empSearchInput.value = g.name || pin;
+    tabEmployeesBtn.click();
+  }
+}
+function openNotifGroup(g){
+  const st = loadNotifState();
+  g.items.forEach(it => { const k = notifKey(it); if(st.dismissed.indexOf(k) === -1) st.dismissed.push(k); });
+  saveNotifState(st);
+  renderNotifs();
+  return notifGoto(g);
+}
+
+notifListEl.addEventListener("click", (e) => {
+  if(e.target.closest("#notifMore")){ notifExpandAll = true; renderNotifs(); return; }
+  const btn = e.target.closest(".notifItem");
+  if(!btn) return;
+  const g = notifGroups[parseInt(btn.dataset.gi, 10)];
+  if(g) openNotifGroup(g);
+});
+notifToggleBtn.addEventListener("click", () => { notifCollapsed = !notifCollapsed; renderNotifs(); });
+notifReadAllBtn.addEventListener("click", () => {
+  const st = loadNotifState();
+  st.ts = notifServerNow || Date.now();
+  st.dismissed = [];
+  saveNotifState(st);
+  notifItems = [];
+  notifExpandAll = false;
+  renderNotifs();
+});
+
+async function loadNotifications(){
+  if(!getAdminSession()) return;
+  notifLastLoad = Date.now();
+  const st = loadNotifState();
+  try{
+    const res = await fetch(EQUIP_WEB_APP_URL, {
+      method: "POST",
+      body: JSON.stringify({ token: EQUIP_API_TOKEN, adminSession: getAdminSession(), action: "adminGetNotifications", since: st.ts || null })
+    });
+    const r = await res.json();
+    if(r.status === "success"){
+      notifItems = r.items || [];
+      notifServerNow = r.now || Date.now();
+      renderNotifs();
+    }
+  }catch(err){
+    // keine Verbindung: Anzeige bleibt, wie sie ist
+  }
+}
+function startNotifications(){
+  stopNotifications();
+  loadNotifications();
+  notifTimer = setInterval(() => { if(document.visibilityState === "visible") loadNotifications(); }, 90000);
+}
+function stopNotifications(){
+  clearInterval(notifTimer);
+  notifTimer = null;
+  notifItems = [];
+  notifGroups = [];
+  notifBar.style.display = "none";
+  document.title = BASE_TITLE;
+}
+// Wer die Seite wieder nach vorn holt, sieht sofort den aktuellen Stand
+document.addEventListener("visibilitychange", () => {
+  if(document.visibilityState === "visible" && getAdminSession() && Date.now() - notifLastLoad > 5000) loadNotifications();
 });
 
 if(getAdminSession()){ enterAdminApp(); }
