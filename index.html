@@ -2966,6 +2966,8 @@ tbody tr:nth-child(odd){
   white-space:nowrap;
 }
 .fillMonthBtn:active{ background:rgba(232,163,61,.22); }
+.absentRow td{ background:rgba(232,163,61,.10); }
+.absTag{ font-size:10.5px; font-weight:800; color:#b9701e; margin-top:2px; }
 
 /* Sticky-Gesamtstunden-Leiste am unteren Bildschirmrand */
 .stickyTotalBar{
@@ -3129,10 +3131,10 @@ tbody tr:nth-child(odd){
     <button class="pinOk" id="chooserFormularBtn" type="button" style="width:100%; margin-bottom:10px; text-align:left; padding:16px;">
       📋 Stundenformular<br><span style="font-weight:400; font-size:12px; opacity:.8;">Monatliche Zeiterfassung</span>
     </button>
-    <button class="pinOk" id="chooserEquipBtn" type="button" style="width:100%; margin-bottom:10px; text-align:left; padding:16px;">
+    <button class="pinOk" id="chooserEquipBtn" type="button" style="display:none; width:100%; margin-bottom:10px; text-align:left; padding:16px;">
       📷 Ausrüstungs-Check<br><span style="font-weight:400; font-size:12px; opacity:.8;" id="chooserEquipSub">Tägliche Foto-Kontrolle</span>
     </button>
-    <button class="pinOk" id="chooserHoursBtn" type="button" style="width:100%; text-align:left; padding:16px; position:relative;">
+    <button class="pinOk" id="chooserHoursBtn" type="button" style="display:none; width:100%; text-align:left; padding:16px; position:relative;">
       🕒 Meine Stunden ansehen<br><span style="font-weight:400; font-size:12px; opacity:.8;">Korrigierte Stunden &amp; Nachrichten</span>
       <span id="hoursNewBadge" style="display:none; position:absolute; top:10px; right:14px; background:#E8A33D; color:#2b1f04; font-size:11px; font-weight:900; padding:3px 10px; border-radius:20px;">🔴 Neu</span>
     </button>
@@ -3645,7 +3647,10 @@ if("serviceWorker" in navigator){
   });
 }
 
-const APP_VERSION = "v20261019b";
+const APP_VERSION = "v20261020a";
+// Abgeschaltete Funktionen: Ausrüstungs-Check und "Meine Stunden ansehen" (jetzt im Dienstplan-Portal). Auch im Server sind diese Aktionen entfernt.
+const FEATURE_EQUIP = false;
+const FEATURE_HOURS_VIEW = false;
 document.getElementById("loginVersion").textContent = "Version " + APP_VERSION;
 
 (function setupUpdateCheck(){
@@ -5748,6 +5753,7 @@ function saveNoticeCache(lines){
 function renderChooserNotice(lines){
   const box = document.getElementById("chooserNotice");
   if(!box) return;
+  if(!FEATURE_HOURS_VIEW){ box.style.display = "none"; return; }
   let snoozed = false;
   try{ snoozed = sessionStorage.getItem("sad_notice_later") === lines.join("|"); }catch(e){}
   if(!lines.length || snoozed){ box.style.display = "none"; return; }
@@ -5759,6 +5765,7 @@ function renderChooserNotice(lines){
 
 let lastHoursCheck = 0;
 async function checkForHoursUpdates(){
+  if(!FEATURE_HOURS_VIEW) return;
   lastHoursCheck = Date.now();
   const pin = localStorage.getItem("sad_personal_pin");
   const secret = localStorage.getItem("sad_device_secret");
@@ -5831,6 +5838,7 @@ let equipCachedPosition = null;
 let equipCachedPositionTime = 0;
 
 function openEquipCheck(){
+  if(!FEATURE_EQUIP) return;
   if(equipIsLocked()){
     dlgAlert("Diese Funktion wird bald freigeschaltet.", "Noch nicht verfügbar");
     return;
@@ -5855,6 +5863,7 @@ chooserFormularBtn.addEventListener("click", openStundenformular);
 chooserEquipBtn.addEventListener("click", openEquipCheck);
 
 function openMyHours(){
+  if(!FEATURE_HOURS_VIEW) return;
   chooserBack.style.display = "none";
   hoursBack.style.display = "flex";
 
@@ -5942,6 +5951,7 @@ hoursLoginBtn.addEventListener("click", async ()=>{
 });
 
 async function loadMyHours(pin, secret){
+  if(!FEATURE_HOURS_VIEW) return;
   hoursTableWrap.innerHTML = `<div style="display:flex; align-items:center; gap:10px; color:rgba(255,255,255,.8); font-size:13px; padding:10px 0;"><span style="display:inline-block; width:20px; height:20px; border-radius:50%; border:3px solid rgba(255,255,255,.25); border-top-color:#FFD54A; animation:equipSpin 0.8s linear infinite;"></span>Lädt...</div>`;
   hoursMessagesWrap.innerHTML = "";
   hoursDocumentsWrap.innerHTML = "";
@@ -6514,10 +6524,14 @@ async function planUebernehmen(){
   const rows = Array.from(document.querySelectorAll("#rows tr"));
   const todo = [];
   let already = 0;
+  let absentSkipped = 0;
+  planAbsences = result.absences || [];
+  markAbsenceRows();
   shifts.forEach(s=>{
     const day = parseInt(String(s.date).slice(8,10),10);
     const tr = rows.find(r => parseInt(r.dataset.day,10) === day);
     if(!tr) return;
+    if(absenceOn(s.date)){ absentSkipped++; return; }
     const ortVal = tr.querySelector(".ort").value;
     if(ortVal && ortVal !== "__CLEAR_ORT__"){ already++; return; }
     todo.push({ tr: tr, s: s });
@@ -6528,6 +6542,7 @@ async function planUebernehmen(){
   }
   const msg = todo.length + (todo.length === 1 ? " geplante Schicht" : " geplante Schichten") + " in die leeren Tage übernehmen?" +
     (already ? " " + already + (already === 1 ? " Tag ist" : " Tage sind") + " schon ausgefüllt und bleiben unverändert." : "") +
+    (absentSkipped ? " " + absentSkipped + (absentSkipped === 1 ? " Tag wird" : " Tage werden") + " übersprungen (krank gemeldet oder Urlaub)." : "") +
     " Bitte prüfe danach, ob du wirklich so gearbeitet hast.";
   const ok = await dlgConfirm(msg, "Aus Dienstplan übernehmen");
   if(!ok) return;
@@ -6550,6 +6565,54 @@ async function planUebernehmen(){
   updateTotal();
 }
 document.getElementById("planFillBtn")?.addEventListener("click", planUebernehmen);
+
+// Eigene Krank-/Urlaubstage (vom Server) im Formular kennzeichnen und freundlich darauf hinweisen
+let planAbsences = [];
+function absenceOn(iso){
+  return planAbsences.find(a => a.from <= iso && iso <= a.to) || null;
+}
+function markAbsenceRows(){
+  const mm = String(parseInt(monthEl.value,10)).padStart(2,"0");
+  const yy = parseInt(yearEl.value,10);
+  document.querySelectorAll("#rows tr").forEach(tr=>{
+    const iso = yy + "-" + mm + "-" + String(tr.dataset.day).padStart(2,"0");
+    const a = absenceOn(iso);
+    const cell = tr.querySelector("td");
+    let tag = tr.querySelector(".absTag");
+    if(a){
+      tr.classList.add("absentRow");
+      if(!tag && cell){ tag = document.createElement("div"); tag.className = "absTag"; cell.appendChild(tag); }
+      if(tag) tag.textContent = a.type === "krank" ? "krank gemeldet" : "Urlaub";
+    }else{
+      tr.classList.remove("absentRow");
+      if(tag) tag.remove();
+    }
+  });
+}
+async function loadPlanAbsences(){
+  const pin = localStorage.getItem("sad_personal_pin");
+  const secret = localStorage.getItem("sad_device_secret");
+  if(!pin || !secret) return;
+  const mm = String(parseInt(monthEl.value,10)).padStart(2,"0");
+  const yy = parseInt(yearEl.value,10);
+  try{
+    const res = await fetch(EQUIP_WEB_APP_URL, { method: "POST", body: JSON.stringify({ token: EQUIP_API_TOKEN, action: "getMyPlan", pin: pin, secret: secret, month: yy + "-" + mm }) });
+    const result = await res.json();
+    if(result.status === "success"){ planAbsences = result.absences || []; markAbsenceRows(); }
+  }catch(e){ /* ohne Verbindung: kein Hinweis, das Formular funktioniert trotzdem */ }
+}
+document.getElementById("rows")?.addEventListener("change", (e)=>{
+  const sel = e.target;
+  if(!sel || !sel.classList || !sel.classList.contains("ort")) return;
+  const tr = sel.closest("tr");
+  if(!tr || !tr.classList.contains("absentRow") || tr.dataset.absWarned) return;
+  if(!sel.value || sel.value === "__CLEAR_ORT__") return;
+  tr.dataset.absWarned = "1";
+  const a = absenceOn(yearEl.value + "-" + String(parseInt(monthEl.value,10)).padStart(2,"0") + "-" + String(tr.dataset.day).padStart(2,"0"));
+  dlgAlert("An diesem Tag bist du " + (a && a.type === "krank" ? "krank gemeldet" : "im Urlaub") + ". Wenn du trotzdem gearbeitet hast, ist das in Ordnung, trage es einfach ein.", "Hinweis");
+});
+const _buildOriginal = build;
+build = function(){ _buildOriginal(); planAbsences = planAbsences; markAbsenceRows(); loadPlanAbsences(); };
 
 closePrevTop.addEventListener("click", closePreview);
 closePrevBottom.addEventListener("click", closePreview);
