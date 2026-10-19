@@ -3136,6 +3136,9 @@ tbody tr:nth-child(odd){
       🕒 Meine Stunden ansehen<br><span style="font-weight:400; font-size:12px; opacity:.8;">Korrigierte Stunden &amp; Nachrichten</span>
       <span id="hoursNewBadge" style="display:none; position:absolute; top:10px; right:14px; background:#E8A33D; color:#2b1f04; font-size:11px; font-weight:900; padding:3px 10px; border-radius:20px;">🔴 Neu</span>
     </button>
+    <button class="pinOk" id="chooserPlanBtn" type="button" style="width:100%; margin-top:10px; text-align:left; padding:16px;">
+      📅 Mein Dienstplan<br><span style="font-weight:400; font-size:12px; opacity:.8;">Schichten, Krankmeldung &amp; Anträge</span>
+    </button>
   </div>
 </div>
 
@@ -3517,6 +3520,10 @@ tbody tr:nth-child(odd){
       <div id="progressText" class="progressText">0 von 0 Tagen ausgefüllt</div>
       <button type="button" id="fillMonthBtn" class="fillMonthBtn">Muster für Monat übernehmen</button>
     </div>
+    <div class="tableSubRow">
+      <div class="progressText">Geplante Schichten aus dem Dienstplan</div>
+      <button type="button" id="planFillBtn" class="fillMonthBtn">📅 Aus Dienstplan übernehmen</button>
+    </div>
     <div class="swipeHintText">↔ nach rechts wischen für Beginn/Ende/Stunden</div>
 
     <div class="tableScroll">
@@ -3638,7 +3645,7 @@ if("serviceWorker" in navigator){
   });
 }
 
-const APP_VERSION = "v20261001p";
+const APP_VERSION = "v20261019b";
 document.getElementById("loginVersion").textContent = "Version " + APP_VERSION;
 
 (function setupUpdateCheck(){
@@ -5866,6 +5873,7 @@ function openMyHours(){
 }
 
 chooserHoursBtn.addEventListener("click", openMyHours);
+document.getElementById("chooserPlanBtn").addEventListener("click", function () { window.location.href = "dienstplan.html"; });
 document.getElementById("chooserNoticeOpen").addEventListener("click", openMyHours);
 document.getElementById("chooserNoticeLater").addEventListener("click", ()=>{
   const box = document.getElementById("chooserNotice");
@@ -6466,6 +6474,82 @@ async function musterFuerMonatUebernehmen(){
 }
 
 fillMonthBtn?.addEventListener("click", musterFuerMonatUebernehmen);
+
+// Geplante Schichten (veröffentlichter Dienstplan) in die LEEREN Tage des Monats übernehmen.
+// Bereits ausgefüllte Tage werden nie verändert.
+async function planUebernehmen(){
+  const btn = document.getElementById("planFillBtn");
+  const pin = localStorage.getItem("sad_personal_pin");
+  const secret = localStorage.getItem("sad_device_secret");
+  if(!pin || !secret){
+    dlgAlert("Damit dein Dienstplan geladen werden kann, muss dieses Gerät deiner PIN zugeordnet sein. Das passiert beim ersten Senden von Stunden oder über „Meine Stunden“.", "Gerät nicht zugeordnet");
+    return;
+  }
+  const mm = String(parseInt(monthEl.value,10)).padStart(2,"0");
+  const yy = parseInt(yearEl.value,10);
+  const oldText = btn.textContent;
+  btn.disabled = true; btn.textContent = "Lädt …";
+  let result;
+  try{
+    const res = await fetch(EQUIP_WEB_APP_URL, {
+      method: "POST",
+      body: JSON.stringify({ token: EQUIP_API_TOKEN, action: "getMyPlan", pin: pin, secret: secret, month: yy + "-" + mm })
+    });
+    result = await res.json();
+  }catch(e){
+    result = { status: "error", message: "Keine Verbindung zum Server. Bitte prüfe dein Internet." };
+  }
+  btn.disabled = false; btn.textContent = oldText;
+
+  if(result.status !== "success"){
+    if(result.code === "DEVICE_MISMATCH"){ handleUnknownDevice(); return; }
+    dlgAlert(result.message || "Der Dienstplan konnte nicht geladen werden.", "Fehler");
+    return;
+  }
+  const shifts = result.shifts || [];
+  if(!shifts.length){
+    dlgAlert("Für diesen Monat sind noch keine Schichten für dich veröffentlicht.", "Kein Dienstplan");
+    return;
+  }
+  const rows = Array.from(document.querySelectorAll("#rows tr"));
+  const todo = [];
+  let already = 0;
+  shifts.forEach(s=>{
+    const day = parseInt(String(s.date).slice(8,10),10);
+    const tr = rows.find(r => parseInt(r.dataset.day,10) === day);
+    if(!tr) return;
+    const ortVal = tr.querySelector(".ort").value;
+    if(ortVal && ortVal !== "__CLEAR_ORT__"){ already++; return; }
+    todo.push({ tr: tr, s: s });
+  });
+  if(!todo.length){
+    dlgAlert("Alle geplanten Tage sind schon ausgefüllt. Es wurde nichts verändert.", "Nichts zu übernehmen");
+    return;
+  }
+  const msg = todo.length + (todo.length === 1 ? " geplante Schicht" : " geplante Schichten") + " in die leeren Tage übernehmen?" +
+    (already ? " " + already + (already === 1 ? " Tag ist" : " Tage sind") + " schon ausgefüllt und bleiben unverändert." : "") +
+    " Bitte prüfe danach, ob du wirklich so gearbeitet hast.";
+  const ok = await dlgConfirm(msg, "Aus Dienstplan übernehmen");
+  if(!ok) return;
+
+  todo.forEach(({tr, s})=>{
+    const ort = tr.querySelector(".ort");
+    const opts = Array.from(ort.options);
+    const pick = opts.find(o => o.value === s.place && o.getAttribute("data-start") === s.start && o.getAttribute("data-end") === s.end)
+              || opts.find(o => o.value === s.place);
+    if(!pick) return;
+    ort.selectedIndex = opts.indexOf(pick);
+    applyShortLabel(ort);
+    tr.querySelector(".start").value = s.start;
+    tr.querySelector(".end").value = s.end;
+    autoHours(tr);
+    updateRowShiftClass(tr);
+  });
+  markDirty();
+  saveState();
+  updateTotal();
+}
+document.getElementById("planFillBtn")?.addEventListener("click", planUebernehmen);
 
 closePrevTop.addEventListener("click", closePreview);
 closePrevBottom.addEventListener("click", closePreview);
