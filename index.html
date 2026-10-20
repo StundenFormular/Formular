@@ -4179,6 +4179,47 @@ function fillMonthYear(){
   yearEl.value=String(current.getFullYear());
 }
 
+/* ---- Standorte kommen vom Server (neue Standorte erscheinen ohne neue App-Version) ---- */
+const ORTE_CACHE_KEY = "sad_orte_v1";
+function applyOrte(templates){
+  if(!Array.isArray(templates) || !templates.length) return false;
+  const next = [];
+  for(const t of templates){
+    if(!t || typeof t.place !== "string" || typeof t.start !== "string" || typeof t.end !== "string") return false;
+    next.push({ value: t.place, short: t.place.replace(/\s*\((Tag|Nacht)\)\s*$/i, ""), start: t.start, end: t.end, typ: t.typ === "Tagschicht" ? "Tagschicht" : "Nachtschicht" });
+  }
+  if(JSON.stringify(next) === JSON.stringify(ORTE)) return false;
+  ORTE.length = 0; next.forEach(o => ORTE.push(o));
+  return true;
+}
+function refreshOrtSelects(){
+  document.querySelectorAll("select.ort").forEach(sel => {
+    const cur = sel.value;
+    const keep = Array.from(sel.options).slice(0, 2).map(o => o.outerHTML).join("");
+    sel.innerHTML = keep + buildOrtOptions();
+    if(cur){
+      if(!Array.from(sel.options).some(o => o.value === cur)){
+        const o = document.createElement("option"); o.value = cur; o.textContent = cur; sel.appendChild(o);
+      }
+      sel.value = cur;
+    }
+  });
+}
+try{ const cached = JSON.parse(localStorage.getItem(ORTE_CACHE_KEY) || "null"); if(cached) applyOrte(cached); }catch(e){}
+async function loadOrteFromServer(){
+  try{
+    const pin = localStorage.getItem("sad_personal_pin"), secret = localStorage.getItem("sad_device_secret");
+    if(!pin || !secret) return;
+    const res = await fetch(EQUIP_WEB_APP_URL, { method: "POST", body: JSON.stringify({ token: EQUIP_API_TOKEN, action: "listPlaces", pin: pin, secret: secret }) });
+    const r = await res.json();
+    if(r && r.status === "success" && Array.isArray(r.templates) && r.templates.length){
+      localStorage.setItem(ORTE_CACHE_KEY, JSON.stringify(r.templates));
+      if(applyOrte(r.templates)) refreshOrtSelects();
+    }
+  }catch(e){ /* offline: die gespeicherte Liste bleibt */ }
+}
+window.addEventListener("load", () => setTimeout(loadOrteFromServer, 700));
+
 function buildOrtOptions(){
   const gruppen = {};
   ORTE.forEach(o=>{
