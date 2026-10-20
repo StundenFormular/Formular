@@ -159,12 +159,15 @@
     const tReq = tile('swap', 'Anträge', 'Urlaub, Tausch oder Änderung', showRequests);
     const tHours = tile('clock', 'Meine Stunden', 'Gesendete und korrigierte Stunden', showHours);
     const tMsg = tile('chat', 'Nachrichten', 'Schreibe dem Admin', showMessages);
+    const tOpen = tile('plus', 'Offene Schichten', 'Zusätzliche Schichten übernehmen', showOpen);
+    const offlineBox = h('div', {});
     const changeBtn = h('button', { type: 'button', class: 'btn btn-secondary' }, DP.icon('key', 'sm'), 'Passwort ändern');
     changeBtn.addEventListener('click', function () { showChangePassword(false); });
     const allBtn = h('button', { type: 'button', class: 'btn btn-secondary' }, DP.icon('logout', 'sm'), 'Auf allen Geräten abmelden');
     allBtn.addEventListener('click', async function () {
       if (!(await DP.confirm('Auf allen Geräten abmelden?', 'Du wirst überall abgemeldet, auch auf diesem Gerät. Danach musst du dich neu anmelden.', 'Überall abmelden', 'danger'))) return;
       await DP.api('accLogoutAll', { session: state.session.token });
+      clearCaches();
       store.clear();
       showLogin('Du wurdest auf allen Geräten abgemeldet.');
     });
@@ -178,8 +181,8 @@
           h('div', { class: 'row hero-id' }, h('div', { class: 'avatar lg', text: DP.initials(p.name || p.username) }),
             h('div', {}, h('h2', { text: greeting() + ', ' + first + '!' }), h('p', { class: 'dateline', text: PD.long(PD.today()) }))),
           h('div', { class: 'hero-next' }, heroLab, heroBig, heroSub)))),
-      h('main', { class: 'page wide stack' },
-        h('div', { class: 'tiles' }, tPlan.el, tSick.el, tReq.el, tHours.el, tMsg.el),
+      h('main', { class: 'page wide stack' }, offlineBox,
+        h('div', { class: 'tiles' }, tPlan.el, tSick.el, tReq.el, tHours.el, tMsg.el, tOpen.el),
         h('section', { class: 'card stack-sm' }, h('h3', { text: 'Dein Zugang' }),
           h('dl', { class: 'kv' },
             h('dt', { text: 'Benutzername' }), h('dd', { class: 'mono', text: p.username || '' }),
@@ -188,6 +191,7 @@
     loadHome().then(function (r) {
       if (!r) return;
       if (r.status !== 'success') { tPlan.sub.textContent = 'Der Dienstplan konnte nicht geladen werden.'; heroBig.textContent = 'Nicht verfügbar'; return; }
+      if (r.offlineAt) offlineBox.replaceChildren(offlineBanner(r.offlineAt));
       tPlan.sub.textContent = planPreview(r);
       const nx = nextShift(r.shifts || []);
       if (nx) {
@@ -215,6 +219,40 @@
       if (sick) tSick.sub.textContent = 'Aktuell gemeldet bis ' + PD.short(sick.to);
       if (r.decidedSick > 0) showBadge(tSick.badge, 'Vom Admin bestätigt', 'success');
     });
+    call('accOpenShifts').then(function (o) {
+      if (!o || o.status !== 'success' || o.offlineAt) return;
+      const n = (o.shifts || []).filter(function (s) { return s.fits; }).length;
+      if (n) { tOpen.sub.textContent = n + (n === 1 ? ' Schicht ist frei' : ' Schichten sind frei'); showBadge(tOpen.badge, n + ' frei'); }
+    });
+  }
+
+  // ---------- Offene Schichten ----------
+  function showOpen() {
+    const list = h('div', { class: 'stack-sm' }, spinnerCard());
+    async function load() {
+      const r = await call('accOpenShifts');
+      if (!r) return;
+      if (r.status !== 'success') { list.replaceChildren(alertBox('error', r.message || 'Die offenen Schichten konnten nicht geladen werden.')); return; }
+      curPlaceInfo = r.placeInfo || {};
+      const nodes = [];
+      if (r.offlineAt) nodes.push(offlineBanner(r.offlineAt));
+      if (!r.shifts.length) nodes.push(h('div', { class: 'card empty-card' }, h('div', { class: 'ico' }, DP.icon('plus')), h('h3', { text: 'Gerade keine offenen Schichten' }), h('p', { class: 'small', text: 'Wenn der Planer zusätzliche Schichten ausschreibt, findest du sie hier. Du bekommst dann auch eine Nachricht.' })));
+      r.shifts.forEach(function (s) {
+        const btn = h('button', { type: 'button', class: 'btn btn-primary btn-sm' }, DP.icon('plus', 'sm'), 'Übernehmen');
+        btn.disabled = !!r.offlineAt;
+        btn.addEventListener('click', async function () {
+          if (!(await DP.confirm('Schicht übernehmen?', PD.short(s.date) + ' · ' + s.start + '–' + s.end + ' Uhr · ' + s.place + '. Sie steht danach in deinem Dienstplan.', 'Übernehmen', 'primary'))) return;
+          const x = await call('accClaimShift', { id: s.id });
+          if (x && x.status === 'success') DP.toast('Schicht übernommen. Sie steht jetzt in deinem Dienstplan.');
+          else if (x) DP.toast(x.message || 'Das hat nicht geklappt.', 'error');
+          load();
+        });
+        nodes.push(h('div', { class: 'openwrap stack-sm' }, shiftCard(s, 0, false), s.fits ? h('div', {}, btn) : h('div', { class: 'small muted', text: s.reason || 'Passt nicht zu deinem Plan.' })));
+      });
+      list.replaceChildren(...nodes);
+    }
+    screen('Offene Schichten', [h('p', { class: 'muted small', text: 'Diese Schichten sind noch frei. Wenn du eine übernimmst, ist sie sofort deine.' }), list]);
+    load();
   }
 
   // ---------- Dienstplan ----------
@@ -243,8 +281,19 @@
     if (!n) return 'Noch keine Schichten veröffentlicht.';
     return (shiftStart(n) <= new Date() ? 'Läuft gerade: ' : 'Nächste Schicht: ') + PD.short(n.date) + ' ' + n.start + '–' + n.end + ' · ' + n.place;
   }
+  // Offline: der zuletzt geladene Plan bleibt lesbar (nur auf diesem Gerät, wird beim Abmelden gelöscht)
+  const CACHE_ACTIONS = { accHome: 1, accMyShifts: 1, accOpenShifts: 1 };
+  function cacheKey(action) { return 'dp_cache_' + action + '_v1:' + ((state.profile && state.profile.username) || ''); }
+  function clearCaches() { try { Object.keys(localStorage).filter(function (k) { return k.indexOf('dp_cache_') === 0; }).forEach(function (k) { localStorage.removeItem(k); }); } catch (e) { /* ignorieren */ } }
+  function offlineBanner(ts) { return alertBox('info', 'Keine Verbindung. Du siehst den Stand von ' + DP.fmtDate(ts) + '.'); }
   async function call(action, payload) {
     const r = await DP.api(action, Object.assign({ session: state.session.token }, payload || {}));
+    if (CACHE_ACTIONS[action]) {
+      if (r.status === 'success') { try { localStorage.setItem(cacheKey(action), JSON.stringify({ ts: Date.now(), r: r })); } catch (e) { /* ignorieren */ } }
+      else if (r.code === 'NETWORK') {
+        try { const c = JSON.parse(localStorage.getItem(cacheKey(action))); if (c && c.r && c.r.status === 'success') return Object.assign({}, c.r, { offlineAt: c.ts }); } catch (e) { /* ignorieren */ }
+      }
+    }
     if (r.code === 'AUTH') { expired(); return null; }
     if (r.code === 'MUST_CHANGE') { showChangePassword(true); return null; }
     if (r.code === 'MAINTENANCE') { showMaintenance(r.message); return null; }
@@ -260,6 +309,13 @@
     if (r && r.status === 'success') state.shifts = r;
     return r;
   }
+  let curPlaceInfo = {};
+  function placeInfoNode(place) {
+    const i = curPlaceInfo && curPlaceInfo[place];
+    if (!i) return null;
+    const rows = [['Adresse', i.address], ['Ansprechpartner', i.contact], ['Hinweis', i.note]].filter(function (x) { return x[1]; });
+    return rows.length ? h('details', { class: 'pinfo' }, h('summary', { text: 'Infos zum Standort' }), h('dl', { class: 'kv' }, rows.map(function (x) { return [h('dt', { text: x[0] }), h('dd', { text: x[1] })]; }))) : null;
+  }
   function shiftCard(s, seen, past) {
     const d = PD.parse(s.date), cancelled = s.status === 'abgesagt', isToday = s.date === PD.today();
     const isNew = !cancelled && seen && s.updated > seen;
@@ -271,7 +327,8 @@
           isNew ? h('span', { class: 'badge info', text: 'Neu / geändert' }) : null,
           isToday && !cancelled ? h('span', { class: 'badge success', text: 'Heute' }) : null),
         h('div', { class: 'when', text: s.start + ' – ' + s.end + ' Uhr · ' + PD.fmtHours(s.hours) + ' Std.' }),
-        s.note ? h('div', { class: 'note' }, DP.icon('sticky', 'sm'), h('span', { text: s.note })) : null));
+        s.note ? h('div', { class: 'note' }, DP.icon('sticky', 'sm'), h('span', { text: s.note })) : null,
+        cancelled ? null : placeInfoNode(s.place)));
   }
   function showShifts() {
     const seen0 = getSeen();
@@ -289,6 +346,8 @@
         body.replaceChildren(h('div', { class: 'stack' }, alertBox('error', r.message || 'Der Dienstplan konnte nicht geladen werden.'), retry));
         return;
       }
+      curPlaceInfo = r.placeInfo || {};
+      if (r.offlineAt) nodes.push(offlineBanner(r.offlineAt));
       const now = new Date();
       const upcoming = r.shifts.filter(function (s) { return shiftEnd(s) > now; });
       const past = r.shifts.filter(function (s) { return shiftEnd(s) <= now; }).reverse();
@@ -383,8 +442,9 @@
   function field(label, input, id, hint) { return h('div', { class: 'field' }, h('label', { for: id, text: label }), input, hint ? h('div', { class: 'hint', text: hint }) : null); }
 
   // ---------- Anträge und Krankmeldungen: Karten ----------
-  const REQ_ICON = { krank: 'pluscircle', urlaub: 'sun', tausch: 'swap', aenderung: 'clock' };
+  const REQ_ICON = { krank: 'pluscircle', urlaub: 'sun', tausch: 'swap', aenderung: 'clock', verfuegbar: 'x' };
   function statusOf(q) {
+    if (q.type === 'verfuegbar') return q.status === 'genehmigt' ? ['Eingetragen', 'success'] : ['Zurückgezogen', 'neutral'];
     if (q.type === 'krank') return q.status === 'offen' ? ['Gemeldet', 'info'] : q.status === 'genehmigt' ? ['Bestätigt', 'success'] : ['Zurückgezogen', 'neutral'];
     return ({ offen: ['Offen', 'info'], genehmigt: ['Genehmigt', 'success'], abgelehnt: ['Abgelehnt', 'danger'], zurueckgezogen: ['Zurückgezogen', 'neutral'] })[q.status] || [q.status, 'neutral'];
   }
@@ -399,12 +459,13 @@
       q.wish ? h('div', { class: 'note' }, DP.icon('clock', 'sm'), h('span', { text: 'Dein Wunsch: ' + [q.wish.start || q.wish.end ? (q.wish.start || '…') + '–' + (q.wish.end || '…') + ' Uhr' : '', q.wish.place || ''].filter(Boolean).join(' · ') })) : null,
       q.reply ? h('div', { class: 'note reply' }, DP.icon('chat', 'sm'), h('span', { text: 'Antwort vom Admin: ' + q.reply })) : null,
       q.affected && q.affected.length && q.status !== 'zurueckgezogen' ? h('div', { class: 'sub', text: 'Betrifft ' + q.affected.length + (q.affected.length === 1 ? ' Schicht' : ' Schichten') + ': ' + q.affected.map(function (x) { return PD.short(x.date); }).join(', ') }) : null);
-    if (q.status === 'offen') {
-      const w = h('button', { type: 'button', class: 'btn btn-ghost btn-sm' }, DP.icon('x', 'sm'), 'Zurückziehen');
+    if (q.status === 'offen' || (q.type === 'verfuegbar' && q.status === 'genehmigt')) {
+      const w = h('button', { type: 'button', class: 'btn btn-ghost btn-sm' }, DP.icon('x', 'sm'), q.type === 'verfuegbar' ? 'Eintrag löschen' : 'Zurückziehen');
       w.addEventListener('click', async function () {
-        if (!(await DP.confirm('Zurückziehen?', 'Der Admin sieht deinen Eintrag danach nicht mehr als offen.', 'Zurückziehen', 'danger'))) return;
+        const un = q.type === 'verfuegbar';
+        if (!(await DP.confirm(un ? 'Eintrag löschen?' : 'Zurückziehen?', un ? 'Du bist an diesen Tagen danach wieder einplanbar.' : 'Der Admin sieht deinen Eintrag danach nicht mehr als offen.', un ? 'Löschen' : 'Zurückziehen', 'danger'))) return;
         const r = await call('accRequestWithdraw', { id: q.id });
-        if (r && r.status === 'success') { DP.toast('Zurückgezogen.'); onChange(); } else if (r) DP.toast(r.message || 'Das hat nicht geklappt.', 'error');
+        if (r && r.status === 'success') { DP.toast(un ? 'Eintrag gelöscht.' : 'Zurückgezogen.'); onChange(); } else if (r) DP.toast(r.message || 'Das hat nicht geklappt.', 'error');
       });
       body.append(h('div', {}, w));
     }
@@ -469,7 +530,7 @@
     load();
   }
   function openTypePicker(onDone) {
-    const opts = [['urlaub', 'sun', 'Urlaub / freier Tag', 'Für einen oder mehrere Tage'], ['tausch', 'swap', 'Schicht tauschen oder abgeben', 'Eine deiner Schichten abgeben'], ['aenderung', 'clock', 'Zeit oder Standort ändern', 'Zum Beispiel später anfangen']];
+    const opts = [['urlaub', 'sun', 'Urlaub / freier Tag', 'Für einen oder mehrere Tage'], ['verfuegbar', 'x', 'Nicht verfügbar', 'Tage, an denen du nicht arbeiten kannst. Der Planer sieht es sofort'], ['tausch', 'swap', 'Schicht tauschen oder abgeben', 'Eine deiner Schichten abgeben'], ['aenderung', 'clock', 'Zeit oder Standort ändern', 'Zum Beispiel später anfangen']];
     let picker;
     const nodes = opts.map(function (o) {
       const b = h('button', { type: 'button', class: 'pick' }, h('div', { class: 'ico' }, DP.icon(o[1])), h('div', {}, h('div', { class: 't', text: o[2] }), h('div', { class: 's', text: o[3] })));
@@ -481,10 +542,10 @@
   function openRequestForm(type, onDone) {
     const today = PD.today();
     const msg = h('div', {});
-    const text = h('textarea', { class: 'input textarea', id: 'rq_text', maxlength: '300', placeholder: type === 'urlaub' ? 'Optional, zum Beispiel Grund' : type === 'tausch' ? 'Optional, zum Beispiel „Tausch mit Karl wäre möglich“' : 'Was soll geändert werden? Zum Beispiel „ab 23:00 statt 22:00“' });
+    const text = h('textarea', { class: 'input textarea', id: 'rq_text', maxlength: '300', placeholder: type === 'urlaub' || type === 'verfuegbar' ? 'Optional, zum Beispiel Grund' : type === 'tausch' ? 'Optional, zum Beispiel „Tausch mit Karl wäre möglich“' : 'Was soll geändert werden? Zum Beispiel „ab 23:00 statt 22:00“' });
     const nodes = [];
     let from, to, pick;
-    if (type === 'urlaub') {
+    if (type === 'urlaub' || type === 'verfuegbar') {
       from = h('input', { class: 'input', id: 'rq_from', type: 'date', value: PD.add(today, 1) });
       to = h('input', { class: 'input', id: 'rq_to', type: 'date', value: PD.add(today, 1) });
       from.addEventListener('change', function () { if (to.value < from.value) to.value = from.value; });
@@ -507,7 +568,7 @@
         h('p', { class: 'hint', text: 'Ändere nur, was sich ändern soll. Das macht es für den Admin ein Klick. Du kannst zusätzlich etwas dazuschreiben.' }));
     }
     nodes.push(field(type === 'aenderung' ? 'Hinweis (optional)' : 'Hinweis (optional)', text, 'rq_text'), msg);
-    const titles = { urlaub: 'Urlaub / freier Tag', tausch: 'Schicht tauschen oder abgeben', aenderung: 'Zeit oder Standort ändern' };
+    const titles = { verfuegbar: 'Nicht verfügbar eintragen', urlaub: 'Urlaub / freier Tag', tausch: 'Schicht tauschen oder abgeben', aenderung: 'Zeit oder Standort ändern' };
     DP.modal({
       title: titles[type], wide: true, body: h('div', { class: 'stack' }, nodes),
       actions: [{ label: 'Abbrechen', kind: 'secondary' }, {
@@ -515,7 +576,7 @@
         onClick: async function (api) {
           msg.replaceChildren();
           const payload = { type: type, text: text.value };
-          if (type === 'urlaub') { if (!from.value || !to.value || to.value < from.value) { msg.append(alertBox('error', 'Bitte gib einen gültigen Zeitraum an.')); return; } payload.from = from.value; payload.to = to.value; }
+          if (type === 'urlaub' || type === 'verfuegbar') { if (!from.value || !to.value || to.value < from.value) { msg.append(alertBox('error', 'Bitte gib einen gültigen Zeitraum an.')); return; } payload.from = from.value; payload.to = to.value; }
           else {
             if (!pick.value) { msg.append(alertBox('error', 'Bitte wähle eine Schicht.')); return; }
             payload.shiftId = pick.value;
@@ -645,11 +706,13 @@
       h('h1', { text: 'Keine Verbindung' }), h('p', { class: 'muted', text: 'Der Server ist gerade nicht erreichbar. Prüfe dein Internet.' }), b)));
   }
   function expired() {
+    clearCaches();
     store.clear();
     state.session = null;
     showLogin('Deine Sitzung ist abgelaufen. Bitte melde dich neu an.');
   }
   function logout() {
+    clearCaches();
     store.clear();
     state.session = null; state.profile = null;
     showLogin();
@@ -664,11 +727,17 @@
     const r = await DP.api('accMe', { session: s.token });
     if (r.status === 'success') {
       state.profile = r.profile;
+      try { localStorage.setItem('dp_cache_profile_v1', JSON.stringify(r.profile)); } catch (e) { /* ignorieren */ }
       return r.mustChange ? showChangePassword(true) : showHome();
     }
-    if (r.code === 'NETWORK') return showOffline();
+    if (r.code === 'NETWORK') {
+      let cp = null; try { cp = JSON.parse(localStorage.getItem('dp_cache_profile_v1')); } catch (e) { cp = null; }
+      if (cp && cp.username) { state.profile = cp; return showHome(); }   // offline: Startseite mit dem letzten Stand
+      return showOffline();
+    }
     if (r.code === 'MAINTENANCE') return showMaintenance(r.message);
     expired();
   }
+  try { if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(function () { /* ohne Offline-Hilfe weiterarbeiten */ }); } catch (e) { /* ignorieren */ }
   boot();
 })();

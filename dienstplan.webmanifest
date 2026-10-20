@@ -1,0 +1,16 @@
+{
+  "name": "Dienstplan",
+  "short_name": "Dienstplan",
+  "description": "Dein Dienstplan, Anträge und Nachrichten",
+  "lang": "de",
+  "start_url": "dienstplan.html",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#F3F2FA",
+  "theme_color": "#3D3A87",
+  "icons": [
+    { "src": "dp-icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "dp-icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "dp-icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}

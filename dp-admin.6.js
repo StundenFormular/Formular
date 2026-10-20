@@ -21,16 +21,18 @@
   const WARN_ACTIONS = ['login_fehlgeschlagen', 'konto_voruebergehend_gesperrt', 'konto_status_gesperrt'];
 
   function view(node) { root.replaceChildren(node); }
+  function byName(x, y) { if (x.pin === '00') return -1; if (y.pin === '00') return 1; return x.name.localeCompare(y.name, 'de'); }
   function alertBox(kind, text) { return h('div', { class: 'alert ' + kind, role: kind === 'error' ? 'alert' : 'status' }, DP.icon(kind === 'success' ? 'check' : 'alert', 'sm'), h('div', { text: text })); }
 
   async function adm(action, payload) {
     const r = await DP.api(action, Object.assign({ adminSession: state.session && state.session.token }, payload || {}));
-    if (r.code === 'ADMIN_AUTH') { sessionEnded('Die Sitzung ist abgelaufen. Bitte neu anmelden.'); }
+    if (r.code === 'ADMIN_AUTH' && state.session) { sessionEnded('Die Sitzung ist abgelaufen. Bitte neu anmelden.'); }
     return r;
   }
 
   // ---------- Anmeldung ----------
-  function showLogin(notice) {
+  function showLogin(notice) { showLoginPin(notice); }
+  function showLoginPin(notice) {
     stopLive();
     const pin = h('input', { class: 'input', id: 'pin', name: 'pin', type: 'password', inputmode: 'numeric', autocomplete: 'off', required: true, maxlength: '40', 'aria-label': 'Admin-PIN' });
     const msg = h('div', {});
@@ -49,6 +51,7 @@
         state.session = { token: r.session };
         store.save(r.session, Date.now() + 8 * 3600 * 1000, false);
         bridgeSession(r.session);
+        state.role = 'voll'; state.who = '';
         return startConsole();
       }
       btn.disabled = false; btn.replaceChildren('Anmelden');
@@ -56,13 +59,14 @@
     });
     view(h('div', { class: 'auth-wrap' }, h('div', { class: 'auth-card' },
       h('div', { class: 'head' }, h('div', { class: 'logo' }, DP.icon('shield')), h('div', {}, h('h1', { text: 'Admin-Konsole' }), h('p', { class: 'muted', text: 'Dienstplan verwalten' }))),
-      h('div', { class: 'card' }, form))));
+      h('div', { class: 'card stack-sm' }, form, (function () { const b = h('button', { type: 'button', class: 'btn btn-ghost btn-sm', id: 'toUser', text: 'Mit Benutzername anmelden' }); b.addEventListener('click', function () { showLoginUser(notice); }); return b; })()))));
     pin.focus();
   }
   // Die eingebetteten Bereiche (alte Admin-Seite) nutzen dieselbe Anmeldung: sie wird im Tab-Speicher unter dem alten Namen bereitgestellt
   function bridgeSession(token) { try { sessionStorage.setItem('adm_session', token); } catch (e) { /* ignorieren */ } }
   function sessionEnded(notice) {
-    store.clear(); state.session = null;
+    store.clear(); state.session = null; state.role = null; state.who = '';
+    state.tab = 'plan'; state.plan.data = null; state.plan.brush = null; state.plan.undo = null; state.users = null; state.dash = null; state.employees = [];   // nichts vom letzten Benutzer bleibt stehen
     try { sessionStorage.removeItem('adm_session'); } catch (e) { /* ignorieren */ }
     Object.keys(embedFrames).forEach(function (k) { delete embedFrames[k]; });
     document.title = 'Dienstplan – Admin';
@@ -73,27 +77,34 @@
   // ---------- Daten laden ("Live") ----------
   async function refresh(manual) {
     if (!state.session) return;
-    const r = await adm('adminAccList');
-    if (r.status === 'success') {
-      state.employees = r.employees || [];
-      state.serverNow = r.now || Date.now();
-      state.lastLoad = Date.now();
-      state.error = false;
-    } else if (r.code === 'NETWORK') {
-      state.error = true;
-    }
-    if (state.tab === 'audit' || state.tab === 'overview') await loadAudit();
-    await loadDash();
-    if (state.tab === 'plan') await loadPlan();
-    if (state.tab === 'requests') await loadRequests();
-    if (state.tab === 'messages') await loadMessages();
-    if (state.tab === 'report') await loadReport();
-    if (state.tab === 'overview') await loadSettings();
+    // Alles gleichzeitig abfragen (früher nacheinander): das Öffnen dauert nur noch so lang wie die langsamste Abfrage
+    const jobs = [
+      adm('adminAccList').then(function (r) {
+        if (r.status === 'success') {
+          state.employees = r.employees || [];
+          state.serverNow = r.now || Date.now();
+          state.lastLoad = Date.now();
+          state.error = false;
+        } else if (r.code === 'NETWORK') {
+          state.error = true;
+        }
+      }),
+      loadDash()
+    ];
+    if (state.tab === 'audit' || state.tab === 'overview') jobs.push(loadAudit());
+    if (state.tab === 'plan') jobs.push(loadPlan());
+    if (state.tab === 'requests') jobs.push(loadRequests());
+    if (state.tab === 'messages') jobs.push(loadMessages());
+    if (state.tab === 'report') jobs.push(loadReport());
+    if (state.tab === 'users') jobs.push(loadUsers());
+    if (state.tab === 'overview') jobs.push(loadSettings());
+    await Promise.all(jobs);
     renderChrome();
     renderTab();
     if (manual && !state.error) DP.toast('Aktualisiert.');
   }
   async function loadAudit() {
+    if (state.role && state.role !== 'voll') return;
     const r = await adm('adminAudit', { limit: 200 });
     if (r.status === 'success') state.audit = r.items || [];
   }
@@ -265,21 +276,35 @@
     const box = document.getElementById('content');
     if (!box) return;
     if (syncEmbed(box)) return;
-    const f = state.tab === 'plan' ? planView : state.tab === 'requests' ? requestsView : state.tab === 'messages' ? messagesView : state.tab === 'report' ? reportView : state.tab === 'accounts' ? accountsView : state.tab === 'audit' ? auditView : overviewView;
+    const f = state.tab === 'plan' ? planView : state.tab === 'requests' ? requestsView : state.tab === 'messages' ? messagesView : state.tab === 'report' ? reportView : state.tab === 'accounts' ? accountsView : state.tab === 'users' ? usersView : state.tab === 'audit' ? auditView : overviewView;
     const old = box.querySelector('.grid-wrap'), sl = old ? old.scrollLeft : 0, sy = window.scrollY;
-    box.replaceChildren(f());
+    const el = f();
+    if (state.role === 'lesen' && el && el.prepend) el.prepend(alertBox('info', 'Du hast nur Lesezugriff. Änderungen sind nicht möglich.'));
+    box.replaceChildren(el);
     const nw = box.querySelector('.grid-wrap');
     if (nw && sl) nw.scrollLeft = sl;
     if (sy) window.scrollTo(0, sy);
   }
-  function startConsole() {
-    const tabs = [['plan', 'calendar', 'Dienstplan'], ['overview', 'home', 'Übersicht'], ['requests', 'swap', 'Anträge'], ['messages', 'chat', 'Nachrichten'], ['report', 'chart', 'Auswertung'], ['accounts', 'users', 'Zugänge'], ['audit', 'list', 'Protokoll']];
+  async function startConsole() {
+    if (!state.role) {
+      const r = await adm('adminMe');
+      if (!state.session) return;
+      state.role = r.status === 'success' ? r.role : 'voll'; state.who = r.name || r.user || '';
+    }
+    startConsoleReal();
+  }
+  function startConsoleReal() {
+    const tabsAll = [['plan', 'calendar', 'Dienstplan'], ['overview', 'home', 'Übersicht'], ['requests', 'swap', 'Anträge'], ['messages', 'chat', 'Nachrichten'], ['report', 'chart', 'Auswertung'], ['accounts', 'users', 'Zugänge'], ['audit', 'list', 'Protokoll']];
+    const ROLE_TABS = { voll: null, planer: ['plan', 'overview', 'requests', 'messages', 'report'], lesen: ['plan', 'overview', 'requests', 'report'] };
+    const roleTabs = ROLE_TABS[state.role] || null;
+    const tabs = tabsAll.filter(function (t) { return !roleTabs || roleTabs.indexOf(t[0]) !== -1; }).concat(state.role === 'voll' ? [['users', 'shield', 'Admins']] : []);
+    const whoNote = h('div', { class: 'who-note' }, h('div', { class: 'wn', text: state.who || 'Hauptzugang' }), h('div', { class: 'muted small', text: ROLE_LABEL[state.role] || '' }));
     const nav = h('nav', { id: 'nav', class: 'side', 'aria-label': 'Hauptmenü' }, h('div', { class: 'brand' }, h('div', { class: 'mark' }, DP.icon('calendar')), 'Dienstplan'),
-      tabs.concat(Object.keys(EMB).map(function (k) { return [k, EMB[k][2], EMB[k][1]]; })).map(function (t, i) {
+      tabs.concat((state.role === 'voll' ? Object.keys(EMB) : []).map(function (k) { return [k, EMB[k][2], EMB[k][1]]; })).map(function (t, i) {
         const b = h('button', { type: 'button', class: 'nav', dataset: { tab: t[0] } }, DP.icon(t[1]), t[2], h('span', { id: 'navCount_' + t[0], class: 'count' }));
         b.addEventListener('click', function () { state.tab = t[0]; loadForTab(t[0]).then(function () { renderChrome(); renderTab(); }); renderChrome(); renderTab(); });
         return i === tabs.length ? [h('div', { class: 'navgroup', text: 'Stunden & Geräte' }), b] : b;
-      }), h('div', { class: 'grow' }));
+      }), h('div', { class: 'grow' }), whoNote);
     const refreshBtn = h('button', { type: 'button', class: 'btn btn-secondary btn-sm' }, DP.icon('refresh', 'sm'), 'Aktualisieren');
     refreshBtn.addEventListener('click', function () {
       const f = embedFrames[state.tab];
@@ -404,11 +429,11 @@
     const P = state.plan, rg = planRange(), key = P.view + rg[0];
     const r = await adm('adminShiftList', { from: rg[0], to: rg[1] });
     if (key !== P.view + planRange()[0]) return;   // inzwischen anderer Zeitraum gewählt
-    if (r.status === 'success') { P.data = r; P.error = false; }
+    if (r.status === 'success') { r.employees = [{ pin: '00', name: 'Offene Schichten' }].concat(r.employees || []); P.data = r; P.error = false; }
     else if (r.code === 'NETWORK') P.error = true;
   }
   async function changeMonth(ms) {
-    state.plan.monthStart = ms; state.plan.data = null;
+    state.plan.monthStart = ms; state.plan.data = null; state.plan.undo = null;
     renderTab();
     await loadPlan();
     renderTab();
@@ -416,7 +441,7 @@
   async function setPlanView(v) {
     const P = state.plan;
     if (P.view === v) return;
-    P.view = v; P.data = null; P.brush = null;
+    P.view = v; P.data = null; P.brush = null; P.undo = null;
     renderTab();
     await loadPlan();
     renderTab();
@@ -469,6 +494,9 @@
     D.shifts.forEach(function (s) { const k = (P.mode === 'emp' ? s.pin : s.place) + '|' + s.date; (idx[k] = idx[k] || []).push(s); });
     const absByPin = {};
     (D.absences || []).forEach(function (x) { (absByPin[x.pin] = absByPin[x.pin] || []).push(x); });
+    const unavByPin = {};
+    (D.unavail || []).forEach(function (x) { (unavByPin[x.pin] = unavByPin[x.pin] || []).push(x); });
+    const unavChip = function (x) { return h('div', { class: 'unavchip', title: 'Nicht verfügbar' + (x.text ? ': ' + x.text : '') }, 'Nicht verfügbar'); };
     const absChip = function (x) {
       const label = x.type === 'krank' ? 'Krank' : x.status === 'genehmigt' ? 'Urlaub' : 'Urlaub?';
       return h('div', { class: 'abs ' + x.type + (x.status === 'offen' && x.type === 'urlaub' ? ' pending' : ''), title: (x.type === 'krank' ? 'Krank gemeldet' : x.status === 'genehmigt' ? 'Urlaub (genehmigt)' : 'Urlaub beantragt, noch nicht entschieden') + ' · ' + PD.short(x.from) + (x.from !== x.to ? ' – ' + PD.short(x.to) : ''), text: label });
@@ -483,7 +511,7 @@
     };
     const rows = [];
     if (P.mode === 'emp') {
-      D.employees.slice().sort(function (x, y) { return x.name.localeCompare(y.name, 'de'); }).forEach(function (e) {
+      D.employees.slice().sort(byName).forEach(function (e) {
         let sum = 0;
         D.shifts.forEach(function (s) { if (s.pin === e.pin && s.status !== 'abgesagt') sum += s.hours; });
         const acct = acctByPin[e.pin];
@@ -491,10 +519,11 @@
           const add = h('button', { type: 'button', class: 'add-cell', 'aria-label': 'Schicht für ' + e.name + ' am ' + PD.short(d) + ' hinzufügen' }, DP.icon('plus', 'sm'));
           add.addEventListener('click', function () { openShiftModal({ pin: e.pin, date: d }); });
           const abs = (absByPin[e.pin] || []).filter(function (x) { return x.from <= d && d <= x.to; });
-          return h('td', { class: (d === today ? 'today' : '') + (abs.length ? ' absent' : '') }, abs.map(absChip), (idx[e.pin + '|' + d] || []).map(chip), add);
+          const un = (unavByPin[e.pin] || []).filter(function (x) { return x.from <= d && d <= x.to; });
+          return h('td', { class: (d === today ? 'today' : '') + (abs.length ? ' absent' : '') + (un.length ? ' unav' : '') }, abs.map(absChip), un.map(unavChip), (idx[e.pin + '|' + d] || []).map(chip), add);
         });
         rows.push(h('tr', {}, h('td', { class: 'who' }, h('div', { class: 'whocell' }, h('div', { class: 'avatar', text: DP.initials(e.name) }),
-          h('div', {}, h('div', { class: 'nm', text: e.name }), !acct ? h('span', { class: 'badge neutral', text: 'kein Zugang', title: 'Hat noch keinen Zugang und sieht den Plan nicht.' }) : null))),
+          h('div', {}, h('div', { class: 'nm', text: e.name }), e.pin === '00' ? h('span', { class: 'badge info', text: 'für alle' }) : !acct ? h('span', { class: 'badge neutral', text: 'kein Zugang', title: 'Hat noch keinen Zugang und sieht den Plan nicht.' }) : null))),
           cells, h('td', { class: 'sum' + (D.rulesOn && sum > D.limits.weekHours ? ' warn' : ''), title: 'Summe der Woche (ohne abgesagte)', text: sum ? PD.fmtHours(sum) + ' Std.' : '–' })));
       });
     } else {
@@ -523,9 +552,9 @@
       let go = false;
       DP.modal({
         title: 'Bitte prüfen', onClose: function () { resolve(go); },
-        body: h('div', { class: 'stack-sm' }, h('p', { text: 'Diese Schicht überschreitet empfohlene Grenzen:' }),
+        body: h('div', { class: 'stack-sm' }, h('p', { text: warnings.every(function (w) { return w.code === 'UNAVAILABLE'; }) ? 'Bitte kurz prüfen:' : 'Diese Schicht überschreitet empfohlene Grenzen:' }),
           h('ul', { class: 'warn-list' }, warnings.map(function (w) { return h('li', { text: w.message }); })),
-          h('p', { class: 'hint', text: 'Du entscheidest, ob du sie trotzdem einplanst. Verantwortlich für die Einhaltung der Arbeitszeitregeln bleibt die Firma.' })),
+          h('p', { class: 'hint', text: warnings.every(function (w) { return w.code === 'UNAVAILABLE'; }) ? 'Der Mitarbeiter hat sich für diesen Tag abgemeldet. Du entscheidest, ob du ihn trotzdem einplanst.' : 'Du entscheidest, ob du sie trotzdem einplanst. Verantwortlich für die Einhaltung der Arbeitszeitregeln bleibt die Firma.' })),
         actions: [{ label: 'Zurück', kind: 'secondary' }, { label: 'Trotzdem speichern', kind: 'primary', onClick: function () { go = true; } }]
       });
     });
@@ -533,7 +562,7 @@
 
   function openShiftModal(init) {
     const D = state.plan.data, ed = init.shift || null;
-    const emps = D.employees.slice().sort(function (x, y) { return x.name.localeCompare(y.name, 'de'); });
+    const emps = D.employees.slice().sort(byName);
     if (ed && ed.status === 'abgesagt') {
       DP.modal({
         title: 'Abgesagte Schicht', wide: true,
@@ -640,14 +669,15 @@
   async function loadMessages() { const r = await adm('adminListMessages'); if (r.status === 'success') state.msg.data = r.messages || []; }
   async function loadForTab(tab) {
     if (tab === 'plan') await loadPlan();
-    else if (tab === 'requests') { await loadRequests(); await loadDash(); }
-    else if (tab === 'messages') { await loadMessages(); await loadDash(); }
+    else if (tab === 'requests') await Promise.all([loadRequests(), loadDash()]);
+    else if (tab === 'messages') await Promise.all([loadMessages(), loadDash()]);
     else if (tab === 'report') await loadReport();
-    else if (tab === 'audit' || tab === 'overview') { await loadAudit(); await loadDash(); if (tab === 'overview') await loadSettings(); }
+    else if (tab === 'users') await loadUsers();
+    else if (tab === 'audit' || tab === 'overview') await Promise.all([loadAudit(), loadDash(), tab === 'overview' ? loadSettings() : null]);
   }
 
   // ---------- Anträge ----------
-  const REQ_ICON = { krank: 'pluscircle', urlaub: 'sun', tausch: 'swap', aenderung: 'clock' };
+  const REQ_ICON = { krank: 'pluscircle', urlaub: 'sun', tausch: 'swap', aenderung: 'clock', verfuegbar: 'x' };
   function reqStatus(q) {
     if (q.type === 'krank') return q.status === 'offen' ? ['Gemeldet', 'warn'] : q.status === 'genehmigt' ? ['Bestätigt', 'success'] : ['Zurückgezogen', 'neutral'];
     return ({ offen: ['Offen', 'warn'], genehmigt: ['Genehmigt', 'success'], abgelehnt: ['Abgelehnt', 'danger'], zurueckgezogen: ['Zurückgezogen', 'neutral'] })[q.status] || [q.status, 'neutral'];
@@ -792,7 +822,7 @@
     if (s) openShiftModal({ shift: s });
   }
   function openAbsenceModal() {
-    const emps = state.employees.slice().sort(function (x, y) { return x.name.localeCompare(y.name, 'de'); });
+    const emps = state.employees.slice().sort(byName);
     const emp = h('select', { class: 'input', id: 'ab_emp' }, emps.map(function (e) { return h('option', { value: e.pin, text: e.name }); }));
     const type = h('select', { class: 'input', id: 'ab_type' }, h('option', { value: 'krank', text: 'Krank' }), h('option', { value: 'urlaub', text: 'Urlaub / frei' }));
     const from = h('input', { class: 'input', id: 'ab_from', type: 'date', value: PD.today() });
@@ -916,13 +946,17 @@
   const ISSUE_LABEL = { fehlt: ['Nicht gesendet', 'danger'], abweichung: ['Abweichung', 'warn'], ungeplant: ['Ungeplant', 'info'] };
   function num(x) { return String(Math.round(x * 10) / 10).replace('.', ','); }
   function csvText(v) { let s = String(v == null ? '' : v); if (/^[=+\-@\t\r]/.test(s)) s = "'" + s; return /[;"\n\r]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s; }
+  // Nacht-/Sonntagsstunden: gesendete Stunden, solange vorhanden, sonst die geplanten (gedämpft)
+  function premTd(label, e, plan, sent) {
+    return h('td', { class: 'num' + (e.submitted ? '' : ' muted'), 'data-l': label, title: e.submitted ? 'aus den gesendeten Stunden' : 'geplant (noch keine Stunden gesendet)', text: e.submitted ? (sent ? num(sent) : '–') : (plan ? num(plan) : '–') });
+  }
   function downloadReportCsv() {
     const R = state.report, D = R.data;
     if (!D) return;
-    const lines = [['Mitarbeiter', 'PIN', 'Schichten', 'Plan-Stunden', 'Gesendete Stunden', 'Differenz', 'Krankheitstage', 'Urlaubstage', 'Beanstandungen'].join(';')];
-    D.employees.slice().sort(function (x, y) { return x.name.localeCompare(y.name, 'de'); }).forEach(function (e) {
+    const lines = [['Mitarbeiter', 'PIN', 'Schichten', 'Plan-Stunden', 'Gesendete Stunden', 'Differenz', 'Nacht-Std. (Plan)', 'Nacht-Std. (gesendet)', 'Sonntags-Std. (Plan)', 'Sonntags-Std. (gesendet)', 'Krankheitstage', 'Urlaubstage', 'Beanstandungen'].join(';')];
+    D.employees.slice().sort(byName).forEach(function (e) {
       const diff = e.submitted ? num(e.actualHours - e.pastHours) : '';
-      lines.push([csvText(e.name), csvText(e.pin), e.shifts, num(e.plannedHours), e.submitted ? num(e.actualHours) : '', diff, e.sickDays, e.vacationDays, csvText(e.issues.map(function (i) { return PD.short(i.date) + ' ' + ISSUE_LABEL[i.kind][0]; }).join(', '))].join(';'));
+      lines.push([csvText(e.name), csvText(e.pin), e.shifts, num(e.plannedHours), e.submitted ? num(e.actualHours) : '', diff, num(e.nightHours), e.submitted ? num(e.sentNightHours) : '', num(e.sundayHours), e.submitted ? num(e.sentSundayHours) : '', e.sickDays, e.vacationDays, csvText(e.issues.map(function (i) { return PD.short(i.date) + ' ' + ISSUE_LABEL[i.kind][0]; }).join(', '))].join(';'));
     });
     const blob = new Blob(['\ufeff' + lines.join('\r\n') + '\r\n'], { type: 'text/csv;charset=utf-8' });
     const url = URL.createObjectURL(blob);
@@ -946,7 +980,7 @@
       iconBtn('chevright', 'Nächster Monat', function () { go(monthAdd(R.month, 1)); }), nowBtn, h('div', { class: 'grow' }), csv, prn);
     const title = h('div', { class: 'print-only print-title', text: 'Auswertung ' + label });
     if (!D) return h('div', { class: 'stack' }, toolbar, h('div', { class: 'empty' }, h('span', { class: 'spinner' })));
-    const emps = D.employees.slice().sort(function (x, y) { return x.name.localeCompare(y.name, 'de'); });
+    const emps = D.employees.slice().sort(byName);
     const tot = { shifts: 0, plan: 0, act: 0, sick: 0, vac: 0, issues: 0 };
     const rows = [];
     emps.forEach(function (e) {
@@ -959,24 +993,24 @@
         h('td', { class: 'num', 'data-l': 'Schichten', text: String(e.shifts) }), h('td', { class: 'num', 'data-l': 'Plan-Std.', text: e.shifts ? num(e.plannedHours) : '–' }),
         h('td', { class: 'num', 'data-l': 'Gesendet', text: e.submitted ? num(e.actualHours) : (e.shifts ? 'nicht gesendet' : '–') }),
         h('td', { class: 'num', 'data-l': 'Differenz' }, e.submitted ? h('span', { class: 'diff ' + (Math.abs(diff) >= 0.5 ? 'warn' : 'ok'), title: 'Gesendet minus geplante Stunden der Tage, die schon vorbei sind (' + num(e.pastHours) + ' Std.)', text: (diff > 0 ? '+' : diff < 0 ? '−' : '') + num(Math.abs(diff)) }) : h('span', { class: 'muted', text: '–' })),
+        premTd('Nacht', e, e.nightHours, e.sentNightHours), premTd('Sonntag', e, e.sundayHours, e.sentSundayHours),
         h('td', { class: 'num', 'data-l': 'Krank', text: e.sickDays ? String(e.sickDays) : '–' }), h('td', { class: 'num', 'data-l': 'Urlaub', text: e.vacationDays ? String(e.vacationDays) : '–' }),
         h('td', { 'data-l': 'Hinweise' }, hint)));
       if (R.open[e.pin] && e.issues.length) {
-        rows.push(h('tr', { class: 'detail' }, h('td', { colspan: '8' }, e.issues.map(function (i) {
+        rows.push(h('tr', { class: 'detail' }, h('td', { colspan: '10' }, e.issues.map(function (i) {
           const l = ISSUE_LABEL[i.kind];
           return h('div', { class: 'issue' }, h('span', { class: 'd', text: PD.short(i.date) }), h('span', { class: 'badge ' + l[1], text: l[0] }), h('span', { text: i.text }));
         }))));
       }
     });
-    const head = h('tr', {}, ['Mitarbeiter', 'Schichten', 'Plan-Std.', 'Gesendet', 'Differenz', 'Krank', 'Urlaub', 'Hinweise'].map(function (t, i) { return h('th', { class: i > 0 && i < 7 ? 'num' : '', text: t }); }));
-    const foot = h('tr', {}, h('td', { text: 'Summe' }), h('td', { class: 'num', text: String(tot.shifts) }), h('td', { class: 'num', text: num(tot.plan) }), h('td', { class: 'num', text: num(tot.act) }), h('td', { class: 'num', text: '' }), h('td', { class: 'num', text: String(tot.sick) }), h('td', { class: 'num', text: String(tot.vac) }), h('td', { text: tot.issues ? tot.issues + ' offen' : '' }));
+    const head = h('tr', {}, ['Mitarbeiter', 'Schichten', 'Plan-Std.', 'Gesendet', 'Differenz', 'Nacht', 'Sonntag', 'Krank', 'Urlaub', 'Hinweise'].map(function (t, i) { return h('th', { class: i > 0 && i < 9 ? 'num' : '', title: t === 'Nacht' ? 'Stunden zwischen 23 und 6 Uhr' : t === 'Sonntag' ? 'Stunden am Sonntag (0 bis 24 Uhr)' : '', text: t }); }));
+    const foot = h('tr', {}, h('td', { text: 'Summe' }), h('td', { class: 'num', text: String(tot.shifts) }), h('td', { class: 'num', text: num(tot.plan) }), h('td', { class: 'num', text: num(tot.act) }), h('td', { class: 'num', text: '' }), h('td', { class: 'num', text: num(D.employees.reduce(function (s, e) { return s + (e.submitted ? e.sentNightHours : e.nightHours); }, 0)) }), h('td', { class: 'num', text: num(D.employees.reduce(function (s, e) { return s + (e.submitted ? e.sentSundayHours : e.sundayHours); }, 0)) }), h('td', { class: 'num', text: String(tot.sick) }), h('td', { class: 'num', text: String(tot.vac) }), h('td', { text: tot.issues ? tot.issues + ' offen' : '' }));
     return h('div', { class: 'stack' }, toolbar, title,
       h('div', { class: 'card tbl-wrap' }, h('table', { class: 'tbl' }, h('thead', {}, head), h('tbody', {}, rows), h('tfoot', {}, foot))),
       h('p', { class: 'muted small', text: 'Plan = veröffentlichte Schichten des Monats. Gesendet = von der Stunden-App eingereichte Stunden (nach Korrekturen des Admins). Die Differenz vergleicht nur Tage, die schon vorbei sind. Schichten, die noch kommen, zählen zum Plan, aber nicht zur Differenz.' }));
   }
 
   // ---------- Einstellungen (Übersicht) ----------
-  async function loadSettings() { const r = await adm('adminGetSettings'); if (r.status === 'success') state.settings = { rules: !!r.rules }; }
   function settingsCard() {
     const box = h('input', { type: 'checkbox', id: 'st_rules' });
     box.checked = state.settings.rules;
@@ -990,7 +1024,6 @@
       h('label', { class: 'check' }, box, h('span', {}, 'Arbeitszeit-Warnungen beim Planen', h('div', { class: 'hint', text: 'Warnt vor weniger als 11 Std. Ruhezeit, mehr als 10 Std. am Tag und mehr als 48 Std. pro Woche. Standard ist AUS (Pilotbetrieb). Eine Doppelbelegung bleibt immer gesperrt.' }))));
   }
   const overviewViewBase = overviewView;
-  overviewView = function () { const el = overviewViewBase(); el.append(settingsCard()); return el; };
 
   // ---------- Monatsansicht mit Pinsel ----------
   let brushDrag = null;
@@ -1011,7 +1044,9 @@
     if (r.cleared) parts.push(r.cleared + ' entfernt');
     if (r.unchanged && !parts.length) parts.push('nichts zu ändern');
     if (r.skippedCount) parts.push(r.skippedCount + ' übersprungen');
+    if (r.unavailable) parts.push(r.unavailable + (r.unavailable === 1 ? ' Tag' : ' Tage') + ' trotz „nicht verfügbar“');
     DP.toast(parts.join(', ') + '.');
+    P.undo = r.undo && r.undo.length ? { list: r.undo, label: parts.join(', ') } : null;
     if (r.skippedCount) {
       const groups = {};
       r.skipped.forEach(function (x) { (groups[x.reason] = groups[x.reason] || []).push(PD.short(x.date)); });
@@ -1025,11 +1060,12 @@
     if (!(await DP.confirm('Rhythmus fortsetzen?', 'Die 28 Tage vor dem ' + PD.short(ms) + ' (ab ' + PD.short(from) + ') werden als Muster für ' + PD.monthLabel(ms) + ' wiederholt. Alles wird als Entwurf angelegt. Krank- und Urlaubstage werden übersprungen, vorhandene Schichten bleiben.', 'Fortsetzen', 'primary'))) return;
     const r = await adm('adminShiftCopyRange', { fromStart: from, toStart: ms, days: len });
     if (r.status !== 'success') { if (r.code !== 'ADMIN_AUTH') DP.toast(r.message || 'Das hat nicht geklappt.', 'error'); return; }
-    let copied = r.copied, absent = r.absent, conflicts = r.conflictCount;
+    let copied = r.copied, absent = r.absent, conflicts = r.conflictCount, undoList = (r.undo || []).slice();
     if (len > 28) {   // die letzten 1–3 Tage des Monats aus den ersten Tagen desselben Monats fortsetzen
       const r2 = await adm('adminShiftCopyRange', { fromStart: ms, toStart: PD.add(ms, 28), days: len - 28 });
-      if (r2.status === 'success') { copied += r2.copied; absent += r2.absent; conflicts += r2.conflictCount; }
+      if (r2.status === 'success') { copied += r2.copied; absent += r2.absent; conflicts += r2.conflictCount; undoList = undoList.concat(r2.undo || []); }
     }
+    P.undo = undoList.length ? { list: undoList, label: copied + ' Schichten kopiert' } : null;
     DP.toast(copied + ' Schichten als Entwurf angelegt' + (absent ? ', ' + absent + ' wegen Krank/Urlaub übersprungen' : '') + (conflicts ? ', ' + conflicts + ' Überschneidungen ausgelassen' : '') + '.');
     await loadPlan(); renderTab();
   }
@@ -1064,6 +1100,7 @@
     if (!D) return h('div', { class: 'stack' }, toolbar, h('div', { class: 'empty' }, P.error ? 'Verbindung unterbrochen. Es wird automatisch erneut versucht.' : h('span', { class: 'spinner' })));
     const n = PD.diff(ms, PD.add(PD.monthEnd(ms), 1));
     const days = []; for (let i = 0; i < n; i++) days.push(PD.add(ms, i));
+    const gapDays = {}; (D.gaps || []).forEach(function (g) { (gapDays[g.date] = gapDays[g.date] || []).push(g.place); });
     const brushBtn = function (b, cls, label, title) {
       const on = P.brush && P.brush.kind === b.kind && P.brush.place === b.place && P.brush.start === b.start && P.brush.end === b.end;
       const x = h('button', { type: 'button', class: 'brush' + cls + (on ? ' active' : ''), title: title || label, 'aria-pressed': on ? 'true' : 'false' }, label);
@@ -1082,10 +1119,13 @@
     state.employees.forEach(function (e) { acctByPin[e.pin] = e.account; });
     const absByPin = {};
     (D.absences || []).forEach(function (x) { (absByPin[x.pin] = absByPin[x.pin] || []).push(x); });
+    const unavByPin = {};
+    (D.unavail || []).forEach(function (x) { (unavByPin[x.pin] = unavByPin[x.pin] || []).push(x); });
+    const unavChip = function (x) { return h('div', { class: 'unavchip', title: 'Nicht verfügbar' + (x.text ? ': ' + x.text : '') }, 'Nicht verfügbar'); };
     const idx = {};
     D.shifts.forEach(function (s) { if (s.status !== 'abgesagt') { const k = s.pin + '|' + s.date; (idx[k] = idx[k] || []).push(s); } });
     const rows = [];
-    D.employees.slice().sort(function (x, y) { return x.name.localeCompare(y.name, 'de'); }).forEach(function (e) {
+    D.employees.slice().sort(byName).forEach(function (e) {
       let sum = 0;
       D.shifts.forEach(function (s) { if (s.pin === e.pin && s.status !== 'abgesagt') sum += s.hours; });
       const fill = h('button', { type: 'button', class: 'rowfill', 'aria-label': 'Ganze Zeile für ' + e.name + ' mit dem Pinsel füllen', title: 'Ganze Zeile mit dem Pinsel füllen' }, DP.icon('chevright', 'sm'));
@@ -1094,16 +1134,17 @@
       const cells = days.map(function (d) {
         const list = idx[e.pin + '|' + d] || [];
         const abs = (absByPin[e.pin] || []).filter(function (x) { return x.from <= d && d <= x.to; })[0];
+        const un = (unavByPin[e.pin] || []).filter(function (x) { return x.from <= d && d <= x.to; })[0];
         const wd = PD.weekday(d);
-        const cls = 'mcell' + (d === today ? ' today' : '') + (wd >= 5 ? ' we' : '') + (abs ? ' absent ' + abs.type : '');
+        const cls = 'mcell' + (d === today ? ' today' : '') + (wd >= 5 ? ' we' : '') + (abs ? ' absent ' + abs.type : '') + (un ? ' unav' : '');
         const inner = abs && !list.length ? h('div', { class: 'mabs', text: abs.type === 'krank' ? 'K' : 'U' })
-          : list.length ? h('div', { class: 'mc' + DP.placeClass(list[0].place) + (list[0].status === 'entwurf' ? ' draft' : ''), text: DP.placeShort(list[0].place) + ' ' + list[0].start.slice(0, 2) + (list.length > 1 ? '+' : '') }) : null;
-        return h('td', { class: cls, dataset: { pin: e.pin, date: d }, title: nameByPin[e.pin] + ' · ' + PD.short(d) + (list.length ? ' · ' + list.map(function (s) { return s.place + ' ' + s.start + '–' + s.end + (s.status === 'entwurf' ? ' (Entwurf)' : ''); }).join(', ') : '') + (abs ? ' · ' + (abs.type === 'krank' ? 'krank' : 'Urlaub') : '') }, inner);
+          : list.length ? h('div', { class: 'mc' + DP.placeClass(list[0].place) + (list[0].status === 'entwurf' ? ' draft' : ''), text: DP.placeShort(list[0].place) + ' ' + list[0].start.slice(0, 2) + (list.length > 1 ? '+' : '') }) : un ? h('div', { class: 'mun', text: 'N' }) : null;
+        return h('td', { class: cls, dataset: { pin: e.pin, date: d }, title: nameByPin[e.pin] + ' · ' + PD.short(d) + (list.length ? ' · ' + list.map(function (s) { return s.place + ' ' + s.start + '–' + s.end + (s.status === 'entwurf' ? ' (Entwurf)' : ''); }).join(', ') : '') + (abs ? ' · ' + (abs.type === 'krank' ? 'krank' : 'Urlaub') : '') + (un ? ' · nicht verfügbar' + (un.text ? ': ' + un.text : '') : '') }, inner);
       });
-      rows.push(h('tr', {}, h('td', { class: 'who' }, h('div', { class: 'whocell' }, h('div', { class: 'avatar', text: DP.initials(e.name) }), h('div', { class: 'grow' }, h('div', { class: 'nm', text: e.name }), !acctByPin[e.pin] ? h('span', { class: 'badge neutral', text: 'kein Zugang' }) : null), fill)), cells,
+      rows.push(h('tr', {}, h('td', { class: 'who' }, h('div', { class: 'whocell' }, h('div', { class: 'avatar', text: DP.initials(e.name) }), h('div', { class: 'grow' }, h('div', { class: 'nm', text: e.name }), e.pin === '00' ? h('span', { class: 'badge info', text: 'für alle' }) : !acctByPin[e.pin] ? h('span', { class: 'badge neutral', text: 'kein Zugang' }) : null), fill)), cells,
         h('td', { class: 'sum', title: 'Summe im Monat (ohne abgesagte)', text: sum ? PD.fmtHours(sum) : '–' })));
     });
-    const head = h('tr', {}, h('th', { text: 'Mitarbeiter' }), days.map(function (d) { const wd = PD.weekday(d); return h('th', { class: (d === today ? 'today' : '') + (wd >= 5 ? ' we' : ''), title: PD.short(d) }, h('div', { text: String(+d.slice(8)) }), h('div', { class: 'wdl', text: PD.WD[wd] })); }), h('th', { text: 'Σ Std.' }));
+    const head = h('tr', {}, h('th', { text: 'Mitarbeiter' }), days.map(function (d) { const wd = PD.weekday(d); return h('th', { class: (d === today ? 'today' : '') + (wd >= 5 ? ' we' : '') + (gapDays[d] ? ' gap' : ''), title: PD.short(d) + (gapDays[d] ? ' · Lücke: ' + gapDays[d].join(', ') : '') }, h('div', { text: String(+d.slice(8)) }), h('div', { class: 'wdl', text: PD.WD[wd] })); }), h('th', { text: 'Σ Std.' }));
     const table = h('table', { class: 'plan month' + (P.brush ? ' brushing' : '') }, h('thead', {}, head), h('tbody', {}, rows));
     const cellOf = function (e) { return e.target.closest ? e.target.closest('td.mcell') : null; };
     table.addEventListener('mousedown', function (e) {
@@ -1129,10 +1170,319 @@
       const list = (idx[td.dataset.pin + '|' + td.dataset.date] || []);
       openShiftModal(list.length ? { shift: list[0] } : { pin: td.dataset.pin, date: td.dataset.date });
     });
-    const placeLegend = h('div', { class: 'legend places' }, D.places.map(function (pl) { return h('span', { class: 'plg' + DP.placeClass(pl) }, h('i', { class: 'dotc' }), DP.placeShort(pl) + ' = ' + pl); }), h('span', { class: 'plg' }, h('i', { class: 'dotc dashed' }), 'gestrichelt = Entwurf'), h('span', { class: 'plg' }, h('i', { class: 'dotc ab' }), 'K = krank, U = Urlaub'));
-    return h('div', { class: 'stack' }, h('div', { class: 'print-only print-title', text: 'Dienstplan ' + PD.monthLabel(ms) }), toolbar, brushBar, placeLegend,
+    const touchCell = function (e) { const t = e.touches && e.touches[0]; const el = t ? document.elementFromPoint(t.clientX, t.clientY) : null; return el && el.closest ? el.closest('td.mcell') : null; };
+    table.addEventListener('touchstart', function (e) {
+      if (!P.brush) return;
+      const td = touchCell(e);
+      if (!td) return;
+      e.preventDefault();
+      brushDrag = { pin: td.dataset.pin, first: td.dataset.date, cells: [td], dates: function () { return this.cells.map(function (c) { return c.dataset.date; }); } };
+      td.classList.add('sel');
+    }, { passive: false });
+    table.addEventListener('touchmove', function (e) {
+      if (!brushDrag) return;
+      e.preventDefault();
+      const td = touchCell(e);
+      if (!td || td.dataset.pin !== brushDrag.pin) return;
+      const a1 = brushDrag.first, b1 = td.dataset.date, lo = a1 < b1 ? a1 : b1, hi = a1 < b1 ? b1 : a1;
+      brushDrag.cells.forEach(function (c) { c.classList.remove('sel'); });
+      brushDrag.cells = Array.prototype.filter.call(td.parentElement.querySelectorAll('td.mcell'), function (c) { return c.dataset.date >= lo && c.dataset.date <= hi; });
+      brushDrag.cells.forEach(function (c) { c.classList.add('sel'); });
+    }, { passive: false });
+    table.addEventListener('touchend', function (e) {
+      if (!brushDrag) return;
+      e.preventDefault();
+      const d = brushDrag; brushDrag = null;
+      d.cells.forEach(function (c) { c.classList.remove('sel'); });
+      commitBrush(d.pin, d.dates());
+    }, { passive: false });
+    const placeLegend = h('div', { class: 'legend places' }, D.places.map(function (pl) { return h('span', { class: 'plg' + DP.placeClass(pl) }, h('i', { class: 'dotc' }), DP.placeShort(pl) + ' = ' + pl); }), h('span', { class: 'plg' }, h('i', { class: 'dotc dashed' }), 'gestrichelt = Entwurf'), h('span', { class: 'plg' }, h('i', { class: 'dotc ab' }), 'K = krank, U = Urlaub'), h('span', { class: 'plg' }, h('i', { class: 'dotc unv' }), 'N = nicht verfügbar (Wunsch)'));
+    return h('div', { class: 'stack' }, h('div', { class: 'print-only print-title', text: 'Dienstplan ' + PD.monthLabel(ms) }), toolbar, gapsCard(), undoBar(), brushBar, placeLegend,
       h('div', { class: 'card grid-wrap' }, rows.length ? table : h('div', { class: 'empty', text: 'Keine Mitarbeiter vorhanden.' })),
       h('p', { class: 'muted small', text: 'Ohne Pinsel öffnet ein Klick auf einen Tag die Schicht zum Bearbeiten. Neue Schichten sind Entwürfe, erst „Veröffentlichen“ macht sie für die Mitarbeiter sichtbar.' }));
+  }
+
+  // ---------- Rückgängig, Lücken, Mindestbesetzung, Sicherung, Zugangs-Zettel ----------
+  function undoBar() {
+    const P = state.plan;
+    if (!P.undo) return null;
+    const b = h('button', { type: 'button', class: 'btn btn-secondary btn-sm' }, DP.icon('swap', 'sm'), 'Rückgängig');
+    b.addEventListener('click', undoLast);
+    return h('div', { class: 'card undobar' }, h('span', { class: 'grow', text: 'Letzte Änderung: ' + P.undo.label + '.' }), b, h('span', { class: 'muted small', text: 'Strg+Z' }));
+  }
+  async function undoLast() {
+    const P = state.plan;
+    if (!P.undo) return;
+    const u = P.undo; P.undo = null;
+    const r = await adm('adminShiftUndo', { undo: u.list });
+    if (r.status === 'success') {
+      DP.toast(r.restored + (r.restored === 1 ? ' Änderung' : ' Änderungen') + ' zurückgenommen' + (r.skipped ? ', ' + r.skipped + ' nicht mehr möglich' : '') + '.');
+      await loadPlan(); renderTab();
+    } else if (r.code !== 'ADMIN_AUTH') { DP.toast(r.message || 'Rückgängig hat nicht geklappt.', 'error'); renderTab(); }
+  }
+  document.addEventListener('keydown', function (e) {
+    if (!(e.ctrlKey || e.metaKey) || e.shiftKey || String(e.key).toLowerCase() !== 'z') return;
+    const P = state.plan;
+    if (state.tab !== 'plan' || P.view !== 'month' || !P.undo || (DP._stack && DP._stack.length)) return;
+    if (/^(INPUT|TEXTAREA|SELECT)$/.test((e.target && e.target.tagName) || '')) return;
+    e.preventDefault(); undoLast();
+  });
+
+  function gapsCard() {
+    const D = state.plan.data;
+    if (!D || !D.coverage || !Object.keys(D.coverage).length) return null;
+    const gaps = D.gaps || [];
+    if (!gaps.length) return h('div', { class: 'card okline', text: '✓ Alle Standorte sind in diesem Zeitraum wie vorgegeben besetzt.' });
+    const chips = gaps.slice(0, 14).map(function (g) {
+      const b = h('button', { type: 'button', class: 'chip gapchip', title: 'Schicht für diese Lücke anlegen', text: PD.short(g.date) + ' · ' + g.place + ' · ' + g.have + ' von ' + g.need });
+      b.addEventListener('click', function () { openShiftModal({ date: g.date, place: g.place }); });
+      return b;
+    });
+    return h('div', { class: 'card stack-sm gaps' }, h('div', { class: 'row wrap' }, DP.icon('alert', 'sm'), h('strong', { text: 'Besetzungslücken (' + gaps.length + ')' }), h('span', { class: 'muted small', text: 'Ein Klick legt dort eine Schicht an.' })),
+      h('div', { class: 'row wrap' }, chips), gaps.length > 14 ? h('div', { class: 'muted small', text: '… und ' + (gaps.length - 14) + ' weitere' }) : null);
+  }
+  const planViewWeek = planView;
+  planView = function () {
+    const el = planViewWeek(), D = state.plan.data;
+    if (state.plan.view === 'week' && D && el && el.querySelector) {
+      const card = gapsCard(), tb = el.querySelector('.plan-toolbar');
+      if (card && tb) tb.insertAdjacentElement('afterend', card);
+    }
+    return el;
+  };
+
+  async function loadSettings() {
+    const rs = await Promise.all([adm('adminGetSettings'), adm('adminGetCoverage'), adm('adminBackupStatus'), adm('adminGetPlaceInfo')]);
+    if (rs[3] && rs[3].status === 'success') state.settings.placeInfo = rs[3].info || {};
+    if (rs[0].status === 'success') state.settings.rules = !!rs[0].rules;
+    if (rs[1].status === 'success') { state.settings.coverage = rs[1].coverage || {}; state.settings.places = rs[1].places || []; }
+    if (rs[2].status === 'success') state.settings.backup = { last: rs[2].last, scheduled: rs[2].scheduled };
+  }
+  function coverageCard() {
+    const places = state.settings.places && state.settings.places.length ? state.settings.places : DP.PLACES, cov = state.settings.coverage || {}, inputs = {};
+    const rows = places.map(function (p) {
+      const vals = cov[p] || [0, 0, 0, 0, 0, 0, 0];
+      inputs[p] = vals.map(function (v, i) { return h('input', { class: 'input covin', type: 'number', min: '0', max: '20', step: '1', value: String(v), 'aria-label': p + ' ' + PD.WD[i] }); });
+      return h('tr', {}, h('td', { text: p }), inputs[p].map(function (x) { return h('td', {}, x); }));
+    });
+    const save = h('button', { type: 'button', class: 'btn btn-primary btn-sm', text: 'Speichern' });
+    save.addEventListener('click', async function () {
+      const out = {};
+      for (const p of places) {
+        const a = inputs[p].map(function (x) { return Number(x.value === '' ? 0 : x.value); });
+        if (!a.every(function (n) { return Number.isInteger(n) && n >= 0 && n <= 20; })) { DP.toast('Bitte nur ganze Zahlen von 0 bis 20 eintragen (' + p + ').', 'error'); return; }
+        if (a.some(function (n) { return n > 0; })) out[p] = a;
+      }
+      const r = await adm('adminSetCoverage', { coverage: out });
+      if (r.status === 'success') { state.settings.coverage = r.coverage; DP.toast('Mindestbesetzung gespeichert.'); await loadDash(); renderTab(); }
+      else if (r.code !== 'ADMIN_AUTH') DP.toast(r.message || 'Speichern hat nicht geklappt.', 'error');
+    });
+    return h('section', { class: 'card stack-sm' }, h('h3', { text: 'Mindestbesetzung' }),
+      h('p', { class: 'muted small', text: 'Wie viele Mitarbeiter pro Standort und Wochentag mindestens eingeplant sein sollen. 0 heißt keine Vorgabe. Lücken zeigt der Plan automatisch an. Krank oder im Urlaub Gemeldete zählen nicht mit.' }),
+      h('div', { class: 'tbl-wrap' }, h('table', { class: 'tbl covtbl' }, h('thead', {}, h('tr', {}, h('th', { text: 'Standort' }), PD.WD.map(function (w) { return h('th', { class: 'num', text: w }); }))), h('tbody', {}, rows))), save);
+  }
+  function backupCard() {
+    const b = state.settings.backup || {};
+    const last = b.last ? new Date(b.last).toLocaleString('de-DE', { dateStyle: 'medium', timeStyle: 'short' }) : null;
+    const btn = h('button', { type: 'button', class: 'btn btn-secondary btn-sm', text: 'Jetzt sichern' });
+    btn.addEventListener('click', async function () {
+      btn.disabled = true;
+      const r = await adm('adminBackupNow');
+      if (r.status === 'success') { DP.toast('Sicherung angelegt.'); await loadSettings(); renderTab(); }
+      else { btn.disabled = false; if (r.code !== 'ADMIN_AUTH') DP.toast(r.message || 'Die Sicherung ist fehlgeschlagen.', 'error'); }
+    });
+    return h('section', { class: 'card stack-sm' }, h('h3', { text: 'Sicherung der Daten' }),
+      h('p', { text: 'Letzte Sicherung: ' + (last || 'noch keine') }),
+      h('p', { class: 'muted small', text: b.scheduled ? 'Automatisch jeden Sonntag: eingerichtet. Es bleiben die letzten 8 Sicherungen im Drive-Ordner „Sicherungen“.' : 'Automatisch: noch nicht eingerichtet. Führe dazu einmalig im Apps-Script-Editor die Funktion „sicherungEinrichten“ aus.' }), btn);
+  }
+  function dashGapsCard() {
+    const cov = state.settings.coverage || {};
+    if (!Object.keys(cov).length || !state.dash) return null;
+    const g = state.dash.gaps || [];
+    return h('section', { class: 'card stack-sm' }, h('h3', { text: 'Besetzung der nächsten 7 Tage' }),
+      g.length ? h('div', { class: 'row wrap' }, g.map(function (x) { return h('span', { class: 'chip gapchip', text: PD.short(x.date) + ' · ' + x.place + ' · ' + x.have + ' von ' + x.need }); })) : h('p', { class: 'okline', text: '✓ Alles wie vorgegeben besetzt.' }));
+  }
+  overviewView = function () { const el = overviewViewBase(); (state.role === 'voll' ? [dashOpenCard(), dashGapsCard(), settingsCard(), coverageCard(), placeInfoCard(), backupCard()] : [dashOpenCard(), dashGapsCard()]).forEach(function (c) { if (c) el.append(c); }); return el; };
+
+  // Alle Zugänge auf einmal anlegen und als Zettel ausdrucken
+  async function bulkCreate() {
+    const todo = state.employees.filter(function (e) { return !e.account; });
+    if (!todo.length) return;
+    if (!(await DP.confirm('Zugänge für ' + todo.length + ' Mitarbeiter anlegen?', 'Jeder bekommt ein vorläufiges Passwort, danach kannst du alle Zugangsdaten als Zettel ausdrucken. Das dauert etwa ' + Math.max(2, todo.length * 2) + ' Sekunden. Bitte das Fenster nicht schließen.', 'Anlegen', 'primary'))) return;
+    const prog = h('p', { text: '0 von ' + todo.length + ' angelegt …' });
+    const m = DP.modal({ title: 'Zugänge werden angelegt', dismissable: false, body: h('div', { class: 'stack-sm' }, prog, h('span', { class: 'spinner' })), actions: [] });
+    const done = [], failed = [];
+    for (const e of todo) {
+      const r = await adm('adminAccCreate', { pin: e.pin });
+      if (r.status === 'success') done.push({ name: e.name, username: r.username, password: r.password });
+      else { failed.push(e.name); if (r.code === 'ADMIN_AUTH') break; }
+      prog.textContent = done.length + ' von ' + todo.length + ' angelegt …';
+    }
+    m.close();
+    await refresh();
+    if (done.length) showSlips(done, failed);
+    else if (failed.length) DP.toast('Es konnten keine Zugänge angelegt werden.', 'error');
+  }
+  function showSlips(list, failed) {
+    const portal = new URL('dienstplan.html', location.href).href;
+    const host = h('div', { id: 'slips' }, list.map(function (x) {
+      return h('div', { class: 'slip' }, h('div', { class: 'slip-h', text: 'Dienstplan-Zugang' }), h('div', { class: 'slip-n', text: x.name }),
+        h('div', { class: 'slip-r' }, h('span', { text: 'Adresse' }), h('b', { text: portal })), h('div', { class: 'slip-r' }, h('span', { text: 'Benutzername' }), h('b', { text: x.username })),
+        h('div', { class: 'slip-r' }, h('span', { text: 'Vorläufiges Passwort' }), h('b', { class: 'mono', text: x.password })),
+        h('div', { class: 'slip-f', text: 'Beim ersten Anmelden wählst du ein eigenes Passwort. Bitte diesen Zettel danach vernichten.' }));
+    }));
+    document.body.append(host);
+    const cleanup = function () { host.remove(); document.body.classList.remove('slips-printing'); };
+    DP.modal({
+      title: list.length + (list.length === 1 ? ' Zugang angelegt' : ' Zugänge angelegt'), wide: true, dismissable: false,
+      body: h('div', { class: 'stack-sm' }, failed.length ? alertBox('warn', 'Nicht angelegt: ' + failed.join(', ')) : null,
+        h('div', { class: 'alert warn' }, DP.icon('alert', 'sm'), h('div', { text: 'Die Passwörter werden nur jetzt angezeigt und nirgends gespeichert. Drucke die Zettel jetzt aus.' })),
+        h('p', { text: 'Jeder Zettel enthält Adresse, Benutzername und vorläufiges Passwort. Beim ersten Anmelden wählt jeder Mitarbeiter ein eigenes Passwort.' })),
+      actions: [{ label: 'Schließen', kind: 'secondary', onClick: cleanup }, { label: 'Zettel drucken', kind: 'primary', closes: false, onClick: function () { document.body.classList.add('slips-printing'); window.print(); setTimeout(function () { document.body.classList.remove('slips-printing'); }, 500); } }]
+    });
+  }
+  const accountsViewBase = accountsView;
+  accountsView = function () {
+    const el = accountsViewBase();
+    if (state.employees.some(function (e) { return !e.account; }) && el && el.querySelector) {
+      const b = h('button', { type: 'button', class: 'btn btn-primary btn-sm', id: 'bulkBtn', text: 'Alle ohne Zugang anlegen (' + state.employees.filter(function (e) { return !e.account; }).length + ')' });
+      b.addEventListener('click', bulkCreate);
+      const chip = el.querySelector('.chip');
+      if (chip && chip.parentNode) chip.parentNode.append(b);
+    }
+    return el;
+  };
+
+  // ---------- Anmeldung mit Benutzername (Admin-Konten) ----------
+  function enterWithSession(token, expires) {
+    state.session = { token: token };
+    state.role = null; state.who = '';   // wird beim Start mit "adminMe" geladen
+    store.save(token, expires || Date.now() + 8 * 3600 * 1000, false);
+    bridgeSession(token);
+    return startConsole();
+  }
+  function authCard(title, sub, body) {
+    view(h('div', { class: 'auth-wrap' }, h('div', { class: 'auth-card' },
+      h('div', { class: 'head' }, h('div', { class: 'logo' }, DP.icon('shield')), h('div', {}, h('h1', { text: title }), h('p', { class: 'muted', text: sub }))),
+      h('div', { class: 'card stack-sm' }, body))));
+  }
+  function showLoginUser(notice) {
+    stopLive();
+    const user = h('input', { class: 'input', id: 'cu_user', name: 'username', type: 'text', autocomplete: 'username', autocapitalize: 'none', autocorrect: 'off', spellcheck: 'false', required: true });
+    const pw = h('input', { class: 'input', id: 'cu_pw', name: 'password', type: 'password', autocomplete: 'current-password', required: true });
+    const msg = h('div', {});
+    if (notice) msg.append(alertBox('info', notice));
+    const btn = h('button', { type: 'submit', class: 'btn btn-primary btn-block' }, 'Anmelden');
+    const form = h('form', { class: 'stack', novalidate: true }, field('Benutzername', user, 'cu_user'), field('Passwort', pw, 'cu_pw'), msg, btn);
+    form.addEventListener('submit', async function (e) {
+      e.preventDefault();
+      msg.replaceChildren();
+      const u = user.value.trim(), p = pw.value;
+      if (!u || !p) { msg.append(alertBox('error', 'Bitte Benutzername und Passwort eingeben.')); return; }
+      btn.disabled = true; btn.replaceChildren(h('span', { class: 'spinner' }), 'Bitte warten …');
+      const r = await DP.api('accLogin', { username: u, password: p, console: true });
+      pw.value = '';
+      if (r.status === 'success' && r.session) return r.mustChange ? forceNewPassword(r.session, p, u) : enterWithSession(r.session, r.expires);
+      btn.disabled = false; btn.replaceChildren('Anmelden');
+      msg.append(alertBox(r.code === 'RATE_LIMIT' ? 'warn' : 'error', r.message || 'Anmeldung fehlgeschlagen.'));
+    });
+    const back = h('button', { type: 'button', class: 'btn btn-ghost btn-sm', id: 'toPin', text: 'Mit Admin-PIN anmelden' });
+    back.addEventListener('click', function () { showLoginPin(); });
+    authCard('Admin-Konsole', 'Anmeldung mit Benutzername', [form, back]);
+    user.focus();
+  }
+  function forceNewPassword(session, oldPw) {
+    const a = h('input', { class: 'input', id: 'np1', type: 'password', autocomplete: 'new-password', required: true });
+    const b = h('input', { class: 'input', id: 'np2', type: 'password', autocomplete: 'new-password', required: true });
+    const msg = h('div', {});
+    const btn = h('button', { type: 'submit', class: 'btn btn-primary btn-block' }, 'Passwort speichern');
+    const form = h('form', { class: 'stack', novalidate: true }, h('p', { class: 'muted', text: 'Bitte lege jetzt dein eigenes Passwort fest (mindestens 10 Zeichen). Das Startpasswort gilt danach nicht mehr.' }), field('Neues Passwort', a, 'np1'), field('Noch einmal', b, 'np2'), msg, btn);
+    form.addEventListener('submit', async function (e) {
+      e.preventDefault();
+      msg.replaceChildren();
+      if (a.value !== b.value) { msg.append(alertBox('error', 'Die beiden Passwörter sind nicht gleich.')); return; }
+      btn.disabled = true;
+      const r = await DP.api('accChangePassword', { session: session, oldPassword: oldPw, newPassword: a.value });
+      if (r.status === 'success' && r.session) return enterWithSession(r.session, r.expires);
+      btn.disabled = false;
+      msg.append(alertBox('error', r.message || 'Das Passwort konnte nicht geändert werden.'));
+    });
+    authCard('Neues Passwort', 'Erste Anmeldung', [form]);
+    a.focus();
+  }
+  // ---------- Admin-Konten (nur Vollzugriff) ----------
+  const ROLE_LABEL = { voll: 'Vollzugriff', planer: 'Planer', lesen: 'Nur ansehen', admin: 'Vollzugriff' };
+  async function loadUsers() { const r = await adm('adminUsersList'); if (r.status === 'success') state.users = r.users || []; }
+  async function userReset(u) {
+    if (!(await DP.confirm('Passwort zurücksetzen?', 'Für ' + u.name + ' wird ein neues vorläufiges Passwort erzeugt. Alle angemeldeten Geräte werden sofort abgemeldet.', 'Zurücksetzen', 'danger'))) return;
+    const r = await adm('adminAccReset', { id: u.id });
+    if (r.status === 'success') { r.name = u.name; showCredentials(r, 'Neues Passwort für'); await loadUsers(); renderTab(); }
+    else if (r.code !== 'ADMIN_AUTH') DP.toast(r.message || 'Zurücksetzen hat nicht geklappt.', 'error');
+  }
+  async function userStatus(u, status) {
+    if (status !== 'aktiv' && !(await DP.confirm(status === 'gesperrt' ? 'Konto sperren?' : 'Konto deaktivieren?', u.name + ' kann sich danach nicht mehr anmelden, bestehende Sitzungen enden sofort.', status === 'gesperrt' ? 'Sperren' : 'Deaktivieren', 'danger'))) return;
+    const r = await adm('adminAccSetStatus', { id: u.id, status: status });
+    if (r.status === 'success') { DP.toast(status === 'aktiv' ? 'Konto aktiviert.' : 'Konto ' + status + '.'); await loadUsers(); renderTab(); }
+    else if (r.code !== 'ADMIN_AUTH') DP.toast(r.message || 'Das hat nicht geklappt.', 'error');
+  }
+  function usersView() {
+    setTitle('Admins');
+    const U = state.users || [];
+    const name = h('input', { class: 'input', id: 'au_name', type: 'text', maxlength: '40', placeholder: 'Vor- und Nachname', autocomplete: 'off' });
+    const role = h('select', { class: 'input', id: 'au_role' }, [['planer', 'Planer: Plan, Anträge und Nachrichten bearbeiten'], ['lesen', 'Nur ansehen: nichts ändern'], ['admin', 'Vollzugriff: wie du']].map(function (o) { return h('option', { value: o[0], text: o[1] }); }));
+    const err = h('div', {});
+    const add = h('button', { type: 'button', class: 'btn btn-primary' }, DP.icon('plus', 'sm'), 'Konto anlegen');
+    add.addEventListener('click', async function () {
+      err.replaceChildren();
+      if (!name.value.trim()) { err.append(alertBox('error', 'Bitte einen Namen eingeben.')); return; }
+      add.disabled = true;
+      const r = await adm('adminUserCreate', { name: name.value, role: role.value });
+      add.disabled = false;
+      if (r.status === 'success') { name.value = ''; showCredentials(r, 'Zugangsdaten für'); await loadUsers(); renderTab(); }
+      else if (r.code !== 'ADMIN_AUTH') err.append(alertBox('error', r.message || 'Das Konto konnte nicht angelegt werden.'));
+    });
+    const rows = U.map(function (u) {
+      const act = [];
+      const btn = function (label, fn) { const b = h('button', { type: 'button', class: 'btn btn-secondary btn-sm', text: label }); b.addEventListener('click', fn); return b; };
+      act.push(btn('Passwort zurücksetzen', function () { userReset(u); }));
+      act.push(u.status === 'aktiv' ? btn('Sperren', function () { userStatus(u, 'gesperrt'); }) : btn('Aktivieren', function () { userStatus(u, 'aktiv'); }));
+      return h('tr', {}, h('td', { 'data-l': 'Name' }, h('div', { class: 'nm', text: u.name }), h('div', { class: 'muted small mono', text: u.username })),
+        h('td', { 'data-l': 'Rolle', text: ROLE_LABEL[u.role] || u.role }), h('td', { 'data-l': 'Status' }, h('span', { class: 'badge ' + (u.status === 'aktiv' ? 'success' : 'neutral'), text: u.status }), u.mustChange ? h('div', { class: 'muted small', text: 'Passwort noch nicht geändert' }) : null),
+        h('td', { 'data-l': 'Letzte Anmeldung', text: u.lastLogin ? DP.fmtDate(new Date(u.lastLogin).getTime()) : '–' }), h('td', { 'data-l': 'Aktionen' }, h('div', { class: 'row wrap' }, act)));
+    });
+    return h('div', { class: 'stack' },
+      h('section', { class: 'card stack-sm' }, h('h3', { text: 'Weitere Admin-Konten' }),
+        h('p', { class: 'muted small', text: 'Jede Person bekommt ein eigenes Konto, damit im Protokoll steht, wer was geändert hat. Die Admin-PIN bleibt immer als Vollzugang bestehen. Anmelden geht auf der Anmeldeseite unter „Mit Benutzername anmelden“.' }),
+        h('div', { class: 'form-grid' }, field('Name', name, 'au_name'), field('Rolle', role, 'au_role')), err, h('div', {}, add)),
+      h('div', { class: 'card tbl-wrap' }, U.length ? h('table', { class: 'tbl' }, h('thead', {}, h('tr', {}, ['Name', 'Rolle', 'Status', 'Letzte Anmeldung', 'Aktionen'].map(function (t) { return h('th', { text: t }); }))), h('tbody', {}, rows)) : h('div', { class: 'empty', text: 'Noch keine weiteren Admin-Konten.' })));
+  }
+
+  // ---------- Standort-Infos ----------
+  function placeInfoCard() {
+    const places = state.settings.places && state.settings.places.length ? state.settings.places : DP.PLACES, info = state.settings.placeInfo || {}, inputs = {};
+    const rows = places.map(function (p) {
+      const v = info[p] || {};
+      inputs[p] = ['address', 'contact', 'note'].map(function (k) { return h('input', { class: 'input', type: 'text', maxlength: '160', value: v[k] || '', 'aria-label': p + ' ' + k }); });
+      return h('tr', {}, h('td', { text: p }), inputs[p].map(function (x) { return h('td', {}, x); }));
+    });
+    const save = h('button', { type: 'button', class: 'btn btn-primary btn-sm', text: 'Speichern' });
+    save.addEventListener('click', async function () {
+      const out = {};
+      places.forEach(function (p) { out[p] = { address: inputs[p][0].value, contact: inputs[p][1].value, note: inputs[p][2].value }; });
+      const r = await adm('adminSetPlaceInfo', { info: out });
+      if (r.status === 'success') { state.settings.placeInfo = r.info; DP.toast('Standort-Infos gespeichert.'); }
+      else if (r.code !== 'ADMIN_AUTH') DP.toast(r.message || 'Speichern hat nicht geklappt.', 'error');
+    });
+    return h('section', { class: 'card stack-sm' }, h('h3', { text: 'Standort-Infos für Mitarbeiter' }),
+      h('p', { class: 'muted small', text: 'Adresse, Ansprechpartner und ein Hinweis (zum Beispiel „Schlüssel beim Pförtner“). Mitarbeiter sehen das bei ihrer Schicht unter „Infos zum Standort“.' }),
+      h('div', { class: 'tbl-wrap' }, h('table', { class: 'tbl covtbl' }, h('thead', {}, h('tr', {}, ['Standort', 'Adresse', 'Ansprechpartner', 'Hinweis'].map(function (t) { return h('th', { text: t }); }))), h('tbody', {}, rows))), save);
+  }
+  function dashOpenCard() {
+    const n = state.dash && state.dash.openShifts;
+    if (!n) return null;
+    const go = h('button', { type: 'button', class: 'btn btn-secondary btn-sm', text: 'Im Dienstplan ansehen' });
+    go.addEventListener('click', function () { state.tab = 'plan'; loadForTab('plan').then(function () { renderChrome(); renderTab(); }); renderChrome(); renderTab(); });
+    return h('section', { class: 'card stack-sm' }, h('h3', { text: 'Offene Schichten' }), h('p', { text: n + (n === 1 ? ' Schicht wartet' : ' Schichten warten') + ' darauf, von einem Mitarbeiter übernommen zu werden.' }), h('div', {}, go));
   }
 
   // ---------- Start ----------
