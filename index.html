@@ -2998,6 +2998,59 @@ tbody tr:nth-child(odd){
   padding-left:10px !important;
   padding-right:6px !important;
 }
+
+/* Meine Stunden: kompakte Handy-Ansicht */
+.hChips{display:flex;gap:6px;overflow-x:auto;padding:0 0 10px;-webkit-overflow-scrolling:touch}
+.hChip{flex:none;padding:7px 13px;border-radius:999px;border:1px solid rgba(255,255,255,.22);background:rgba(255,255,255,.06);color:#fff;font:600 13px/1 inherit;cursor:pointer;white-space:nowrap}
+.hChip.on{background:#E8A33D;border-color:#E8A33D;color:#2b1f04;font-weight:800}
+.hCard{background:rgba(255,255,255,.055);border:1px solid rgba(255,255,255,.12);border-radius:14px;padding:13px 14px;margin-bottom:11px}
+.hHead{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}
+.hMon{font-weight:800;font-size:16px;color:#fff}
+.hBadge{font-size:11px;font-weight:800;padding:4px 9px;border-radius:999px;white-space:nowrap}
+.hBadge.ok{background:rgba(120,210,160,.2);color:#8fe3b4}
+.hBadge.go{background:rgba(232,163,61,.22);color:#f0c382}
+.hBadge.warn{background:rgba(224,102,102,.2);color:#ffa8a8}
+.hBadge.wait{background:rgba(255,255,255,.1);color:rgba(255,255,255,.72)}
+.hSum{font-size:34px;font-weight:800;color:#fff;line-height:1.1;margin:6px 0 2px}
+.hSum span{font-size:16px;font-weight:700;color:rgba(255,255,255,.6)}
+.hNote{font-size:12.5px;line-height:1.45;color:rgba(255,255,255,.72);margin-top:7px;padding:8px 10px;border-radius:10px;background:rgba(255,255,255,.05)}
+.hNote.warn{background:rgba(224,102,102,.14);color:#ffbdbd}
+.hNote.ok{background:rgba(120,210,160,.13);color:#9ee7bf}
+.hNote.go{background:rgba(232,163,61,.14);color:#f3cf9b}
+.hListHead{display:flex;justify-content:space-between;font-size:12px;font-weight:800;letter-spacing:.03em;color:rgba(255,255,255,.62);padding-bottom:7px;border-bottom:1px solid rgba(255,255,255,.12);margin-bottom:4px}
+.hRow{display:flex;gap:10px;align-items:flex-start;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.07)}
+.hRow:last-of-type{border-bottom:0}
+.hD{flex:none;width:3.3em;font-weight:800;font-size:13px;color:rgba(255,255,255,.6);font-variant-numeric:tabular-nums}
+.hM{flex:1;min-width:0}
+.hT{font-size:14px;font-weight:600;color:#fff;line-height:1.3}
+.hS{font-size:12px;color:rgba(255,255,255,.6);line-height:1.35}
+.hH{flex:none;font-weight:800;font-size:15px;color:#fff;font-variant-numeric:tabular-nums}
+.hRow.chg{border-left:3px solid #E8A33D;padding-left:8px;background:rgba(232,163,61,.09);border-radius:0 8px 8px 0}
+.hRow.del{border-left:3px solid #E06666;padding-left:8px;background:rgba(224,102,102,.09);border-radius:0 8px 8px 0}
+.hRow.del .hT{text-decoration:line-through;color:rgba(255,255,255,.55)}
+.hToggle{width:100%;margin-top:9px;padding:9px;border-radius:10px;border:1px solid rgba(255,255,255,.18);background:transparent;color:rgba(255,255,255,.82);font:700 13px inherit;cursor:pointer}
+.hLink{display:block;text-align:center;padding:12px;border-radius:12px;background:rgba(232,163,61,.16);color:#f0c382;font-weight:700;font-size:13.5px;text-decoration:none}
+
+.hItem{border-bottom:1px solid rgba(255,255,255,.07)}
+.hItem:last-child{border-bottom:0}
+.hItem .hRow{border-bottom:0}
+.hRow.hasDet{cursor:pointer}
+.hRow.hasDet:active{opacity:.85}
+.hMore{opacity:.75;font-style:italic}
+.hRow.open .hMore{display:none}
+.hDetail{padding:0 0 10px 3.3em}
+
+.helpReplyItem{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.14);border-radius:12px;padding:10px 12px;margin-bottom:8px;font-size:13px;line-height:1.4}
+.helpReplyQ{color:rgba(255,255,255,.6);margin-bottom:4px}
+.helpReplyA{color:#fff;font-weight:600}
+
+.hMsgBox{width:100%;min-height:64px;resize:vertical;border-radius:10px;border:1px solid rgba(255,255,255,.18);background:rgba(255,255,255,.05);color:#fff;font:inherit;font-size:13.5px;padding:9px 10px;box-sizing:border-box}
+.hMsgBox::placeholder{color:rgba(255,255,255,.4)}
+.hMsgBtn{width:100%;margin-top:8px;padding:10px;border-radius:10px;border:0;background:#E8A33D;color:#2b1f04;font-weight:800;font-size:13.5px;cursor:pointer}
+.hMsgBtn:disabled{opacity:.6;cursor:default}
+.hMsgStatus{margin-top:6px;font-size:12px;min-height:14px}
+.hMsgStatus.ok{color:#8fe3b4}
+.hMsgStatus.err{color:#ffa8a8}
 </style>
 </head>
 
@@ -3122,6 +3175,15 @@ tbody tr:nth-child(odd){
       </div>
     </div>
 
+    <div class="chooserNotice" id="helpReplyNotice" style="display:none;" role="status">
+      <div class="cnTitle">💬 Antwort vom Admin</div>
+      <div id="helpReplyList"></div>
+      <div class="cnBtns">
+        <button type="button" class="cnOpen" id="helpReplyOpenBtn">Ansehen</button>
+        <button type="button" class="cnLater" id="helpReplyLaterBtn">Später</button>
+      </div>
+    </div>
+
     <button class="chooserNew" id="chooserNewBtn" type="button" style="display:none;">
       <span class="chooserNewIcon">🆕</span>
       <span><b>Neu hier? Eigene PIN anfordern</b><br><small>Du hast schon eine PIN? Dann trag sie einfach im Stundenformular ein.</small></span>
@@ -3134,7 +3196,7 @@ tbody tr:nth-child(odd){
     <button class="pinOk" id="chooserEquipBtn" type="button" style="display:none; width:100%; margin-bottom:10px; text-align:left; padding:16px;">
       📷 Ausrüstungs-Check<br><span style="font-weight:400; font-size:12px; opacity:.8;" id="chooserEquipSub">Tägliche Foto-Kontrolle</span>
     </button>
-    <button class="pinOk" id="chooserHoursBtn" type="button" style="display:none; width:100%; text-align:left; padding:16px; position:relative;">
+    <button class="pinOk" id="chooserHoursBtn" type="button" style="width:100%; text-align:left; padding:16px; position:relative;">
       🕒 Meine Stunden ansehen<br><span style="font-weight:400; font-size:12px; opacity:.8;">Korrigierte Stunden &amp; Nachrichten</span>
       <span id="hoursNewBadge" style="display:none; position:absolute; top:10px; right:14px; background:#E8A33D; color:#2b1f04; font-size:11px; font-weight:900; padding:3px 10px; border-radius:20px;">🔴 Neu</span>
     </button>
@@ -3405,6 +3467,8 @@ tbody tr:nth-child(odd){
       </div>
     </div>
 
+<div id="helpRepliesWrap" style="display:none; margin-bottom:12px;"></div>
+
     <label class="helpLabel" for="helpText">Was ist das Problem?</label>
     <textarea id="helpText" maxlength="1500" placeholder="Beschreibe kurz, was nicht funktioniert …"></textarea>
     <div class="helpCount" id="helpCount">0 / 1500</div>
@@ -3650,7 +3714,7 @@ if("serviceWorker" in navigator){
 const APP_VERSION = "v20261020a";
 // Abgeschaltete Funktionen: Ausrüstungs-Check und "Meine Stunden ansehen" (jetzt im Dienstplan-Portal). Auch im Server sind diese Aktionen entfernt.
 const FEATURE_EQUIP = false;
-const FEATURE_HOURS_VIEW = false;
+const FEATURE_HOURS_VIEW = true;
 document.getElementById("loginVersion").textContent = "Version " + APP_VERSION;
 
 (function setupUpdateCheck(){
@@ -3901,6 +3965,7 @@ async function applyAssignedPin(pin, message, secret, label){
   setNameError(false);
   newPinPanel.style.display = "none";
   if(newPinToggleWrap) newPinToggleWrap.style.display = "none";
+  newPinRequestBtn.disabled = false;   // der Knopf soll nicht dauerhaft gesperrt bleiben, falls das Formular später erneut geöffnet wird
 
   dlgTitleEl.textContent = "Deine PIN";
   dlgMsgEl.innerHTML = `
@@ -3941,6 +4006,16 @@ newPinRequestBtn?.addEventListener("click", async ()=>{
         result.secret,
         result.nameMasked
       );
+    }else if(result.code === "DEVICE_TAKEN"){
+      newPinStatus.style.color = "#2f9e44";
+      newPinStatus.textContent = "";
+      if(result.pin){
+        await applyAssignedPin(result.pin, "Dieses Handy ist bereits registriert: " + (result.nameMasked || "") + ". Du bist startklar.", null, result.nameMasked);
+      }else{
+        newPinStatus.style.color = "#c0392b";
+        newPinStatus.textContent = result.message || "Dieses Handy ist schon registriert.";
+      }
+      newPinRequestBtn.disabled = false;
     }else if(result.code === "NAME_EXISTS"){
       newPinStatus.style.color = "#c0392b";
       newPinStatus.textContent = result.message + " ";
@@ -3967,6 +4042,12 @@ newPinRequestBtn?.addEventListener("click", async ()=>{
     newPinRequestBtn.disabled = false;
   }
 });
+
+// "Neu hier? PIN anfordern" bleibt sichtbar, solange das Handy nicht zugeordnet ist –
+// ein Fehlversuch (z. B. Name schon vergeben) blendet den Zugang nie aus.
+(function keepNewPinVisible(){
+  if(newPinToggleWrap && !isDeviceBound()) newPinToggleWrap.style.display = "";
+})();
 
 (function fillEquipStandorte(){
   if(!equipStandortEl) return;
@@ -5405,6 +5486,7 @@ function showChooser(){
   }
   chooserBack.style.display = "flex";
   checkForHoursUpdates();
+  checkHelpReplies();
 }
 
 // "Neu hier?": Formular öffnen, Namensfelder aufklappen, Cursor in "Vorname"
@@ -5436,7 +5518,7 @@ function getHelpDeviceId(){
   return getDeviceClientId();
 }
 
-function openHelp(prefill, name){
+function openHelp(prefill, name, replies){
   helpStatus.className = "helpStatus";
   helpStatus.textContent = "";
   if(typeof prefill === "string" && prefill){
@@ -5446,8 +5528,22 @@ function openHelp(prefill, name){
   if(typeof name === "string" && name){
     helpName.value = name;
   }
+  renderHelpReplies(replies || []);
   helpBack.style.display = "flex";
   setTimeout(()=> helpText.focus(), 60);
+}
+function renderHelpReplies(replies){
+  const wrap = document.getElementById("helpRepliesWrap");
+  if(!wrap) return;
+  if(!replies || !replies.length){ wrap.style.display = "none"; wrap.innerHTML = ""; return; }
+  const esc = s => String(s==null?"":s).replace(/[<>&]/g, c => ({"<":"&lt;",">":"&gt;","&":"&amp;"}[c]));
+  wrap.innerHTML = replies.map(r => `
+    <div class="helpReplyItem">
+      <div class="helpReplyQ">Du: „${esc(r.frage)}“</div>
+      <div class="helpReplyA">👤 Admin: ${esc(r.text)}</div>
+    </div>
+  `).join("");
+  wrap.style.display = "block";
 }
 
 function closeHelp(){
@@ -5850,10 +5946,53 @@ function recheckHoursIfChooserVisible(){
   if(chooserBack.style.display !== "flex") return;
   if(Date.now() - lastHoursCheck < 2000) return;
   checkForHoursUpdates();
+  checkHelpReplies();
 }
 document.addEventListener("visibilitychange", recheckHoursIfChooserVisible);
 window.addEventListener("focus", recheckHoursIfChooserVisible);
 window.addEventListener("pageshow", (e)=>{ if(e.persisted) recheckHoursIfChooserVisible(); });
+
+// Wer über "Hilfe" geschrieben hat (auch ohne PIN), bekommt beim Wiederöffnen der App eine Benachrichtigung,
+// sobald der Admin geantwortet hat. Erkannt wird das Gerät, nicht die Person.
+const helpReplyNotice = document.getElementById("helpReplyNotice");
+const helpReplyList = document.getElementById("helpReplyList");
+let pendingHelpReplies = [];
+async function checkHelpReplies(){
+  if(!helpReplyNotice) return;
+  try{
+    const res = await fetch(EQUIP_WEB_APP_URL, {
+      method: "POST",
+      body: JSON.stringify({ token: EQUIP_API_TOKEN, action: "checkHelpReplies", deviceId: getHelpDeviceId() })
+    });
+    const r = await res.json();
+    if(!r || r.status !== "success" || !r.replies || !r.replies.length){
+      helpReplyNotice.style.display = "none";
+      pendingHelpReplies = [];
+      return;
+    }
+    pendingHelpReplies = r.replies;
+    helpReplyList.innerHTML = r.replies.slice(0, 3).map(x =>
+      `<div class="cnItem">${(x.text || "").replace(/[<>&]/g, c => ({"<":"&lt;",">":"&gt;","&":"&amp;"}[c])).slice(0, 140)}</div>`
+    ).join("") + (r.replies.length > 3 ? `<div class="cnItem">… und ${r.replies.length - 3} weitere</div>` : "");
+    helpReplyNotice.style.display = "block";
+  }catch(e){ /* ohne Verbindung bleibt die Benachrichtigung einfach aus */ }
+}
+async function ackHelpReplies(){
+  const ids = pendingHelpReplies.map(x => x.id);
+  helpReplyNotice.style.display = "none";
+  pendingHelpReplies = [];
+  for(const id of ids){
+    try{
+      await fetch(EQUIP_WEB_APP_URL, { method: "POST", body: JSON.stringify({ token: EQUIP_API_TOKEN, action: "ackHelpReply", deviceId: getHelpDeviceId(), id: id }) });
+    }catch(e){}
+  }
+}
+document.getElementById("helpReplyOpenBtn")?.addEventListener("click", () => {
+  const replies = pendingHelpReplies.slice();
+  ackHelpReplies();
+  openHelp("", "", replies);
+});
+document.getElementById("helpReplyLaterBtn")?.addEventListener("click", () => { helpReplyNotice.style.display = "none"; });
 
 let formularHistoryPushed = false;
 
@@ -6044,46 +6183,113 @@ async function loadMyHours(pin, secret){
       const accentColors = ["#E8A33D", "#6FA8DC", "#93C47D", "#C27BA0", "#76A5AF", "#E06666"];
       const sortedSummaries = [...result.summaries].sort((a,b)=> String(a.monat).localeCompare(String(b.monat)));
 
-      hoursSummaryWrap.innerHTML = sortedSummaries.map((s, idx)=>{
-        const parts = String(s.monat).split("-");
-        const monthLabel = (parts.length === 2 && monthNames[parseInt(parts[1],10)-1])
-          ? `${monthNames[parseInt(parts[1],10)-1]} ${parts[0]}`
-          : s.monat;
-        const accent = accentColors[idx % accentColors.length];
-
-        return `
-        <div style="border:1px solid ${accent}66; border-left:4px solid ${accent}; border-radius:12px; padding:12px; margin-bottom:12px; background:rgba(255,255,255,.03);">
-          <div style="font-weight:900; color:${accent}; font-size:14px; margin-bottom:8px;">📅 ${monthLabel}</div>
-          <div style="display:flex; gap:12px; flex-wrap:wrap;">
-            <div style="flex:1; min-width:120px; background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.12); border-radius:12px; padding:10px 12px;">
-              <div style="font-size:11px; color:rgba(255,255,255,.6);">Gesendete Stunden</div>
-              <div style="font-size:20px; font-weight:900; color:#fff;">${s.summeEingereicht ?? 0} Std.</div>
-            </div>
-            ${s.freigegeben ? `
-            <div style="flex:1; min-width:120px; background:rgba(232,163,61,.12); border:1px solid rgba(232,163,61,.4); border-radius:12px; padding:10px 12px;">
-              <div style="font-size:11px; color:rgba(255,213,74,.85);">Offiziell erfasst</div>
-              <div style="font-size:20px; font-weight:900; color:#FFD54A;">${s.summeOffiziell ?? 0} Std.</div>
-            </div>` : ""}
-          </div>
-          ${(() => { const monthDays = (result.hours || []).filter(h => h.monat === s.monat && h.geaendert === true); const n = monthDays.length; const del = monthDays.filter(h => h.geloescht === true).length; return n > 0 ? `<div class="monthCorrNote" style="margin-top:8px; font-size:12px; color:#FFD54A;">✏️ Der Admin hat in diesem Monat <b>${n}</b> ${n === 1 ? "Tag" : "Tage"} korrigiert${del > 0 ? ` (davon <b>${del}</b> gelöscht)` : ""} – siehe unten.</div>` : ""; })()}
-          ${s.kommentar && s.kommentar.trim() ? `
-          <div style="margin-top:8px; padding:10px 12px; border-radius:10px; background:rgba(232,163,61,.15); border:1px solid rgba(232,163,61,.4); color:#FFD54A; font-size:12px; white-space:pre-wrap;">📝 <b>Hinweis Admin:</b><br>${s.kommentar.replace(/</g,"&lt;")}</div>` : ""}
-        </div>`;
-      }).join("");
-    }
-
-    const correctedDays = (result.hours || []).filter(isCorrectedDay);
-
-    if(correctedDays.length === 0){
-      hoursTableWrap.innerHTML = (result.summaries && result.summaries.length > 0)
-        ? `<div style="color:rgba(255,255,255,.7); font-size:13px;">Keine einzelnen Korrekturen vorhanden.</div>`
-        : `<div style="color:rgba(255,255,255,.7); font-size:13px;">Noch keine Stunden gesendet.</div>`;
-    }else{
-      const sorted = [...correctedDays].sort((a,b)=> String(a.sortKey || a.datum).localeCompare(String(b.sortKey || b.datum)));
-      hoursTableWrap.innerHTML = `
-        <div style="font-weight:800; margin:2px 0 4px; color:#fff;">✏️ Korrigierte Tage</div>
-        <div style="font-size:12px; color:rgba(255,255,255,.6); margin-bottom:10px;">„Eingereicht“ ist das, was du gesendet hast. „Korrigiert“ ist das, was der Admin eingetragen hat. Geänderte Werte sind markiert, gelöschte Tage sind als „gelöscht“ gekennzeichnet.</div>
-        ${sorted.map(renderCorrectedDay).join("")}`;
+      hoursSummaryWrap.innerHTML = "";
+      // Kompakte Ansicht: ein Monat nach dem anderen, Änderungen zuerst, Rest eingeklappt
+      const H_MON = ['Januar','Februar','März','April','Mai','Juni','Juli','August','September','Oktober','November','Dezember'];
+      const hMonth = m => { const p = String(m||'').split('-'); return p.length===2 ? H_MON[+p[1]-1] + ' ' + p[0] : String(m||''); };
+      const hNum = n => { const v = Number(n); return isFinite(v) ? String(Math.round(v*100)/100).replace('.', ',') : '0'; };
+      const hDateTime = ts => { if(!ts) return ''; const d = new Date(ts); const p2 = x => String(x).padStart(2,'0'); return p2(d.getDate())+'.'+p2(d.getMonth()+1)+'.'+d.getFullYear()+' '+p2(d.getHours())+':'+p2(d.getMinutes()); };
+      const esc = s => String(s==null?'':s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+      const hMonths = [...sortedSummaries].sort((a,b) => String(b.monat).localeCompare(String(a.monat)));   // neuester Monat zuerst
+      let hSel = hMonths.length ? hMonths[0].monat : '';
+      let hAll = false;
+      function hStatus(s){
+        const a = s.ack;
+        if(a && a.status === 'bestaetigt') return { t: 'Von dir bestätigt', c: 'ok', sub: 'Am ' + esc(hDateTime(a.ts)) + ' · Prüfnummer ' + esc(a.code) };
+        if(a && a.status === 'abgelehnt') return { t: 'Dein Widerspruch läuft', c: 'warn', sub: 'Du hast geschrieben: „' + esc(a.text) + '“' };
+        if(s.freigegeben) return { t: 'Freigegeben', c: 'go', sub: 'Der Admin hat diesen Monat freigegeben.' };
+        return { t: 'Noch nicht freigegeben', c: 'wait', sub: 'Der Admin prüft die Stunden noch.' };
+      }
+      function renderHours(){
+        const s = sortedSummaries.filter(x => x.monat === hSel)[0];
+        if(!s){ hoursTableWrap.innerHTML = ''; return; }
+        const days = (result.hours || []).filter(x => x.monat === hSel).sort((a,b) => String(a.sortKey) < String(b.sortKey) ? -1 : 1);
+        const changed = days.filter(d => d.geaendert || d.geloescht || (d.kommentar && String(d.kommentar).trim()));
+        const list = (hAll || !changed.length) ? days : changed;
+        const off = (s.summeOffiziell !== '' && s.summeOffiziell !== undefined) ? s.summeOffiziell : days.reduce((t,x)=>t+(Number(x.stunden)||0),0);
+        const diff = s.summeEingereicht !== '' && s.summeEingereicht !== undefined && Math.abs(Number(s.summeEingereicht) - Number(off)) > 0.001;
+        const st = hStatus(s);
+        const nDel = days.filter(d => d.geloescht).length;
+        const nCorr = days.filter(d => d.geaendert || d.geloescht).length;
+        const nHint = changed.length - nCorr;
+        hoursSummaryWrap.innerHTML = '<div class="hCard" style="margin-bottom:0;">'
+          + '<div class="hHead"><span class="hMon">' + esc(hMonth(hSel)) + '</span><span class="hBadge ' + st.c + '">' + st.t + '</span></div>'
+          + '<div class="hSum">' + hNum(off) + ' <span>Std.</span></div>'
+          + '<div class="hNote">Gesendete Stunden: ' + hNum(s.summeEingereicht !== '' && s.summeEingereicht !== undefined ? s.summeEingereicht : off) + ' Std.'
+          + (nCorr ? ' · ' + nCorr + (nCorr === 1 ? ' Tag' : ' Tage') + ' korrigiert' + (nDel ? ' (davon ' + nDel + ' gelöscht)' : '') : ' · keine Korrekturen')
+          + (nHint ? ' · ' + nHint + (nHint === 1 ? ' Tag' : ' Tage') + ' mit Hinweis' : '') + '</div>'
+          + '</div>';
+        const chips = hMonths.map(x => '<button type="button" class="hChip' + (x.monat === hSel ? ' on' : '') + '" data-m="' + esc(x.monat) + '">' + esc(hMonth(x.monat)) + '</button>').join('');
+        const rows = list.map(d => {
+          const was = d.geloescht ? 'gestrichen · du hattest ' + hNum(d.eingereicht) + ' Std. gesendet'
+            : (d.geaendert && d.origKnown ? 'vorher ' + [ (d.origStandort && d.origStandort !== d.standort) ? esc(d.origStandort) : '', esc((d.origBeginn||'') + '–' + (d.origEnde||'')) ].filter(Boolean).join(' · ') : '');
+          const cls = d.geloescht ? ' del' : (d.geaendert ? ' chg' : '');
+          const detail = (d.geaendert || d.geloescht || (d.kommentar && String(d.kommentar).trim())) ? '<div class="hDetail" hidden>' + renderCorrectedDay(d) + '</div>' : '';
+          return '<div class="hItem">'
+            + '<div class="hRow' + cls + (detail ? ' hasDet' : '') + '"' + (detail ? ' role="button" tabindex="0"' : '') + '><div class="hD">' + esc(String(d.datum).slice(0,5)) + '</div>'
+            + '<div class="hM"><div class="hT">' + esc(d.standort || '–') + ' · ' + esc((d.beginn||'') + '–' + (d.ende||'')) + '</div>'
+            + (was ? '<div class="hS">' + was + (detail ? ' <span class="hMore">· antippen für Details</span>' : '') + '</div>' : '')
+            + (d.kommentar ? '<div class="hS">' + esc(d.kommentar) + '</div>' : '') + '</div>'
+            + '<div class="hH">' + (d.geloescht ? '0' : hNum(d.stunden)) + '</div></div>' + detail + '</div>';
+        }).join('');
+        const toggle = (changed.length && changed.length < days.length)
+          ? '<button type="button" class="hToggle" id="hToggleBtn">' + (hAll ? 'Nur Änderungen zeigen (' + changed.length + ')' : 'Alle ' + days.length + ' Tage zeigen') + '</button>' : '';
+        hoursTableWrap.innerHTML =
+          '<div class="hChips">' + chips + '</div>'
+          + '<div class="hCard">'
+          +   '<div class="hNote ' + st.c + '">' + st.sub + '</div>'
+          +   (diff ? '<div class="hNote warn">Gesendet ' + hNum(s.summeEingereicht) + ' Std., vom Admin auf ' + hNum(off) + ' Std. geändert.</div>' : '')
+          +   (s.kommentar ? '<div class="hNote">Admin: ' + esc(s.kommentar) + '</div>' : '')
+          + '</div>'
+          + '<div class="hCard">'
+          +   '<div class="hListHead">' + ((changed.length && !hAll) ? 'Vom Admin geändert (' + changed.length + ')' : 'Alle Tage (' + days.length + ')') + '<span>Std.</span></div>'
+          +   (rows || '<div class="hS" style="padding:10px 0;">Keine Tage in diesem Monat.</div>')
+          +   toggle
+          + '</div>'
+          + '<div class="hCard">'
+          +   '<div class="hListHead">Nachricht zu ' + esc(hMonth(hSel)) + '<span></span></div>'
+          +   '<textarea id="hMsgInput" class="hMsgBox" maxlength="1000" placeholder="Zum Beispiel: Am 5. fehlt eine Schicht, ich war da."></textarea>'
+          +   '<button type="button" class="hMsgBtn" id="hMsgBtn">Nachricht senden</button>'
+          +   '<div class="hMsgStatus" id="hMsgStatus"></div>'
+          + '</div>';
+        hoursTableWrap.querySelectorAll('.hChip').forEach(b => b.addEventListener('click', () => { hSel = b.dataset.m; hAll = false; renderHours(); }));
+        const hMsgBtn = document.getElementById('hMsgBtn');
+        if(hMsgBtn) hMsgBtn.addEventListener('click', () => sendHoursMessage(hSel));
+        const tb = document.getElementById('hToggleBtn');
+        if(tb) tb.addEventListener('click', () => { hAll = !hAll; renderHours(); });
+        hoursTableWrap.querySelectorAll('.hRow.hasDet').forEach(rw => {
+          const open = () => { const d = rw.parentNode.querySelector('.hDetail'); if(!d) return; d.hidden = !d.hidden; rw.classList.toggle('open', !d.hidden); };
+          rw.addEventListener('click', open);
+          rw.addEventListener('keydown', e => { if(e.key === 'Enter' || e.key === ' '){ e.preventDefault(); open(); } });
+        });
+      }
+      async function sendHoursMessage(monat){
+        const box = document.getElementById('hMsgInput');
+        const st = document.getElementById('hMsgStatus');
+        const text = (box.value || '').trim();
+        if(text.length < 2){ st.className = 'hMsgStatus err'; st.textContent = 'Bitte kurz schreiben, worum es geht.'; return; }
+        const btn = document.getElementById('hMsgBtn');
+        btn.disabled = true;
+        st.className = 'hMsgStatus'; st.textContent = 'Wird gesendet …';
+        try{
+          const res = await fetch(EQUIP_WEB_APP_URL, { method: 'POST', body: JSON.stringify({ token: EQUIP_API_TOKEN, action: 'addMessage', pin: pin, secret: secret, text: 'Zu ' + hMonth(monat) + ': ' + text }) });
+          const r = await res.json();
+          if(r.status === 'success'){
+            box.value = '';
+            st.className = 'hMsgStatus ok';
+            st.textContent = '✅ Gesendet. Der Admin sieht deine Nachricht.';
+          }else{
+            st.className = 'hMsgStatus err';
+            st.textContent = r.message || 'Senden hat nicht geklappt.';
+          }
+        }catch(e){
+          st.className = 'hMsgStatus err';
+          st.textContent = 'Keine Verbindung. Bitte versuche es noch einmal.';
+        }finally{
+          btn.disabled = false;
+        }
+      }
+      renderHours();
     }
 
     renderMyMessages(result.messages || []);
