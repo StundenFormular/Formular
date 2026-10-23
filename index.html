@@ -5787,6 +5787,7 @@ function renderCorrectedDay(h){
   const known = h.origKnown === true;
   const hasHoursOrig = h.eingereicht !== "" && h.eingereicht != null;
   const deleted = h.geloescht === true;
+  const added = !deleted && h.eingereicht === 0 && !known;   // vom Admin ergänzt: der Mitarbeiter hatte nichts gesendet
   const chg = deleted
     ? { standort: known && !!h.origStandort, beginn: known && !!h.origBeginn, ende: known && !!h.origEnde, stunden: hasHoursOrig }
     : {
@@ -5818,7 +5819,7 @@ function renderCorrectedDay(h){
   const statusBorder = freigegeben ? "rgba(124,252,154,.45)" : "rgba(255,213,74,.45)";
   const statusColor = freigegeben ? "#7CFC9A" : "#FFD54A";
   const statusText = freigegeben ? "✅ Freigegeben" : "⏳ Noch nicht freigegeben";
-  const kindText = deleted ? "🗑️ Vom Admin gelöscht" : (h.geaendert === true ? "✏️ Vom Admin korrigiert" : "📝 Hinweis vom Admin");
+  const kindText = deleted ? "🗑️ Vom Admin gelöscht" : (added ? "➕ Vom Admin ergänzt" : (h.geaendert === true ? "✏️ Vom Admin korrigiert" : "📝 Hinweis vom Admin"));
 
   let body;
   if(showCompare){
@@ -5826,7 +5827,7 @@ function renderCorrectedDay(h){
     body = `
       <div style="display:grid; grid-template-columns:auto 1fr; gap:8px 12px; align-items:center; margin-top:4px;">
         ${label("Eingereicht", "rgba(255,255,255,.55)")}
-        <div class="cmpOld" style="color:rgba(255,255,255,.7);">${line({ standort: h.origStandort, beginn: h.origBeginn, ende: h.origEnde, stunden: h.eingereicht }, "old", known)}</div>
+        <div class="cmpOld" style="color:rgba(255,255,255,.7);">${added ? '<div style="font-size:13px;">nichts gesendet</div>' : line({ standort: h.origStandort, beginn: h.origBeginn, ende: h.origEnde, stunden: h.eingereicht }, "old", known)}</div>
         ${label("Korrigiert", "#7CFC9A")}
         <div class="cmpNew" style="color:#fff;">${deleted
           ? `<div style="font-size:13px; font-weight:900; color:#ff9a9a;">🗑️ Eintrag gelöscht – dieser Tag zählt nicht</div>`
@@ -6277,7 +6278,7 @@ async function loadMyHours(pin, secret){
         const chips = hMonths.map(x => '<button type="button" class="hChip' + (x.monat === hSel ? ' on' : '') + '" data-m="' + esc(x.monat) + '">' + esc(hMonth(x.monat)) + '</button>').join('');
         const rows = list.map(d => {
           const was = d.geloescht ? 'gestrichen · du hattest ' + hNum(d.eingereicht) + ' Std. gesendet'
-            : (d.geaendert && d.origKnown ? 'vorher ' + [ (d.origStandort && d.origStandort !== d.standort) ? esc(d.origStandort) : '', esc((d.origBeginn||'') + '–' + (d.origEnde||'')) ].filter(Boolean).join(' · ') : '');
+            : (d.geaendert && d.origKnown ? 'vorher ' + [ (d.origStandort && d.origStandort !== d.standort) ? esc(d.origStandort) : '', esc((d.origBeginn||'') + '–' + (d.origEnde||'')) ].filter(Boolean).join(' · ') : (d.geaendert && d.eingereicht === 0 ? 'vom Admin ergänzt · du hattest nichts gesendet' : ''));
           const cls = d.geloescht ? ' del' : (d.geaendert ? ' chg' : '');
           const detail = (d.geaendert || d.geloescht || (d.kommentar && String(d.kommentar).trim())) ? '<div class="hDetail" hidden>' + renderCorrectedDay(d) + '</div>' : '';
           return '<div class="hItem">'

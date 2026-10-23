@@ -151,6 +151,9 @@
   @keyframes sumFlash{ 0%{ background:#ffe9a8; } 100%{ background:#faf9ff; } }
   .dayRow.off{ grid-template-columns:130px 1fr; background:#eceef2; color:#7b8494; }
   .dayRow.off .dayWd{ margin-left:4px; font-weight:700; }
+  .dayRow.off .dayOffLabel{ display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
+  .dayAddBtn{ border:1px solid #6b63c9; background:#fff; color:#4a43a8; border-radius:8px; padding:3px 10px; font-size:12px; font-weight:700; cursor:pointer; }
+  .dayAddBtn:hover{ background:#6b63c9; color:#fff; }
   .dayRow.deleted{ grid-template-columns:130px 1fr; background:#fdecea; color:#9b2c2c; }
   .dayRow.deleted .dayWd{ margin-left:4px; font-weight:700; }
   .dayRow.deleted .dayDelLabel{ font-weight:700; }
@@ -1200,6 +1203,7 @@ function dayCorrected(d, cur){
   return !!o && (String(cur.standort || "") !== o.standort || String(cur.beginn || "") !== o.beginn || String(cur.ende || "") !== o.ende);
 }
 function correctionParts(d){
+  if(d.eingereicht === 0 && !d._orig) return ["vom Admin ergänzt: " + String(d.stunden === "" ? 0 : d.stunden).replace(".", ",") + " Std."];
   const parts = [];
   const o = d._orig;
   if(o){
@@ -1211,6 +1215,7 @@ function correctionParts(d){
   return parts;
 }
 function origSummary(d){
+  if(d.eingereicht === 0 && !d._orig) return "Vom Admin ergänzt: Der Mitarbeiter hatte für diesen Tag nichts eingereicht.";
   const o = d._orig;
   const parts = [];
   if(o){ parts.push(o.standort || "–"); parts.push((o.beginn || "–") + " – " + (o.ende || "–")); }
@@ -1300,10 +1305,19 @@ function ortOptionsHtml(current){
   return html;
 }
 
-function buildOffRow(d){
+function buildOffRow(emp, month, d, body){
   const offRow = document.createElement("div");
   offRow.className = "dayRow off";
-  offRow.innerHTML = `<div>${escapeHtml(d.datum)}<span class="dayWd">${escapeHtml(d.wd)}</span></div><div class="dayOffLabel">nicht gearbeitet</div>`;
+  offRow.innerHTML = `<div>${escapeHtml(d.datum)}<span class="dayWd">${escapeHtml(d.wd)}</span></div><div class="dayOffLabel">nicht gearbeitet <button type="button" class="dayAddBtn" title="Diesen Tag als gearbeitet eintragen">＋ Als gearbeitet eintragen</button></div>`;
+  // Ein Klick macht aus dem grauen Tag eine bearbeitbare Zeile; gespeichert wird wie bei jedem anderen Tag automatisch
+  offRow.querySelector(".dayAddBtn").addEventListener("click", () => {
+    const nd = { day: d.day, datum: d.datum, wd: d.wd, standort: "", beginn: "", ende: "", stunden: "", eingereicht: "", kommentar: "", _orig: null, _added: true };
+    if(!emp.days) emp.days = [];
+    emp.days.push(nd);
+    const row = buildDayRow(emp, month, nd, body);
+    offRow.replaceWith(row);
+    const first = row.querySelector(".editStandort"); if(first) first.focus();
+  });
   return offRow;
 }
 
@@ -1422,6 +1436,7 @@ function buildDayRow(emp, month, d, body){
         if("ende" in payload) d.ende = payload.ende;
         if("kommentar" in payload) d.kommentar = payload.kommentar;
         const stillDirty = inS.value !== saved.standort || (timeValue(inB) !== null && timeValue(inB) !== saved.beginn) || (timeValue(inE) !== null && timeValue(inE) !== saved.ende) || (hoursValue() !== null && !sameHours(hoursValue(), saved.stunden)) || inK.value !== saved.kommentar;
+        if(result.added && d.eingereicht === ""){ d.eingereicht = 0; row.classList.add("diverges"); origEl.classList.add("show"); origEl.textContent = origSummary(d); }
         if(!stillDirty) dirtyRows.delete(row);
         setState(stillDirty ? "busy" : "ok");
       }else if(result.code !== "ADMIN_AUTH"){
@@ -1505,8 +1520,18 @@ function buildDayRow(emp, month, d, body){
 
   // Löschen direkt in der Zeile, ohne die Liste neu zu laden
   const deleteBtn = row.querySelector(".dayDeleteBtn");
+  const backToOff = () => {
+    dirtyRows.delete(row);
+    emp.days = (emp.days || []).filter(x => x !== d);
+    refreshOfficialSum(emp, body);
+    row.replaceWith(buildOffRow(emp, month, { day: d.day, datum: d.datum, wd: d.wd, off: true }, body));
+  };
   deleteBtn.addEventListener("click", async () => {
-    if(!confirm(`Eintrag vom ${d.datum} wirklich löschen?\n\nDer Mitarbeiter sieht den Tag danach als „vom Admin gelöscht“.`)) return;
+    if(d._added && d.eingereicht === ""){ clearTimeout(timer); backToOff(); return; }   // noch nie gespeichert: einfach zurück
+    const addedDay = d.eingereicht === 0 && !d._orig;
+    if(addedDay){
+      if(!confirm(`Den ergänzten Tag ${d.datum} wieder entfernen?\n\nEr ist danach wieder „nicht gearbeitet“.`)) return;
+    } else if(!confirm(`Eintrag vom ${d.datum} wirklich löschen?\n\nDer Mitarbeiter sieht den Tag danach als „vom Admin gelöscht“.`)) return;
     deleteBtn.disabled = true;
     setState("busy");
     try{
@@ -1517,6 +1542,15 @@ function buildDayRow(emp, month, d, body){
         body: JSON.stringify({ token: EQUIP_API_TOKEN, adminSession: getAdminSession(), action: "adminDeleteDay", pin: emp.pin, monat: month, day: d.day })
       });
       const result = await res.json();
+      if(result.status === "success" && addedDay){
+        backToOff();
+        if(typeof result.nachher === "number") emp.summeOffiziell = result.nachher;
+        updateSumBoxes(emp, body, true);
+        const fb = body.querySelector(".deleteFeedback");
+        fb.style.display = "block";
+        fb.textContent = `Ergänzter Tag ${d.datum} entfernt. Gesamtstunden vorher: ${result.vorher} Std. → jetzt: ${result.nachher} Std.`;
+        return;
+      }
       if(result.status === "success"){
         dirtyRows.delete(row);
         // Wie auf dem Server: Das Original (Eingereicht, Standort, Zeiten) bleibt erhalten, die aktuellen Werte werden geleert
@@ -1701,7 +1735,7 @@ function buildEmployeeCard(emp, month){
       }
     });
     fullMonthDays(emp.days, month).forEach(d => {
-      dayList.appendChild(d.off ? buildOffRow(d) : (d.geloescht ? buildDeletedRow(d) : buildDayRow(emp, month, d, body)));
+      dayList.appendChild(d.off ? buildOffRow(emp, month, d, body) : (d.geloescht ? buildDeletedRow(d) : buildDayRow(emp, month, d, body)));
     });
   }
 
