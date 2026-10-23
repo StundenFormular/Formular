@@ -587,6 +587,8 @@ select.ort option{
   font-family:inherit; font-size:15px;
   background:linear-gradient(135deg, rgba(232,163,61,.28), rgba(232,163,61,.10));
   animation:chooserNewPulse 2.6s ease-in-out infinite;
+  position:sticky; top:0; z-index:5;
+  background-color:#1a1530;
 }
 .chooserNew small{ color:rgba(255,255,255,.78); font-size:12px; font-weight:500; line-height:1.35; }
 .chooserNewIcon{ font-size:26px; }
@@ -3051,6 +3053,15 @@ tbody tr:nth-child(odd){
 .hMsgStatus{margin-top:6px;font-size:12px;min-height:14px}
 .hMsgStatus.ok{color:#8fe3b4}
 .hMsgStatus.err{color:#ffa8a8}
+
+#helpThreadWrap{max-height:280px;overflow-y:auto;margin-bottom:12px;padding:2px;display:flex;flex-direction:column;gap:8px}
+.helpMsg{max-width:85%;padding:8px 11px;border-radius:14px;font-size:13.5px;line-height:1.4}
+.helpMsg.fromMe{align-self:flex-end;background:#E8A33D;color:#2b1f04;border-bottom-right-radius:4px}
+.helpMsg.fromAdmin{align-self:flex-start;background:rgba(255,255,255,.1);color:#fff;border-bottom-left-radius:4px}
+.helpMsgWho{font-size:10.5px;font-weight:800;opacity:.75;margin-bottom:2px;text-transform:uppercase;letter-spacing:.03em}
+.helpMsgText{white-space:pre-wrap;word-break:break-word}
+.helpMsgTime{font-size:10px;opacity:.6;margin-top:3px;text-align:right}
+#helpResolvedNote{background:rgba(120,210,160,.14);color:#9ee7bf;border-radius:10px;padding:9px 11px;font-size:12.5px;margin-bottom:12px;line-height:1.4}
 </style>
 </head>
 
@@ -3166,6 +3177,12 @@ tbody tr:nth-child(odd){
     <div class="pinTitle">Was möchtest du tun?</div>
     <p class="pinHint">Stundenformular wird einmal im Monat ausgefüllt, der Ausrüstungs-Check jeden Tag.</p>
 
+    <button class="chooserNew" id="chooserNewBtn" type="button" style="display:none;">
+      <span class="chooserNewIcon">🆕</span>
+      <span><b>Neu hier? Eigene PIN anfordern</b><br><small>Du hast schon eine PIN? Dann trag sie einfach im Stundenformular ein.</small></span>
+      <span class="chooserNewArrow">›</span>
+    </button>
+
     <div class="chooserNotice" id="chooserNotice" style="display:none;" role="status">
       <div class="cnTitle">🔔 Neu für dich</div>
       <div id="chooserNoticeList"></div>
@@ -3183,12 +3200,6 @@ tbody tr:nth-child(odd){
         <button type="button" class="cnLater" id="helpReplyLaterBtn">Später</button>
       </div>
     </div>
-
-    <button class="chooserNew" id="chooserNewBtn" type="button" style="display:none;">
-      <span class="chooserNewIcon">🆕</span>
-      <span><b>Neu hier? Eigene PIN anfordern</b><br><small>Du hast schon eine PIN? Dann trag sie einfach im Stundenformular ein.</small></span>
-      <span class="chooserNewArrow">›</span>
-    </button>
 
     <button class="pinOk" id="chooserFormularBtn" type="button" style="width:100%; margin-bottom:10px; text-align:left; padding:16px;">
       📋 Stundenformular<br><span style="font-weight:400; font-size:12px; opacity:.8;">Monatliche Zeiterfassung</span>
@@ -3467,16 +3478,17 @@ tbody tr:nth-child(odd){
       </div>
     </div>
 
-<div id="helpRepliesWrap" style="display:none; margin-bottom:12px;"></div>
+<div id="helpThreadWrap" style="display:none;"></div>
+<div id="helpResolvedNote" style="display:none;"></div>
 
-    <label class="helpLabel" for="helpText">Was ist das Problem?</label>
+    <label class="helpLabel" for="helpName" id="helpNameLabel">Dein Name <span>(optional)</span></label>
+    <input id="helpName" type="text" maxlength="60" autocomplete="name" placeholder="z. B. Vorname Nachname">
+
+    <label class="helpLabel" for="helpText" id="helpTextLabel">Was ist das Problem?</label>
     <textarea id="helpText" maxlength="1500" placeholder="Beschreibe kurz, was nicht funktioniert …"></textarea>
     <div class="helpCount" id="helpCount">0 / 1500</div>
 
-    <label class="helpLabel" for="helpName">Dein Name <span>(optional)</span></label>
-    <input id="helpName" type="text" maxlength="60" autocomplete="name" placeholder="z. B. Vorname Nachname">
-
-    <div class="helpInfo">Technische Infos (App-Version, Gerätetyp) werden automatisch mitgeschickt.</div>
+    <div class="helpInfo" id="helpInfoLine">Technische Infos (App-Version, Gerätetyp) werden automatisch mitgeschickt.</div>
 
     <button class="pinOk helpSend" id="helpSendBtn" type="button">Nachricht senden</button>
     <div class="helpStatus" id="helpStatus"></div>
@@ -3730,13 +3742,17 @@ document.getElementById("loginVersion").textContent = "Version " + APP_VERSION;
     document.body.appendChild(bar);
   }
 
+  // Vergleicht die tatsächlich ausgelieferte Datei mit sich selbst beim allerersten Aufruf.
+  // Das ersetzt den Vergleich über eine Versionsnummer, die man leicht vergisst hochzuzählen:
+  // jede inhaltliche Änderung an dieser Datei wird so automatisch erkannt, ganz ohne Pflege.
+  let baselineHtml = null;
   async function checkForNewVersion(){
     try{
       const res = await fetch(location.pathname + "?vcheck=" + Date.now(), { cache: "no-store" });
       if(!res.ok) return;
       const html = await res.text();
-      const m = html.match(/APP_VERSION = "(v[0-9][^"]*)"/);
-      if(m && m[1] !== APP_VERSION) showUpdateBanner();
+      if(baselineHtml === null){ baselineHtml = html; return; }
+      if(html !== baselineHtml) showUpdateBanner();
     }catch(e){}
   }
 
@@ -5518,32 +5534,69 @@ function getHelpDeviceId(){
   return getDeviceClientId();
 }
 
-function openHelp(prefill, name, replies){
+let currentHelpTicket = null;   // id des aktuell offenen Tickets (vom Gerät gespeichert), null = noch keins
+function helpEscape(s){ return String(s==null?"":s).replace(/[<>&]/g, c => ({"<":"&lt;",">":"&gt;","&":"&amp;"}[c])); }
+function helpTime(ts){ if(!ts) return ""; const d = new Date(ts); const p2 = x => String(x).padStart(2,"0"); return p2(d.getDate())+"."+p2(d.getMonth()+1)+". "+p2(d.getHours())+":"+p2(d.getMinutes()); }
+async function openHelp(prefill, name, replies){
   helpStatus.className = "helpStatus";
   helpStatus.textContent = "";
-  if(typeof prefill === "string" && prefill){
-    helpText.value = prefill;
-    helpCount.textContent = helpText.value.length + " / 1500";
-  }
-  if(typeof name === "string" && name){
-    helpName.value = name;
-  }
-  renderHelpReplies(replies || []);
+  if(typeof prefill === "string" && prefill) helpText.value = prefill;
+  if(typeof name === "string" && name) helpName.value = name;
+  helpCount.textContent = helpText.value.length + " / 1500";
   helpBack.style.display = "flex";
+  const knownId = (replies && replies[0] && replies[0].id) || localStorage.getItem("sad_help_ticket") || null;
+  if(knownId){
+    currentHelpTicket = knownId;
+    await loadHelpThread(knownId);
+  }else{
+    currentHelpTicket = null;
+    renderHelpThread(null);
+  }
   setTimeout(()=> helpText.focus(), 60);
 }
-function renderHelpReplies(replies){
-  const wrap = document.getElementById("helpRepliesWrap");
-  if(!wrap) return;
-  if(!replies || !replies.length){ wrap.style.display = "none"; wrap.innerHTML = ""; return; }
-  const esc = s => String(s==null?"":s).replace(/[<>&]/g, c => ({"<":"&lt;",">":"&gt;","&":"&amp;"}[c]));
-  wrap.innerHTML = replies.map(r => `
-    <div class="helpReplyItem">
-      <div class="helpReplyQ">Du: „${esc(r.frage)}“</div>
-      <div class="helpReplyA">👤 Admin: ${esc(r.text)}</div>
+async function loadHelpThread(id){
+  try{
+    const res = await fetch(EQUIP_WEB_APP_URL, { method: "POST", body: JSON.stringify({ token: EQUIP_API_TOKEN, action: "getHelpThread", deviceId: getHelpDeviceId(), id: id }) });
+    const r = await res.json();
+    if(r && r.status === "success"){ renderHelpThread(r); return; }
+  }catch(e){}
+  renderHelpThread(null);   // kein Verlauf gefunden oder offline: einfach eine neue Anfrage anbieten
+}
+function renderHelpThread(thread){
+  const wrap = document.getElementById("helpThreadWrap");
+  const resolvedNote = document.getElementById("helpResolvedNote");
+  const nameLabel = document.getElementById("helpNameLabel");
+  const textLabel = document.getElementById("helpTextLabel");
+  const infoLine = document.getElementById("helpInfoLine");
+  if(!thread || !thread.messages || !thread.messages.length){
+    wrap.style.display = "none"; wrap.innerHTML = "";
+    resolvedNote.style.display = "none";
+    nameLabel.style.display = ""; helpName.style.display = "";
+    textLabel.textContent = "Was ist das Problem?"; infoLine.style.display = "";
+    helpSendBtn.textContent = "Nachricht senden";
+    return;
+  }
+  wrap.innerHTML = thread.messages.map(m => `
+    <div class="helpMsg ${m.von === "admin" ? "fromAdmin" : "fromMe"}">
+      <div class="helpMsgWho">${m.von === "admin" ? "👤 Admin" : "Du"}</div>
+      <div class="helpMsgText">${helpEscape(m.text)}</div>
+      <div class="helpMsgTime">${helpTime(m.ts)}</div>
     </div>
   `).join("");
   wrap.style.display = "block";
+  nameLabel.style.display = "none"; helpName.style.display = "none";   // Name steht schon im Verlauf, nicht erneut fragen
+  infoLine.style.display = "none";
+  if(thread.erledigt){
+    resolvedNote.style.display = "block";
+    resolvedNote.innerHTML = "✅ Diese Anfrage ist erledigt. Schreibst du erneut, beginnt ein neuer Verlauf.";
+    textLabel.textContent = "Neue Anfrage";
+    helpSendBtn.textContent = "Neue Nachricht senden";
+  }else{
+    resolvedNote.style.display = "none";
+    textLabel.textContent = "Weiterschreiben";
+    helpSendBtn.textContent = "Antworten";
+  }
+  setTimeout(()=>{ wrap.scrollTop = wrap.scrollHeight; }, 30);
 }
 
 function closeHelp(){
@@ -5562,7 +5615,7 @@ helpText.addEventListener("input", ()=>{
 helpSendBtn.addEventListener("click", async ()=>{
   const text = helpText.value.trim();
   if(text.length < 5){
-    setHelpStatus("err", "Bitte beschreibe kurz dein Problem (ein paar Worte reichen).");
+    setHelpStatus("err", "Bitte schreib kurz, worum es geht (ein paar Worte reichen).");
     helpText.focus();
     return;
   }
@@ -5586,7 +5639,9 @@ helpSendBtn.addEventListener("click", async ()=>{
     if(r.status === "success"){
       helpText.value = "";
       helpCount.textContent = "0 / 1500";
-      setHelpStatus("ok", "✅ Danke! Deine Nachricht ist beim Admin angekommen.");
+      if(r.id){ currentHelpTicket = r.id; try{ localStorage.setItem("sad_help_ticket", r.id); }catch(e){} }
+      setHelpStatus("ok", "✅ Gesendet.");
+      await loadHelpThread(currentHelpTicket);
     }else if(r.code === "MAINTENANCE"){
       setHelpStatus("err", "Gerade laufen Wartungsarbeiten. Bitte versuche es später noch einmal.");
     }else{
