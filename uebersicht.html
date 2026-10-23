@@ -3,219 +3,25 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self' data:; font-src 'self'; connect-src https://script.google.com https://script.googleusercontent.com; base-uri 'none'; form-action 'none'">
 <meta name="robots" content="noindex, nofollow">
 <meta name="referrer" content="no-referrer">
 <meta name="theme-color" content="#0D1B2A">
 <title>Stunden-Übersicht</title>
-<style>
-@font-face{font-family:"Inter";font-style:normal;font-weight:100 900;font-display:swap;src:url("inter-latin.woff2") format("woff2")}
-@font-face{font-family:"Barlow SC";src:url("barlow-sc-700.woff2") format("woff2");font-weight:700;font-style:normal;font-display:swap}
-@font-face{font-family:"Barlow SC";src:url("barlow-sc-800.woff2") format("woff2");font-weight:800;font-style:normal;font-display:swap}
-:root{--ink:#0D1B2A;--steel:#536173;--paper:#EEF0EC;--card:#fff;--rule:#D9DED8;--ok:#1E8E5A;--ok-bg:#E3F4EA;--open:#B4540B;--open-bg:#FCEBD9;--gold:#F5C542;--font-d:"Barlow SC","Arial Narrow",system-ui,sans-serif}
-*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-html,body{margin:0;background:var(--paper);color:var(--ink);font:15px/1.4 "Inter",system-ui,-apple-system,"Segoe UI",sans-serif}
-body{min-height:100vh;display:flex;justify-content:center}
-.wrap{width:100%;max-width:480px;padding:0 0 calc(24px + env(safe-area-inset-bottom))}
-header{background:var(--ink);color:#fff;padding:calc(14px + env(safe-area-inset-top)) 18px 22px;border-radius:0 0 22px 22px}
-.eyebrow{font:700 .72rem var(--font-d);letter-spacing:.14em;text-transform:uppercase;color:var(--gold)}
-h1{margin:4px 0 0;font:800 1.7rem/1.1 var(--font-d);letter-spacing:.01em}
-.stand{margin-top:6px;font-size:.78rem;color:#B9C4D0}
-.stand i{display:inline-block;width:7px;height:7px;border-radius:50%;background:#3DDC84;margin-right:6px;vertical-align:1px}
-.stand.off i{background:#E8A33D}
-main{padding:14px 14px 0}
-.note{display:flex;gap:9px;align-items:flex-start;background:#FFF7DB;border:1px solid #F1DD8A;border-radius:12px;padding:9px 12px;font-size:.82rem;color:#5C4A00;line-height:1.35}
-.note svg{flex:none;margin-top:1px}
-.chips{display:flex;gap:7px;overflow-x:auto;padding:12px 0 2px;scrollbar-width:none}
-.chips::-webkit-scrollbar{display:none}
-.chip{flex:none;padding:8px 14px;border-radius:999px;border:1px solid var(--rule);background:var(--card);color:var(--ink);font:700 .9rem var(--font-d);letter-spacing:.02em;cursor:pointer}
-.chip.on{background:var(--ink);border-color:var(--ink);color:#fff}
-.chip svg{vertical-align:-2px;margin-right:3px}
-.card{background:var(--card);border:1px solid var(--rule);border-radius:16px;padding:16px;margin-top:12px}
-.big{display:flex;align-items:baseline;gap:8px}
-.big b{font:800 2.5rem/1 var(--font-d)}
-.big span{color:var(--steel);font-size:.95rem}
-.bar{height:10px;border-radius:999px;background:var(--open-bg);overflow:hidden;margin:12px 0 4px}
-.bar i{display:block;height:100%;background:var(--ok);border-radius:999px;transition:width .5s}
-.sub{font-size:.82rem;color:var(--steel)}
-.seg{display:grid;grid-template-columns:1fr 1fr;gap:6px;background:#E2E6E0;border-radius:13px;padding:4px;margin-top:12px}
-.seg button{border:0;background:transparent;border-radius:10px;padding:9px 6px;font:700 .95rem var(--font-d);letter-spacing:.02em;color:var(--steel);cursor:pointer}
-.seg button.on{background:var(--card);color:var(--ink);box-shadow:0 1px 3px rgba(13,27,42,.14)}
-.seg em{font-style:normal;margin-left:5px;padding:1px 7px;border-radius:999px;font-size:.8rem}
-.seg .o em{background:var(--open-bg);color:var(--open)}.seg .g em{background:var(--ok-bg);color:var(--ok)}
-ul{list-style:none;margin:10px 0 0;padding:0;background:var(--card);border:1px solid var(--rule);border-radius:16px;overflow:hidden}
-li{display:flex;align-items:center;gap:10px;padding:10px 14px;border-bottom:1px solid var(--rule);min-height:44px}
-li:last-child{border-bottom:0}
-li .dot{flex:none;width:9px;height:9px;border-radius:50%}
-li.o .dot{background:var(--open)}li.g .dot{background:var(--ok)}
-li .n{flex:1;min-width:0;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-li .t{flex:none;font-size:.78rem;color:var(--steel);font-variant-numeric:tabular-nums}
-.empty{padding:22px 14px;text-align:center;color:var(--steel);font-size:.92rem}
-.msg{margin-top:40px;text-align:center;padding:0 24px}
-.msg h2{font:800 1.5rem var(--font-d);margin:10px 0 4px}.msg p{color:var(--steel);margin:0}
-.lock input{width:100%;padding:12px 14px;border:1px solid var(--rule);border-radius:12px;font:inherit;font-size:1rem;margin-top:10px;background:#fff}
-.lock .go{width:100%;margin-top:10px;padding:12px;border:0;border-radius:12px;background:var(--ink);color:#fff;font:800 1rem var(--font-d);letter-spacing:.04em;cursor:pointer}
-.lock .err{margin-top:8px;color:#B3261E;font-size:.86rem;min-height:1.2em}
-.foot{margin:18px 14px 0;text-align:center;font-size:.74rem;color:var(--steel)}
-.toast{position:fixed;left:50%;bottom:calc(22px + env(safe-area-inset-bottom));transform:translate(-50%,20px);opacity:0;pointer-events:none;background:var(--ink);color:#fff;padding:11px 16px;border-radius:12px;font-size:.88rem;max-width:calc(100% - 32px);text-align:center;transition:.25s}
-.toast.show{opacity:1;transform:translate(-50%,0)}
-.skel{height:44px;border-radius:10px;background:linear-gradient(90deg,#e3e7e1,#f2f4f0,#e3e7e1);background-size:200% 100%;animation:sk 1.2s infinite;margin-top:8px}
-@keyframes sk{to{background-position:-200% 0}}
-@media (prefers-reduced-motion:reduce){.skel{animation:none}.bar i,.toast{transition:none}}
-</style>
+<link rel="stylesheet" href="ub-style.1.css">
 </head>
 <body>
+<div class="progress" aria-hidden="true"></div>
 <div class="wrap">
   <header>
     <div class="eyebrow">Stunden-Übersicht</div>
     <h1 id="title">Wird geladen …</h1>
-    <div class="stand" id="stand"><i></i><span id="standTxt">verbinde …</span></div>
+    <div class="stand" id="stand"><i></i><b class="mini" aria-hidden="true"></b><span id="standTxt">verbinde …</span></div>
   </header>
-  <main id="main"><div class="skel"></div><div class="skel"></div><div class="skel"></div></main>
+  <main id="main"></main>
   <div class="foot">Nur zur Ansicht · Daten live aus dem System</div>
 </div>
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
-<script>
-(function () {
-  "use strict";
-  var URL_API = "https://script.google.com/macros/s/AKfycbzNrtg6-hoAv_kWkuE_noqRtlRYYJAzQMxJnpnEbyP3b4JjlHyG4vPVsuqdC45xrPe9/exec";
-  var API_TOKEN = "Zk0sUhvBN2XU13DGgeAwhm-H-rtmBcK1OwJR7NLc1VI";
-  var vt = (location.hash || "").replace(/^#/, "").replace(/[^0-9a-f]/gi, "").slice(0, 64);
-  var state = { month: "", data: null, tab: null, firstCall: true, offline: false, pwErr: "" };
-  var $ = function (id) { return document.getElementById(id); };
-  var main = $("main"), title = $("title"), stand = $("stand"), standTxt = $("standTxt");
-
-  function el(tag, cls, text) { var e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; }
-  var EYE = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg>';
-  var LOCK = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>';
-
-  // Wer irgendwo klickt: freundlicher Hinweis, dass hier nur angesehen wird
-  var toastTimer = null, lastToast = 0;
-  function hint() {
-    var now = Date.now(); if (now - lastToast < 1800) return; lastToast = now;
-    var t = $("toast"); t.textContent = "Diese Seite ist nur zur Ansicht. Hier lässt sich nichts ändern."; t.classList.add("show");
-    clearTimeout(toastTimer); toastTimer = setTimeout(function () { t.classList.remove("show"); }, 2600);
-  }
-  document.addEventListener("click", function (e) {
-    var t = e.target;
-    if (t.closest && t.closest(".chip, .seg, .lock, #title")) return;   // echte Bedienelemente: Monat, Reiter, Passwort
-    hint();
-  });
-  document.addEventListener("contextmenu", function () { /* erlaubt, nur Ansicht */ });
-
-  function fmtTime(ts) {
-    if (!ts) return "";
-    var d = new Date(ts), n = new Date(), p = function (x) { return String(x).padStart(2, "0"); };
-    var hm = p(d.getHours()) + ":" + p(d.getMinutes());
-    var day = function (x) { return new Date(x.getFullYear(), x.getMonth(), x.getDate()).getTime(); };
-    var diff = Math.round((day(n) - day(d)) / 86400000);
-    if (diff === 0) return "heute " + hm;
-    if (diff === 1) return "gestern " + hm;
-    return p(d.getDate()) + "." + p(d.getMonth() + 1) + ". " + hm;
-  }
-  function setStand() {
-    stand.className = "stand" + (state.offline ? " off" : "");
-    if (!state.data || !state.data.updated) { standTxt.textContent = state.offline ? "keine Verbindung" : "verbinde …"; return; }
-    var d = new Date(state.data.updated), p = function (x) { return String(x).padStart(2, "0"); };
-    standTxt.textContent = (state.offline ? "Keine Verbindung · letzter Stand " : "Stand ") + p(d.getHours()) + ":" + p(d.getMinutes()) + (state.offline ? "" : " · aktualisiert sich selbst");
-  }
-  function grantKey(m) { return "ansicht_grant_" + m; }
-  function getGrant(m) { try { return sessionStorage.getItem(grantKey(m)) || ""; } catch (e) { return ""; } }
-  function setGrant(m, g) { try { sessionStorage.setItem(grantKey(m), g); } catch (e) {} }
-
-  function api(extra) {
-    var body = { token: API_TOKEN, action: "viewMonth", vt: vt };
-    for (var k in extra) body[k] = extra[k];
-    return fetch(URL_API, { method: "POST", body: JSON.stringify(body) }).then(function (r) { return r.json(); });
-  }
-  function load(opts) {
-    opts = opts || {};
-    var m = opts.month || state.month || "";
-    var req = { month: m, grant: getGrant(m) };
-    if (state.firstCall) { req.open = true; state.firstCall = false; }
-    if (opts.password) req.password = opts.password;
-    return api(req).then(function (r) {
-      state.offline = false;
-      if (r.status === "success") {
-        if (r.grant) setGrant(r.month, r.grant);
-        if (r.month !== m && m) { /* Monat nicht (mehr) freigegeben: Server hat auf einen anderen gewechselt */ }
-        state.month = r.month; state.data = r.needPassword ? Object.assign({}, r, { needPassword: true }) : r; state.pwErr = "";
-        if (state.tab === null && r.sent) state.tab = (r.missing && r.missing.length) ? "o" : "g";
-        render();
-      } else if (r.code === "VIEW_PW" || r.code === "VIEW_RATE") { state.pwErr = r.message; render(); }
-      else { state.data = { fatal: r }; render(); }
-    }).catch(function () { state.offline = true; setStand(); if (!state.data) { main.replaceChildren(msg("Keine Verbindung", "Bitte prüfe dein Internet. Es wird weiter versucht.")); } });
-  }
-
-  function msg(h, p) { var d = el("div", "msg"); d.appendChild(el("h2", "", h)); d.appendChild(el("p", "", p)); return d; }
-
-  function monthChips(d) {
-    if (!d.months || d.months.length < 2) return null;
-    var wrap = el("div", "chips");
-    d.months.forEach(function (m) {
-      var b = el("button", "chip" + (m.month === d.month ? " on" : "")); b.type = "button";
-      if (m.pw) { var s = el("span"); s.innerHTML = LOCK; b.appendChild(s.firstChild); }
-      b.appendChild(document.createTextNode(m.label));
-      b.addEventListener("click", function () { if (m.month === state.month) return; state.month = m.month; state.tab = null; state.data = Object.assign({}, state.data, { sent: null, needPassword: false }); render(); load({ month: m.month }); });
-      wrap.appendChild(b);
-    });
-    return wrap;
-  }
-  function noteBox() {
-    var n = el("div", "note"); n.innerHTML = EYE;
-    n.appendChild(el("span", "", "Nur zur Ansicht. Hier kann nichts geändert, korrigiert oder abgeschickt werden."));
-    return n;
-  }
-  function render() {
-    var d = state.data;
-    setStand();
-    if (!d) return;
-    if (d.fatal) { title.textContent = "Stunden-Übersicht"; main.replaceChildren(msg(d.fatal.code === "VIEW_LOCKED" ? "Zurzeit gesperrt" : d.fatal.code === "VIEW_EMPTY" ? "Noch nichts freigegeben" : "Link nicht gültig", d.fatal.message || "")); standTxt.textContent = ""; return; }
-    title.textContent = d.label || "Stunden-Übersicht";
-    var frag = document.createDocumentFragment();
-    frag.appendChild(noteBox());
-    var chips = monthChips(d); if (chips) frag.appendChild(chips);
-    if (d.needPassword) {
-      var c = el("div", "card lock");
-      c.appendChild(el("b", "", "Dieser Monat ist geschützt"));
-      c.appendChild(el("div", "sub", "Bitte gib das Passwort ein, das du bekommen hast."));
-      var inp = el("input"); inp.type = "password"; inp.autocomplete = "current-password"; inp.placeholder = "Passwort"; inp.setAttribute("aria-label", "Passwort");
-      var go = el("button", "go", "Öffnen"); go.type = "button";
-      var err = el("div", "err", state.pwErr || "");
-      var submit = function () { if (!inp.value) return; go.disabled = true; load({ month: d.month, password: inp.value }).then(function () { go.disabled = false; }); };
-      go.addEventListener("click", submit); inp.addEventListener("keydown", function (e) { if (e.key === "Enter") submit(); });
-      c.appendChild(inp); c.appendChild(go); c.appendChild(err); frag.appendChild(c);
-      main.replaceChildren(frag); return;
-    }
-    if (!d.sent) { frag.appendChild(el("div", "skel")); frag.appendChild(el("div", "skel")); main.replaceChildren(frag); return; }
-    var total = d.total || 0, sentN = d.sentCount || 0, pct = total ? Math.round(sentN / total * 100) : 0;
-    var card = el("div", "card");
-    var big = el("div", "big"); big.appendChild(el("b", "", sentN + " von " + total)); big.appendChild(el("span", "", "haben gesendet")); card.appendChild(big);
-    var bar = el("div", "bar"); var fill = el("i"); fill.style.width = pct + "%"; bar.appendChild(fill); card.appendChild(bar);
-    card.appendChild(el("div", "sub", total - sentN === 0 ? "Alle Stunden sind da." : (total - sentN) + (total - sentN === 1 ? " Person fehlt noch" : " Personen fehlen noch") + " · " + pct + " %"));
-    frag.appendChild(card);
-    var seg = el("div", "seg");
-    [["o", "Noch offen", d.missing.length], ["g", "Gesendet", d.sent.length]].forEach(function (x) {
-      var b = el("button", x[0] + (state.tab === x[0] ? " on" : "")); b.type = "button"; b.appendChild(document.createTextNode(x[1])); b.appendChild(el("em", "", String(x[2])));
-      b.addEventListener("click", function () { state.tab = x[0]; render(); });
-      seg.appendChild(b);
-    });
-    frag.appendChild(seg);
-    var list = el("ul"), rows = state.tab === "g" ? d.sent : d.missing;
-    if (!rows.length) { var li = el("li", "empty", state.tab === "g" ? "Noch niemand hat gesendet." : "Alle haben gesendet. Super!"); li.style.display = "block"; list.appendChild(li); }
-    rows.forEach(function (p) {
-      var li = el("li", state.tab === "g" ? "g" : "o"); li.appendChild(el("span", "dot")); li.appendChild(el("span", "n", p.name));
-      if (state.tab === "g") li.appendChild(el("span", "t", fmtTime(p.ts)));
-      list.appendChild(li);
-    });
-    frag.appendChild(list);
-    main.replaceChildren(frag);
-  }
-
-  if (!/^[0-9a-f]{32}$/i.test(vt)) { state.data = { fatal: { code: "VIEW_INVALID", message: "Dieser Link ist nicht (mehr) gültig." } }; render(); return; }
-  load();
-  var poll = setInterval(function () { if (document.visibilityState === "visible" && state.data && !state.data.fatal && !state.data.needPassword) load(); }, 45000);
-  document.addEventListener("visibilitychange", function () { if (document.visibilityState === "visible" && state.data && !state.data.fatal && !state.data.needPassword) load(); });
-})();
-</script>
+<script src="ub-app.1.js"></script>
 </body>
 </html>
