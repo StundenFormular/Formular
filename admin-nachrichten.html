@@ -152,6 +152,12 @@
   .dayRow.off{ grid-template-columns:130px 1fr; background:#eceef2; color:#7b8494; }
   .dayRow.off .dayWd{ margin-left:4px; font-weight:700; }
   .dayRow.off .dayOffLabel{ display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
+  .pdfNote{ display:none; margin:-2px 0 8px; padding:7px 10px; border-radius:8px; font-size:12.5px; line-height:1.4; }
+  .pdfNote.busy,.pdfNote.ok,.pdfNote.err{ display:block; }
+  .pdfNote.busy{ background:#fff7db; color:#5c4a00; }
+  .pdfNote.ok{ background:#e3f4ea; color:#14573a; }
+  .pdfNote.ok a{ color:#14573a; font-weight:800; }
+  .pdfNote.err{ background:#fdecea; color:#8a1f13; font-weight:700; }
   .dayAddBtn{ border:1px solid #6b63c9; background:#fff; color:#4a43a8; border-radius:8px; padding:3px 10px; font-size:12px; font-weight:700; cursor:pointer; }
   .dayAddBtn:hover{ background:#6b63c9; color:#fff; }
   .dayRow.deleted{ grid-template-columns:130px 1fr; background:#fdecea; color:#9b2c2c; }
@@ -1095,7 +1101,9 @@ const SadPdf = (function(){
     a.style.display = "none";
     document.body.appendChild(a);
     a.click();
-    setTimeout(function(){ a.remove(); URL.revokeObjectURL(url); }, 30000);
+    setTimeout(function(){ a.remove(); }, 30000);
+    setTimeout(function(){ URL.revokeObjectURL(url); }, 600000);   // der Link „Datei speichern“ bleibt 10 Minuten gültig
+    return { url: url, filename: filename };
   }
 
   return { build: build, download: download, width: width };
@@ -1177,7 +1185,7 @@ function downloadEmployeePdf(emp, month){
     footer: "Erstellt am " + stamp + " " + p2(now.getHours()) + ":" + p2(now.getMinutes())
   });
   const safeName = String(emp.name).replace(/[^A-Za-z0-9ÄÖÜäöüß_-]+/g, "_");
-  SadPdf.download(bytes, "Stunden_" + safeName + "_" + yy + "-" + p2(mm) + ".pdf");
+  return SadPdf.download(bytes, "Stunden_" + safeName + "_" + yy + "-" + p2(mm) + ".pdf");
 }
 
 
@@ -1632,7 +1640,27 @@ function buildEmployeeCard(emp, month){
       pendingDeleteFeedback = null;
     }
 
-    body.querySelector(".pdfDownloadBtn").addEventListener("click", async ()=>{ await flushAllPending(); downloadEmployeePdf(emp, month); });
+    const pdfBtn = body.querySelector(".pdfDownloadBtn");
+    const pdfNote = document.createElement("div");
+    pdfNote.className = "pdfNote";
+    pdfBtn.insertAdjacentElement("afterend", pdfNote);
+    pdfBtn.addEventListener("click", async ()=>{
+      pdfNote.className = "pdfNote busy"; pdfNote.textContent = "PDF wird erstellt …";
+      try{
+        await flushAllPending();
+        const r = downloadEmployeePdf(emp, month);
+        pdfNote.className = "pdfNote ok"; pdfNote.textContent = "";
+        pdfNote.append("✔ PDF erstellt. ");
+        if(r && r.url){
+          const link = document.createElement("a");
+          link.href = r.url; link.download = r.filename; link.textContent = "Datei speichern";
+          pdfNote.append("Startet der Download nicht von selbst: ", link, " (" + r.filename + ").");
+        }
+      }catch(err){
+        pdfNote.className = "pdfNote err";
+        pdfNote.textContent = "Das PDF konnte nicht erstellt werden: " + (err && err.message ? err.message : err);
+      }
+    });
 
     const freigabeCheckbox = body.querySelector(".freigabeCheckbox");
     freigabeCheckbox.addEventListener("change", async ()=>{
