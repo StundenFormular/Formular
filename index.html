@@ -6119,6 +6119,18 @@ function openMyHours(){
 
 chooserHoursBtn.addEventListener("click", openMyHours);
 document.getElementById("chooserPlanBtn").addEventListener("click", function () { window.location.href = "dienstplan.html"; });
+// „Mein Dienstplan“ lässt sich in der Admin-Konsole aus- und einschalten (Einstellungen). Der letzte Stand wird gemerkt, damit nichts flackert.
+(function planFlag(){
+  const btn = document.getElementById("chooserPlanBtn");
+  function apply(on){ if(btn) btn.style.display = on === false ? "none" : ""; }
+  try{ if(localStorage.getItem("sad_feature_plan") === "0") apply(false); }catch(e){}
+  try{
+    fetch(EQUIP_WEB_APP_URL, { method:"POST", body: JSON.stringify({ token: EQUIP_API_TOKEN, action:"appConfig" }) })
+      .then(function(r){ return r.json(); })
+      .then(function(j){ if(j && j.status === "success"){ const on = j.dienstplan !== false; try{ localStorage.setItem("sad_feature_plan", on ? "1" : "0"); }catch(e){} apply(on); } })
+      .catch(function(){ /* offline: der gemerkte Stand gilt */ });
+  }catch(e){}
+})();
 document.getElementById("chooserNoticeOpen").addEventListener("click", openMyHours);
 document.getElementById("chooserNoticeLater").addEventListener("click", ()=>{
   const box = document.getElementById("chooserNotice");
