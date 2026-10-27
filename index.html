@@ -3063,6 +3063,99 @@ tbody tr:nth-child(odd){
 .helpMsgTime{font-size:10px;opacity:.6;margin-top:3px;text-align:right}
 #helpResolvedNote{background:rgba(120,210,160,.14);color:#9ee7bf;border-radius:10px;padding:9px 11px;font-size:12.5px;margin-bottom:12px;line-height:1.4}
 </style>
+<style id="designA">
+/* ===== Design A: hell, ruhig, eine Akzentfarbe (Indigo) ===== */
+body{background:#F4F5FB !important;color:#171A33}
+#mainWrap.wrap{max-width:560px;padding:0 14px 124px !important;margin:0 auto}
+#mainWrap #aHold, #mainWrap #backToChooserWrap{display:none !important}
+.aBar{position:sticky;top:0;z-index:60;display:flex;align-items:center;justify-content:space-between;height:58px;margin:0 -14px;padding:0 6px;background:#fff;border-bottom:1px solid #E3E5F0}
+.aTitle{margin:0;font-size:17px;line-height:1;font-weight:700;letter-spacing:-.01em;color:#171A33}
+.aIcon{width:44px;height:44px;padding:0;border:0;border-radius:12px;background:none;color:#3D3A87;display:grid;place-items:center;box-shadow:none}
+.aIcon:active{background:#EFEEFA}
+.aMenuWrap{position:relative}
+.aMenu{position:absolute;right:4px;top:50px;min-width:200px;background:#fff;border:1px solid #E3E5F0;border-radius:12px;box-shadow:0 14px 30px rgba(23,26,51,.18);padding:6px;z-index:90}
+.aMenu[hidden]{display:none}
+.aMenu button{display:block;width:100%;text-align:left;padding:12px;border:0;border-radius:9px;background:none;font-size:14px;font-weight:600;color:#BF2F23;box-shadow:none}
+.aMenu button:hover,.aMenu button:active{background:#FDEBE9}
+/* Person und Zeitraum */
+#mainWrap .card.userCard{margin-top:14px;background:#fff;border:1px solid #E3E5F0;border-radius:16px;box-shadow:none;padding:14px}
+#mainWrap .userHeader,#mainWrap .userFooter,#mainWrap .fieldTitle{display:none !important}
+#mainWrap .modernPinSection .pinWrap input#name{height:48px;border:1px solid #D9DCEC;border-radius:12px;font-size:18px;font-weight:700;background:#F8F9FD}
+#mainWrap .modernPinSection .pinWrap input#name:focus{outline:none;border-color:#3D3A87;box-shadow:0 0 0 3px rgba(61,58,135,.18);background:#fff}
+#mainWrap #formIdentityBar{border-radius:10px !important;background:#F3F2FB !important;border:1px solid #E3E5F0 !important}
+#mainWrap .modernPeriodSection{margin-top:14px;padding-top:14px;border-top:1px solid #EEF0F8}
+.aStepper{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.aMonthTitle{text-align:center;min-width:0}
+.aMonthTitle b{display:block;font-size:19px;font-weight:700;letter-spacing:-.01em;color:#171A33}
+.aMonthTitle span{font-size:12px;color:#5F6586}
+.aArr{width:42px;height:42px;padding:0;border:1px solid #E3E5F0;border-radius:12px;background:#F8F9FD;color:#3D3A87;display:grid;place-items:center;box-shadow:none;flex:none}
+.aArr:active{background:#EFEEFA}.aArr:disabled{opacity:.35}
+.aProg{height:7px;border-radius:99px;background:#E8EAF5;margin:13px 0 12px;overflow:hidden}
+.aProg i{display:block;height:100%;width:0;background:linear-gradient(90deg,#3D3A87,#6B67C9);border-radius:99px;transition:width .25s ease}
+.aKpis{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.aKpis div{background:#F8F9FD;border-radius:11px;padding:10px 12px}
+.aKpis b{display:block;font-size:20px;font-weight:700;font-variant-numeric:tabular-nums;color:#171A33}
+.aKpis span{font-size:10.5px;color:#5F6586;text-transform:uppercase;letter-spacing:.07em;font-weight:600}
+#mainWrap .periodGrid{display:grid;grid-template-columns:1.35fr 1fr !important;gap:8px;margin-top:12px}
+#mainWrap .periodBox{padding:0;background:none;border:0;box-shadow:none}
+#mainWrap .periodBox .miniLabel{display:none}
+#mainWrap .periodBox select{height:44px;border:1px solid #D9DCEC;border-radius:12px;font-size:15px !important;font-weight:600;background:#fff;padding:0 10px}
+/* Werkzeuge und Einträge */
+#mainWrap .tableCard{margin-top:14px;background:none;border:0;box-shadow:none;padding:0}
+#mainWrap .tableHeadRow{padding:0 4px 8px}
+#mainWrap .tableHeadRow .title{font-size:11px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:#5F6586}
+.aTools{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:0 0 12px}
+#mainWrap .aTools .fillMonthBtn{height:44px;padding:0 8px;border:1px solid #D9DCEC;border-radius:12px;background:#fff;color:#3D3A87;font-size:13px;font-weight:600;box-shadow:none;white-space:nowrap}
+#mainWrap .aTools .fillMonthBtn:active{background:#EFEEFA}
+#mainWrap .aHide{display:none !important}
+#mainWrap .swipeHintText{display:none !important}
+#mainWrap .tableScroll{background:none;border:0;border-radius:0;overflow:visible}
+#mainWrap .entryTable{min-width:0;width:100%;display:block;border:0}
+#mainWrap .entryTable thead{display:none}
+#mainWrap .entryTable tbody{display:block;background:#fff;border:1px solid #E3E5F0;border-radius:16px;overflow:hidden}
+#mainWrap .entryTable tbody tr{display:grid;grid-template-columns:52px minmax(0,1fr) minmax(0,1fr) 74px;grid-template-areas:"d k k h" "d b e h";gap:7px 8px;align-items:center;padding:10px 12px 10px 10px;border:0 !important;border-top:1px solid #EEF0F8 !important;background:#fff !important;box-shadow:none;opacity:1}
+#mainWrap .entryTable tbody tr:first-child{border-top:0 !important}
+#mainWrap .entryTable tbody tr td{display:block;padding:0 !important;border:0 !important;background:none !important;box-shadow:none !important;min-width:0;width:auto !important}
+#mainWrap .entryTable tbody tr td:nth-child(1){grid-area:d;text-align:center;align-self:center;position:relative}
+#mainWrap .entryTable tbody tr td:nth-child(2){grid-area:k}
+#mainWrap .entryTable tbody tr td:nth-child(3){grid-area:b}
+#mainWrap .entryTable tbody tr td:nth-child(4){grid-area:e}
+#mainWrap .entryTable tbody tr td:nth-child(5){grid-area:h;display:flex;align-items:baseline;justify-content:flex-end;gap:4px}
+#mainWrap .entryTable tbody tr td:nth-child(1) b{display:none}
+#mainWrap .entryTable tbody tr td:nth-child(1)::before{content:attr(data-d);display:block;font-size:19px;font-weight:700;line-height:1;color:#171A33}
+#mainWrap .entryTable tbody tr td:nth-child(1)::after{content:attr(data-wd);display:block;margin-top:3px;font-size:10.5px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:#5F6586}
+#mainWrap .entryTable tbody tr td:nth-child(5)::after{content:"Std";font-size:12px;font-weight:600;color:#5F6586;order:2}
+#mainWrap .entryTable tbody tr td:nth-child(5) input{order:1;width:auto;min-width:0;max-width:46px;padding:0;border:0;background:none;box-shadow:none;text-align:right;font-size:16px;font-weight:700;color:#171A33;font-variant-numeric:tabular-nums}
+#mainWrap .entryTable select{height:40px;padding:0 10px;border:1px solid #D9DCEC;border-radius:10px;font-size:14px;font-weight:600;background:#fff}
+#mainWrap .entryTable .timeField input{height:38px;padding:0 8px;border:1px solid #D9DCEC;border-radius:10px;text-align:center;font-size:14px;font-weight:600;background:#fff;font-variant-numeric:tabular-nums}
+#mainWrap .entryTable tbody tr.rowEmpty{opacity:.9}
+#mainWrap .entryTable tbody tr.rowEmpty select{color:#8A90AE;font-weight:500}
+#mainWrap .entryTable tbody tr.rowNight{box-shadow:inset 3px 0 0 #3D3A87}
+#mainWrap .entryTable tbody tr.rowDay{box-shadow:inset 3px 0 0 #E8A33D}
+#mainWrap .entryTable tbody tr.trActive{background:#F7F7FD !important}
+#mainWrap .entryTable tbody tr.absentRow{background:#FFF7E8 !important}
+#mainWrap .entryTable .absTag{margin-top:4px;font-size:9px;line-height:1.15;font-weight:700;color:#8A5200;white-space:normal}
+/* Bemerkung */
+#mainWrap > .card:not(.userCard){margin-top:14px;background:#fff;border:1px solid #E3E5F0;border-radius:16px;box-shadow:none}
+#mainWrap > .card:not(.userCard) label{font-size:11px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:#5F6586}
+#mainWrap textarea#note{border:1px solid #D9DCEC;border-radius:12px;background:#F8F9FD}
+/* Unterer Balken: Gesamtstunden und Prüfen & senden */
+.stickyTotalBar{display:grid !important;grid-template-columns:auto 1fr;grid-template-areas:"l b" "v b";align-items:center;column-gap:16px;row-gap:0;padding:11px 16px calc(12px + env(safe-area-inset-bottom)) !important;background:#fff !important;color:#171A33 !important;border-top:1px solid #E3E5F0;box-shadow:0 -8px 24px rgba(23,26,51,.07) !important}
+.stickyTotalBar > span:first-child{grid-area:l;font-size:11px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;color:#5F6586}
+.stickyTotalBar .stickyTotalValue{grid-area:v;font-size:22px !important;font-weight:700 !important;font-variant-numeric:tabular-nums;line-height:1.1;color:#171A33}
+.stickyTotalBar #sendBtn{grid-area:b;height:50px;padding:0 14px;border:0;border-radius:14px;background:#3D3A87;color:#fff;font-size:15px;font-weight:700;box-shadow:0 6px 16px rgba(61,58,135,.32)}
+.stickyTotalBar #sendBtn:active{background:#2F2C6B}.stickyTotalBar #sendBtn:disabled{opacity:.55;box-shadow:none}
+/* alte !important-Regeln für Monat/Jahr und PIN gezielt übersteuern */
+#mainWrap .periodGrid{grid-template-columns:1.35fr 1fr !important;gap:8px !important;margin-top:12px !important}
+#mainWrap .periodGrid .periodBox{height:auto !important;min-height:0 !important;padding:0 !important;background:none !important;border:0 !important;box-shadow:none !important}
+#mainWrap .periodGrid .periodBox .miniLabel{display:none !important}
+#mainWrap .periodGrid .periodBox select{height:44px !important;min-height:0 !important;padding:0 12px !important;margin:0 !important;font-size:15px !important;font-weight:600 !important;letter-spacing:0 !important;border:1px solid #D9DCEC !important;border-radius:12px !important;box-shadow:none !important;background:#fff !important}
+#mainWrap .modernPinSection .pinWrap input#name{height:48px !important;min-height:0 !important;padding:0 14px !important;font-size:18px !important;font-weight:700 !important;text-align:left !important;border:1px solid #D9DCEC !important;border-radius:12px !important;box-shadow:none !important;background:#F8F9FD !important}
+#mainWrap .modernPinSection .pinWrap .pinIcon{display:none !important}
+#mainWrap #rows tr td:first-child{border-left:0 !important;box-shadow:none !important;padding-left:0 !important}
+@media print{.aBar{display:none !important}}
+</style>
+
 </head>
 
 <body>
@@ -3522,15 +3615,25 @@ tbody tr:nth-child(odd){
 
 <div class="wrap" id="mainWrap" style="display:none;">
 
-  <div class="topbar">
+  <div class="aBar" id="aBar">
+    <button type="button" class="aIcon" id="aBackBtn" aria-label="Zurück zur Auswahl"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg></button>
+    <h1 class="aTitle">Stunden eintragen</h1>
+    <div class="aMenuWrap">
+      <button type="button" class="aIcon" id="aMenuBtn" aria-label="Weitere Aktionen" aria-haspopup="true" aria-expanded="false"><svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="5" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="12" cy="19" r="2"/></svg></button>
+      <div class="aMenu" id="aMenu" role="menu" hidden></div>
+    </div>
+  </div>
+
+  <!-- Diese Knöpfe behalten ihre Funktion; sie werden beim Start an ihren Platz gesetzt (Prüfen und senden: unterer Balken, Alles löschen: Menü) -->
+  <div class="topbar" id="aHold">
     <div class="btnrow">
-      <button class="send" id="sendBtn" type="button">Übersicht prüfen</button>
+      <button class="send" id="sendBtn" type="button">Prüfen &amp; senden</button>
       <button class="danger" id="delBtn" type="button">Alles löschen</button>
     </div>
   </div>
 
-  <div id="backToChooserWrap" style="text-align:center; margin:8px 0 14px;">
-    <button type="button" id="backToChooserBtn" style="width:auto; padding:9px 20px; border-radius:12px; border:1px solid rgba(232,163,61,.55); background:linear-gradient(135deg, rgba(232,163,61,.22), rgba(232,163,61,.12)); font-size:13px; font-weight:800; color:#8A5A15;">← Zurück zur Auswahl</button>
+  <div id="backToChooserWrap" style="display:none;">
+    <button type="button" id="backToChooserBtn">← Zurück zur Auswahl</button>
   </div>
 
   <div class="card userCard">
@@ -3546,7 +3649,7 @@ tbody tr:nth-child(odd){
       <div class="fieldTitle"><span class="ico"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="15" r="4"></circle><path d="M10.5 12.5L20 3M17 6l3 3M14 9l3 3"></path></svg></span>Personal-PIN</div>
       <div class="pinWrap">
         <span class="pinIcon"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="9" rx="2"></rect><path d="M8 11V7a4 4 0 0 1 8 0v4"></path></svg></span>
-        <input id="name" placeholder="PIN eingeben">
+        <input id="name" placeholder="PIN eingeben" aria-label="Personal-PIN">
       </div>
       <div class="small" id="nameError" style="display:none; color:var(--danger); font-weight:900;">
         Bitte gültige PIN (2 Ziffern) eingeben.
@@ -3571,17 +3674,24 @@ tbody tr:nth-child(odd){
     </div>
 
     <div class="modernPeriodSection">
+      <div class="aStepper">
+        <button type="button" class="aArr" id="aPrev" aria-label="Vorheriger Monat"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 6l-6 6 6 6"/></svg></button>
+        <div class="aMonthTitle"><b id="aMonthName">Monat</b><span id="aDaysInfo">0 von 0 Tagen ausgefüllt</span></div>
+        <button type="button" class="aArr" id="aNext" aria-label="Nächster Monat"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M9.5 6l6 6-6 6"/></svg></button>
+      </div>
+      <div class="aProg" aria-hidden="true"><i id="aProgBar"></i></div>
+      <div class="aKpis"><div><b id="aKpiSum">0</b><span>Stunden</span></div><div><b id="aKpiDays">0</b><span>Tage</span></div></div>
       <div class="fieldTitle"><span class="ico"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="3"></rect><path d="M3 10h18M8 3v4M16 3v4"></path></svg></span>Zeitraum wählen</div>
       <div class="periodGrid">
         <div class="periodBox">
           
           <span class="miniLabel">Monat</span>
-          <select id="month"></select>
+          <select id="month" aria-label="Monat"></select>
         </div>
         <div class="periodBox">
           
           <span class="miniLabel">Jahr</span>
-          <select id="year" tabindex="-1"></select>
+          <select id="year" tabindex="-1" aria-label="Jahr"></select>
         </div>
       </div>
     </div>
@@ -3594,15 +3704,11 @@ tbody tr:nth-child(odd){
       <div class="title">Eintragen</div>
     </div>
 
-    <div class="tableSubRow">
-      <div id="progressText" class="progressText">0 von 0 Tagen ausgefüllt</div>
-      <button type="button" id="fillMonthBtn" class="fillMonthBtn">Muster für Monat übernehmen</button>
+    <div class="aTools">
+      <button type="button" id="planFillBtn" class="fillMonthBtn">📅 Aus Dienstplan</button>
+      <button type="button" id="fillMonthBtn" class="fillMonthBtn">✨ Muster anwenden</button>
     </div>
-    <div class="tableSubRow">
-      <div class="progressText">Geplante Schichten aus dem Dienstplan</div>
-      <button type="button" id="planFillBtn" class="fillMonthBtn">📅 Aus Dienstplan übernehmen</button>
-    </div>
-    <div class="swipeHintText">↔ nach rechts wischen für Beginn/Ende/Stunden</div>
+    <div id="progressText" class="progressText aHide">0 von 0 Tagen ausgefüllt</div>
 
     <div class="tableScroll">
       <table class="entryTable">
@@ -4517,7 +4623,7 @@ function build(){
     const shortDate = `${pad2(d)}.${pad2(m)}.${String(current.getFullYear()).slice(-2)}`;
 
     tr.innerHTML = `
-      <td data-label="Datum"><b>${shortDate}</b></td>
+      <td data-label="Datum" data-d="${pad2(d)}" data-wd="${['So','Mo','Di','Mi','Do','Fr','Sa'][new Date(y, m-1, d).getDay()]}"><b>${shortDate}</b></td>
 
       <td data-label="Kehre">
         <select class="ort">
@@ -7586,5 +7692,53 @@ timeSheetBack.addEventListener("click",(e)=>{ if(e.target===timeSheetBack) close
    einzige Stelle, die Gesamtstunden berechnet - wird u.a. von autoHours()
    nach jeder Änderung automatisch aufgerufen. */
 </script>
+<script id="designAScript">
+/* Design A: Menü, Monatspfeile und Kennzahlen. Die vorhandenen Elemente und Funktionen bleiben unverändert. */
+(function(){
+  const $ = id => document.getElementById(id);
+  const menu = $("aMenu"), mb = $("aMenuBtn"), bar = $("stickyTotalBar");
+  if(!menu || !mb) return;
+  if($("delBtn")) menu.appendChild($("delBtn"));          // Alles löschen: hinter dem Menü (Rückfrage bleibt wie vorher)
+  if($("sendBtn") && bar) bar.appendChild($("sendBtn"));  // Prüfen & senden: unten neben der Gesamtsumme
+  function closeMenu(){ menu.hidden = true; mb.setAttribute("aria-expanded", "false"); }
+  mb.addEventListener("click", function(e){ e.stopPropagation(); const open = menu.hidden; menu.hidden = !open; mb.setAttribute("aria-expanded", open ? "true" : "false"); });
+  document.addEventListener("click", function(e){ if(!menu.hidden && !menu.contains(e.target)) closeMenu(); });
+  document.addEventListener("keydown", function(e){ if(e.key === "Escape") closeMenu(); });
+  menu.addEventListener("click", function(){ setTimeout(closeMenu, 0); });
+  $("aBackBtn").addEventListener("click", function(){ const b = $("backToChooserBtn"); if(b) b.click(); });
+
+  const mEl = $("month"), yEl = $("year"), prev = $("aPrev"), next = $("aNext");
+  const hasYear = y => Array.prototype.some.call(yEl.options, o => parseInt(o.value, 10) === y);
+  const target = dir => { let m = parseInt(mEl.value, 10) + dir, y = parseInt(yEl.value, 10); if(m < 1){ m = 12; y -= 1; } if(m > 12){ m = 1; y += 1; } return (isNaN(m) || isNaN(y) || !hasYear(y)) ? null : { m: m, y: y }; };
+  function step(dir){
+    const t = target(dir); if(!t) return;
+    const yChanged = parseInt(yEl.value, 10) !== t.y;
+    const mo = Array.prototype.find.call(mEl.options, o => parseInt(o.value, 10) === t.m); if(!mo) return;
+    if(yChanged){ const yo = Array.prototype.find.call(yEl.options, o => parseInt(o.value, 10) === t.y); yEl.value = yo.value; yEl.dispatchEvent(new Event("change", { bubbles: true })); }
+    mEl.value = mo.value; mEl.dispatchEvent(new Event("change", { bubbles: true }));
+    sync();
+  }
+  prev.addEventListener("click", function(){ step(-1); });
+  next.addEventListener("click", function(){ step(1); });
+
+  function sync(){
+    const mo = mEl.selectedOptions && mEl.selectedOptions[0];
+    $("aMonthName").textContent = (mo ? mo.textContent.trim() : "Monat") + " " + (yEl.value || "");
+    const p = ($("progressText") ? $("progressText").textContent : "").match(/(\d+)\s+von\s+(\d+)/);
+    const done = p ? parseInt(p[1], 10) : 0, all = p ? parseInt(p[2], 10) : 0;
+    $("aDaysInfo").textContent = done + " von " + all + " Tagen ausgefüllt";
+    $("aKpiDays").textContent = String(done);
+    $("aProgBar").style.width = (all ? Math.round(done / all * 100) : 0) + "%";
+    const s = ($("sum") ? $("sum").textContent : "").match(/^[\d.,]+/);
+    $("aKpiSum").textContent = s ? s[0] : "0";
+    prev.disabled = !target(-1); next.disabled = !target(1);
+  }
+  ["sum", "progressText"].forEach(function(id){ const n = $(id); if(n) new MutationObserver(sync).observe(n, { childList: true, characterData: true, subtree: true }); });
+  mEl.addEventListener("change", sync); yEl.addEventListener("change", sync);
+  setInterval(sync, 800);   // fängt Änderungen ab, die der Code ohne Ereignis setzt
+  sync();
+})();
+</script>
+
 </body>
 </html>

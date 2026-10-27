@@ -1,6 +1,6 @@
 // Version 3: Seiten und Skripte kommen immer zuerst aus dem Netz (also aktuell),
 // nur ohne Verbindung wird die gespeicherte Kopie gezeigt. Bilder und Schriften kommen aus dem Zwischenspeicher.
-const CACHE_NAME = "stundenformular-v3";
+const CACHE_NAME = "stundenformular-v4";
 
 const APP_SHELL = [
   "./",
