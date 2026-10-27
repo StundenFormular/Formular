@@ -810,8 +810,8 @@ function renderOverview(results, month){
     return;
   }
 
-  const sent = results.filter(e => e.hasSubmitted);
-  const notSent = results.filter(e => !e.hasSubmitted);
+  const sent = results.filter(e => e.hasSubmitted && e.source !== "admin");
+  const notSent = results.filter(e => !e.hasSubmitted || e.source === "admin");   // vom Admin erfasst, aber nicht vom Mitarbeiter gesendet
 
   overviewWrap.innerHTML = `
     <div style="font-weight:900; font-size:15px; margin:16px 0 8px; color:#2f9e44;">✅ Gesendet (${sent.length})</div>
@@ -1591,8 +1591,9 @@ function buildEmployeeCard(emp, month){
   card.className = "empCard";
   card.dataset.pin = emp.pin;
 
-  const statusClass = emp.hasSubmitted ? "sent" : "notSent";
-  const statusLabel = emp.hasSubmitted ? "🟢 Gesendet" : "🔴 Noch nicht gesendet";
+  const adminSrc = emp.hasSubmitted && emp.source === "admin";
+  const statusClass = emp.hasSubmitted && !adminSrc ? "sent" : "notSent";
+  const statusLabel = adminSrc ? "🟠 Vom Admin erfasst · noch nicht gesendet" : (emp.hasSubmitted ? "🟢 Gesendet" : "🔴 Noch nicht gesendet");
 
   const header = document.createElement("div");
   header.className = "empHeader " + statusClass;
