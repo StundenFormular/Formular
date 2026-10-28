@@ -1,6 +1,7 @@
-// Version 3: Seiten und Skripte kommen immer zuerst aus dem Netz (also aktuell),
-// nur ohne Verbindung wird die gespeicherte Kopie gezeigt. Bilder und Schriften kommen aus dem Zwischenspeicher.
-const CACHE_NAME = "stundenformular-v4";
+// Version 5: Seiten kommen zuerst aus dem Netz (mit kurzer Rückfrage „unverändert?“), damit nie etwas Altes hängen bleibt.
+// Dateien mit Versionsnummer im Namen (zum Beispiel dp-admin.33.js) ändern sich nie und kommen sofort aus dem Zwischenspeicher.
+// Wird ein solches Skript je OHNE neuen Namen geändert, muss CACHE_NAME hochgezählt werden.
+const CACHE_NAME = "stundenformular-v5";
 
 const APP_SHELL = [
   "./",
@@ -38,12 +39,12 @@ self.addEventListener("fetch", (event) => {
   if (url.origin !== self.location.origin) return;
   if (url.searchParams.has("vcheck")) return;
 
-  const isStatic = /\.(png|jpe?g|svg|webp|ico|woff2?)$/i.test(url.pathname);
+  const isStatic = /\.(png|jpe?g|svg|webp|ico|woff2?)$/i.test(url.pathname) || /[.-]\d+(\.\d+)*(\.min)?\.(js|css|mjs)$/i.test(url.pathname);   // Bilder, Schriften und Dateien mit Versionsnummer
 
   if (request.mode === "navigate" || !isStatic) {
-    // Seiten, Skripte, Stile: erst das Netz, damit nie etwas Altes hängen bleibt
+    // Seiten und alles ohne Versionsnummer: erst das Netz (mit Rückfrage), damit nie etwas Altes hängen bleibt
     event.respondWith(
-      fetch(request, { cache: "no-store" })
+      fetch(request, { cache: "no-cache" })
         .then((response) => {
           if (response.ok) {
             const copy = response.clone();
@@ -58,7 +59,7 @@ self.addEventListener("fetch", (event) => {
     return;
   }
 
-  // Bilder und Schriften: aus dem Zwischenspeicher, sonst Netz
+  // Bilder, Schriften und versionierte Dateien: aus dem Zwischenspeicher, sonst Netz
   event.respondWith(
     caches.match(request).then((cached) => {
       if (cached) return cached;
