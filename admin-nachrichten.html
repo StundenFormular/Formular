@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self' 'sha256-yRhttDbFN0DYYvqUi8Ietj9NvEdU7ncGNBfTf6nNHxI=' 'sha256-SXjRCeqaJYmmAemiBa62nkKu/xvfp7W9CuSNQVdOWNs='; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' data:; connect-src 'self' https://script.google.com https://script.googleusercontent.com; manifest-src 'self'; base-uri 'none'; form-action 'none'; object-src 'none'">
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Nachrichten – Admin</title>
@@ -495,7 +496,7 @@ async function runSearch(query){
       searchResults.appendChild(item);
     });
   }catch(err){
-    searchResults.innerHTML = `<div style="color:#c0392b; font-size:13px;">Fehler: ${err.message}</div>`;
+    searchResults.innerHTML = `<div style="color:#c0392b; font-size:13px;">Fehler: ${escapeHtml(err.message)}</div>`;
   }
 }
 
@@ -581,7 +582,7 @@ async function loadVermerkeList(){
       </div>
     `).join("");
   }catch(err){
-    vermerkeListWrap.innerHTML = `<div style="color:#c0392b; font-size:13px;">Fehler: ${err.message}</div>`;
+    vermerkeListWrap.innerHTML = `<div style="color:#c0392b; font-size:13px;">Fehler: ${escapeHtml(err.message)}</div>`;
   }
 }
 
@@ -636,13 +637,13 @@ async function loadThreads(){
     const data = await res.json();
 
     if(data.status !== "success"){
-      threadsWrap.innerHTML = `<div style="color:#c0392b; padding:20px;">Fehler: ${data.message}</div>`;
+      threadsWrap.innerHTML = `<div style="color:#c0392b; padding:20px;">Fehler: ${escapeHtml(data.message)}</div>`;
       return;
     }
 
     renderThreads(data.messages || []);
   }catch(err){
-    threadsWrap.innerHTML = `<div style="color:#c0392b; padding:20px;">Fehler beim Laden: ${err.message}</div>`;
+    threadsWrap.innerHTML = `<div style="color:#c0392b; padding:20px;">Fehler beim Laden: ${escapeHtml(err.message)}</div>`;
   }
 }
 
@@ -792,12 +793,12 @@ async function loadOverview(){
     });
     const data = await res.json();
     if(data.status !== "success"){
-      overviewWrap.innerHTML = `<div style="color:#c0392b;">Fehler: ${data.message}</div>`;
+      overviewWrap.innerHTML = `<div style="color:#c0392b;">Fehler: ${escapeHtml(data.message)}</div>`;
       return;
     }
     renderOverview(data.results, month);
   }catch(err){
-    overviewWrap.innerHTML = `<div style="color:#c0392b;">Fehler: ${err.message}</div>`;
+    overviewWrap.innerHTML = `<div style="color:#c0392b;">Fehler: ${escapeHtml(err.message)}</div>`;
   }
 }
 
@@ -1609,8 +1610,8 @@ function buildEmployeeCard(emp, month){
   if(emp.hasSubmitted){
     body.innerHTML = `
       <div class="empSums">
-        <div class="empSumBox" data-sum="off">Offiziell<b>${emp.summeOffiziell ?? 0} Std.</b></div>
-        <div class="empSumBox" data-sum="sent">Eingereicht<b>${emp.summeEingereicht ?? 0} Std.</b></div>
+        <div class="empSumBox" data-sum="off">Offiziell<b>${Number(emp.summeOffiziell) || 0} Std.</b></div>
+        <div class="empSumBox" data-sum="sent">Eingereicht<b>${Number(emp.summeEingereicht) || 0} Std.</b></div>
       </div>
       ${emp.mitarbeiterNotiz ? `
       <div style="padding:10px 12px; margin-bottom:12px; border-radius:10px; background:#faf9ff; border:1px solid var(--border); font-size:13px;">

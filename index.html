@@ -1,6 +1,7 @@
 <!doctype html>
 <html lang="de">
 <head>
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self' 'sha256-IZ3rBqSy+sbGv7D8L46hFJKGwiNd2acbh3UpOR/rXL4=' 'sha256-A5AirzBLNryG2laFKKsCE360GkZMcRMP/5QmQILh6vg='; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' data:; connect-src 'self' https://script.google.com https://script.googleusercontent.com; manifest-src 'self'; base-uri 'none'; form-action 'none'; object-src 'none'">
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Stundenformular</title>
@@ -3193,7 +3194,7 @@ body{background:#F4F5FB !important;color:#171A33}
 <!-- PIN Overlay -->
 <div class="pinBack" id="pinBack">
   <div class="pinCard loginCard">
-    <div class="loginLogo"><img src="./icon-192.png" alt="" onerror="this.parentNode.style.display='none'"></div>
+    <div class="loginLogo"><img src="./icon-192.png" alt=""></div>
     <div class="loginBrand">Stundenformular</div>
     <div class="pinTitle">Willkommen</div>
     <p class="pinHint">Gib deinen Login-Code ein, um zu starten.</p>
@@ -4122,7 +4123,7 @@ async function applyAssignedPin(pin, message, secret, label){
 
   dlgTitleEl.textContent = "Deine PIN";
   dlgMsgEl.innerHTML = `
-    <div style="font-size:28px; font-weight:900; color:#3D3A87; margin-bottom:10px;">${pin}</div>
+    <div style="font-size:28px; font-weight:900; color:#3D3A87; margin-bottom:10px;">${escHtml(pin)}</div>
     <div>Bitte immer diese PIN nutzen. Dieses Handy gehört jetzt zu dir.</div>
   `;
   dlgBtnsEl.innerHTML = `<button id="dlgOkBtn" style="grid-column:1 / -1;">OK</button>`;
@@ -4528,7 +4529,7 @@ function openTimeSheet({ title, list, currentValue, targetInput, targetRow, mode
   const addOpt = (label, value, active, danger)=>{
     const div = document.createElement("div");
     div.className = "timeOpt" + (active ? " active" : "") + (danger ? " dangerOpt" : "");
-    div.innerHTML = `<span class="radio"></span><span>${label}</span>`;
+    div.innerHTML = `<span class="radio"></span><span>${escHtml(label)}</span>`;
     div.addEventListener("click", ()=>{
       if(value === "__OTHER__"){
   timeSheetBack.style.display = "none";
@@ -4918,7 +4919,7 @@ function buildPrintTable(){
 
   const today = new Date();
   printMetaTopEl.innerHTML =
-    `<div>Personal-PIN: <b>${name || "–"}</b></div>` +
+    `<div>Personal-PIN: <b>${escHtml(name || "–")}</b></div>` +
     `<div>Datum: <b>${pad2(today.getDate())}.${pad2(today.getMonth()+1)}.${today.getFullYear()}</b></div>`;
 
   printBodyEl.innerHTML="";
@@ -4939,10 +4940,10 @@ function buildPrintTable(){
     if(!isNaN(hrsNum)) sum+=hrsNum;
 
     tr.innerHTML=`
-      <td class="center"><b>${day}</b></td>
-      <td>${empty ? "–" : (ort === "__CLEAR_ORT__" ? "" : ort)}</td>
-      <td class="center">${start || "–"}</td>
-      <td class="center">${end || "–"}</td>
+      <td class="center"><b>${escHtml(day)}</b></td>
+      <td>${escHtml(empty ? "–" : (ort === "__CLEAR_ORT__" ? "" : ort))}</td>
+      <td class="center">${escHtml(start || "–")}</td>
+      <td class="center">${escHtml(end || "–")}</td>
       <td class="center">${
         hrsTxt
           ? `<span class="printHourBadge">${hrsTxt} h</span>`
@@ -5068,7 +5069,7 @@ function openPreview(){
 
   previewTable.innerHTML = `
     <div class="previewMetaLine">
-      <div>PIN: <b>${name || "–"}</b></div>
+      <div>PIN: <b>${escHtml(name || "–")}</b></div>
       <div>Datum: <b>${pad2(today.getDate())}.${pad2(today.getMonth()+1)}.${today.getFullYear()}</b></div>
     </div>
 
@@ -5329,7 +5330,7 @@ function confirmIdentity(pin){
   return new Promise((resolve)=>{
     dlgTitleEl.textContent = "Handy einrichten";
     dlgMsgEl.innerHTML = `
-      <div style="margin-bottom:12px; font-weight:700;">Dieses Handy kennt PIN ${pin} noch nicht. Bitte bestätige einmalig deinen Namen. Danach gehört dieses Handy zu dir.</div>
+      <div style="margin-bottom:12px; font-weight:700;">Dieses Handy kennt PIN ${escHtml(pin)} noch nicht. Bitte bestätige einmalig deinen Namen. Danach gehört dieses Handy zu dir.</div>
       <input id="idVorname" type="text" autocomplete="off" placeholder="Vorname" style="width:100%; padding:11px 12px; margin-bottom:8px; border-radius:10px; border:1px solid var(--border); font-size:15px; box-sizing:border-box;">
       <input id="idNachname" type="text" autocomplete="off" placeholder="Nachname" style="width:100%; padding:11px 12px; margin-bottom:6px; border-radius:10px; border:1px solid var(--border); font-size:15px; box-sizing:border-box;">
       <div id="idError" style="min-height:18px; color:#c0392b; font-size:12px; font-weight:700;"></div>
@@ -5909,6 +5910,8 @@ window.addEventListener("load", ()=>{
 function isCorrectedDay(h){
   return h.geaendert === true || !!(h.kommentar && String(h.kommentar).trim());
 }
+function safeUrl(u){ u = String(u || ""); return /^https:\/\//i.test(u) ? u : "#"; }
+document.addEventListener("error", function(e){ var x = e.target; if(x && x.tagName === "IMG" && x.closest && x.closest(".loginLogo")) x.parentNode.style.display = "none"; }, true);
 function escHtml(s){
   return String(s == null ? "" : s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 }
@@ -6356,7 +6359,7 @@ async function loadMyHours(pin, secret){
         handleUnknownDevice();
         return;
       }
-      hoursTableWrap.innerHTML = `<div style="color:#ff9a9a;">Fehler: ${result.message}</div>`;
+      hoursTableWrap.innerHTML = `<div style="color:#ff9a9a;">Fehler: ${escHtml(result.message)}</div>`;
       return;
     }
 
@@ -6364,7 +6367,7 @@ async function loadMyHours(pin, secret){
       hoursDocumentsWrap.innerHTML = `
         <div style="font-weight:800; margin-bottom:6px; color:#fff;">📎 Dokumente</div>
         ${result.documents.map(d=>`
-          <a href="${d.link}" target="_blank" rel="noopener" style="display:flex; align-items:center; gap:8px; padding:10px 12px; margin-bottom:8px; border-radius:12px; background:rgba(232,163,61,.14); border:1px solid rgba(232,163,61,.4); color:#FFD54A; text-decoration:none; font-size:13px; font-weight:700;">
+          <a href="${escHtml(safeUrl(d.link))}" target="_blank" rel="noopener" style="display:flex; align-items:center; gap:8px; padding:10px 12px; margin-bottom:8px; border-radius:12px; background:rgba(232,163,61,.14); border:1px solid rgba(232,163,61,.4); color:#FFD54A; text-decoration:none; font-size:13px; font-weight:700;">
             📄 ${(d.dateiname || "Dokument").replace(/</g,"&lt;")}
           </a>
         `).join("")}
@@ -6506,7 +6509,7 @@ async function loadMyHours(pin, secret){
     const badgeEl = document.getElementById("hoursNewBadge");
     if(badgeEl) badgeEl.style.display = "none";
   }catch(err){
-    hoursTableWrap.innerHTML = `<div style="color:#ff9a9a;">Fehler beim Laden: ${err.message}</div>`;
+    hoursTableWrap.innerHTML = `<div style="color:#ff9a9a;">Fehler beim Laden: ${escHtml(err.message)}</div>`;
   }
 }
 
