@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="de">
 <head>
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self' 'sha256-tCoxM5IAhr9vVGGSMiPXtMChcKWmpdhY8Lt6j3V6jeE=' 'sha256-85wlNSu5iqrTGADZX4Td7H70vkLje6REP/ICSm/pGZM='; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' data:; connect-src 'self' https://script.google.com https://script.googleusercontent.com; manifest-src 'self'; base-uri 'none'; form-action 'none'; object-src 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self' 'sha256-tCoxM5IAhr9vVGGSMiPXtMChcKWmpdhY8Lt6j3V6jeE=' 'sha256-9wH5hd8YBLjDhKge5fVY+50+oXOLwlZW24N4iIhMh7A='; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' data:; connect-src 'self' https://script.google.com https://script.googleusercontent.com; manifest-src 'self'; base-uri 'none'; form-action 'none'; object-src 'none'">
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Stundenformular</title>
@@ -7788,6 +7788,9 @@ timeSheetBack.addEventListener("click",(e)=>{ if(e.target===timeSheetBack) close
       if(tr.classList.contains("trActive")) { if(window.setActiveRow) window.setActiveRow(null); else tr.classList.remove("trActive"); return; }
       if(window.setActiveRow) window.setActiveRow(tr); else { document.querySelectorAll(".trActive").forEach(x => x.classList.remove("trActive")); tr.classList.add("trActive"); }
       try{ tr.scrollIntoView({ block: "nearest", behavior: "smooth" }); }catch(err){}
+      // Leerer Tag: gleich die Auswahl der Kehre öffnen, damit ein Tipp genügt (statt erst die Zeile und dann noch „Kehre wählen“ anzutippen)
+      const ps = tr.querySelector(".ort");
+      if(ps && !ps.disabled && !tr.classList.contains("rowFilled") && !ps.value) setTimeout(function(){ if(tr.classList.contains("trActive") && ps.offsetParent !== null) openPlaceSheet(ps, tr); }, 60);
     });
   }
   /* Auswahlfenster für die Kehre (ersetzt die Standard-Auswahl des Handys): Farbe, Name und Zeit bei jedem Eintrag */
