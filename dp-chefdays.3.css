@@ -1,0 +1,21 @@
+/* Chef-Bericht: einzelne Tage übernehmen oder anpassen (Version 63) */
+.cfcmp td.cfact{white-space:nowrap;text-align:right}
+.cfdb{display:flex;gap:6px;justify-content:flex-end;flex-wrap:wrap}
+.cfdb .btn{padding:4px 10px;font-size:.78rem}
+.cfdf{display:flex;flex-direction:column;gap:3px;min-width:0}
+.cfdf .input{width:100%}
+.cfdrow{display:grid;grid-template-columns:1fr 1fr 90px;gap:10px}
+@media (max-width:560px){.cfdrow{grid-template-columns:1fr 1fr}.cfdrow .cfdf:last-child{grid-column:1 / -1}}
+.cfdur{gap:6px}.cfdur select{width:auto;min-width:82px}
+
+/* Version 66: Auswahl beim Übernehmen und Abschnitt „Korrekturen vom Admin“ */
+.cftks{display:flex;flex-direction:column;gap:6px;background:#F3F6FC;border-radius:12px;padding:10px 12px}
+.cftk{display:grid;grid-template-columns:11rem 1fr;gap:8px;font-size:.88rem}.cftk b{color:#3D3A87}
+.cfcorr{display:flex;flex-direction:column;gap:8px}
+.cfcsum{font-weight:700;font-size:.9rem;color:#0E1A2B;background:#F3F6FC;border-radius:10px;padding:8px 12px}
+.cfcr{border:1px solid #E3E8F2;border-radius:12px;padding:10px 12px;display:flex;flex-direction:column;gap:4px;background:#fff}
+.cfcrh{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.cfck{font-size:.72rem;font-weight:800;padding:2px 9px;border-radius:99px;background:#FFF1D6;color:#9A5A00}.cfck.ergaenzt{background:#E3EEFB;color:#1B5FB8}.cfck.gestrichen{background:#FFE5E3;color:#B3261E}
+.cfdif{margin-left:auto;font-size:.78rem;font-weight:800;padding:2px 9px;border-radius:99px}.cfdif.pos{background:#E1F4E6;color:#1E7B3A}.cfdif.neg{background:#FFE5E3;color:#B3261E}.cfdif.zero{background:#EEF0F4;color:#5C6B80}
+.cfcl{display:grid;grid-template-columns:7.2rem 1fr;gap:8px;font-size:.88rem}.cfcn{color:#7A889B;font-weight:700}.cfcv{font-weight:700}
+@media (max-width:560px){.cftk,.cfcl{grid-template-columns:1fr;gap:0}}
