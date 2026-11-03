@@ -1,0 +1,55 @@
+/* Chef-Bericht: einzelne Tage übernehmen oder anpassen (Version 63) */
+.cfcmp td.cfact{white-space:nowrap;text-align:right}
+.cfdb{display:flex;gap:6px;justify-content:flex-end;flex-wrap:wrap}
+.cfdb .btn{padding:4px 10px;font-size:.78rem}
+.cfdf{display:flex;flex-direction:column;gap:3px;min-width:0}
+.cfdf .input{width:100%}
+.cfdrow{display:grid;grid-template-columns:1fr 1fr 90px;gap:10px}
+@media (max-width:560px){.cfdrow{grid-template-columns:1fr 1fr}.cfdrow .cfdf:last-child{grid-column:1 / -1}}
+.cfdur{gap:6px}.cfdur select{width:auto;min-width:82px}
+
+/* Version 66: Auswahl beim Übernehmen und Abschnitt „Korrekturen vom Admin“ */
+.cftks{display:flex;flex-direction:column;gap:6px;background:#F3F6FC;border-radius:12px;padding:10px 12px}
+.cftk{display:grid;grid-template-columns:11rem 1fr;gap:8px;font-size:.88rem}.cftk b{color:#3D3A87}
+.cfcorr{display:flex;flex-direction:column;gap:8px}
+.cfcsum{font-weight:700;font-size:.9rem;color:#0E1A2B;background:#F3F6FC;border-radius:10px;padding:8px 12px}
+.cfcr{border:1px solid #E3E8F2;border-radius:12px;padding:10px 12px;display:flex;flex-direction:column;gap:4px;background:#fff}
+.cfcrh{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.cfck{font-size:.72rem;font-weight:800;padding:2px 9px;border-radius:99px;background:#FFF1D6;color:#9A5A00}.cfck.ergaenzt{background:#E3EEFB;color:#1B5FB8}.cfck.gestrichen{background:#FFE5E3;color:#B3261E}
+.cfdif{margin-left:auto;font-size:.78rem;font-weight:800;padding:2px 9px;border-radius:99px}.cfdif.pos{background:#E1F4E6;color:#1E7B3A}.cfdif.neg{background:#FFE5E3;color:#B3261E}.cfdif.zero{background:#EEF0F4;color:#5C6B80}
+.cfcl{display:grid;grid-template-columns:7.2rem 1fr;gap:8px;font-size:.88rem}.cfcn{color:#7A889B;font-weight:700}.cfcv{font-weight:700}
+@media (max-width:560px){.cftk,.cfcl{grid-template-columns:1fr;gap:0}}
+
+/* Version 67: Farben je Spalte, Wahl „Wie soll der Chef das sehen?“, Überstunden */
+.cfcmp th.cfcs,.cfcmp td.cfcs{border-left:3px solid #8EB4EC}.cfcmp th.cfcr2,.cfcmp td.cfcr2{border-left:3px solid #BCA3E6}.cfcmp th.cfce,.cfcmp td.cfce{border-left:3px solid #82C79A}
+.cfcmp th.cfcs{color:#1B5FB8}.cfcmp th.cfcr2{color:#6D3FC0}.cfcmp th.cfce{color:#1E7B3A}
+.cfcmp th.cfcs::before,.cfcmp th.cfcr2::before,.cfcmp th.cfce::before{content:"";display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:6px;vertical-align:0}
+.cfcmp th.cfcs::before{background:#2B7FD1}.cfcmp th.cfcr2::before{background:#7C4DD0}.cfcmp th.cfce::before{background:#2F9E44}
+.cftk b.cls-s,.cfcn.cls-s{color:#1B5FB8}.cftk b.cls-r{color:#6D3FC0}.cftk b.cls-f,.cfcn.cls-f{color:#1E7B3A}
+.cfvbox{display:flex;flex-direction:column;gap:6px;border-top:1px solid #E3E8F2;padding-top:10px}
+.cfvis{display:flex;gap:10px;align-items:flex-start;padding:8px 10px;border:1px solid #E3E8F2;border-radius:12px;cursor:pointer}.cfvis:has(input:checked){border-color:#2B7FD1;background:#F1F6FD}
+.cfvis.off{opacity:.45;cursor:not-allowed}.cfvis input{margin-top:3px}.cfvis span{display:flex;flex-direction:column}.cfvis small{color:#5C6B80;font-size:.78rem}
+.cfvamt{display:flex;align-items:center;gap:8px;margin-left:30px}.cfvamt .input{width:90px}.cfhide{display:none}
+.cfcls{display:flex;flex-direction:column;gap:6px}.cfcl2{display:flex;gap:10px;align-items:center;font-size:.9rem}
+.cfvc{font-size:.72rem;font-weight:800;padding:2px 9px;border-radius:99px;background:#EEF0F4;color:#5C6B80}.cfvc.ueb{background:#E1F4E6;color:#1E7B3A}
+.cfcr.cfhid{background:#FAFBFD;border-style:dashed}
+.cfovsum{font-weight:800;font-size:.9rem;background:#E1F4E6;color:#1E7B3A;border-radius:99px;padding:3px 12px}
+
+/* Version 68: Karte „Standort-Ansicht für den Chef“ */
+.cfstchip{font-size:.74rem;font-weight:800;padding:3px 11px;border-radius:99px;background:#EEF0F4;color:#5C6B80}.cfstchip.on{background:#E1F4E6;color:#1E7B3A}
+.cfwarn{color:#8A5200;background:#FFF1DC;border-radius:10px;padding:8px 10px}
+.cfscroll{overflow-x:auto}.cfst{width:100%;border-collapse:collapse;font-size:.88rem}
+.cfst th{text-align:left;font-size:.72rem;letter-spacing:.05em;text-transform:uppercase;color:#5C6B80;padding:8px 10px;border-bottom:2px solid #E3E8F2;white-space:nowrap}
+.cfst td{padding:9px 10px;border-bottom:1px solid #EEF1F6;vertical-align:top}.cfst .cfstn{font-weight:800}.cfst .cfstr{text-align:right;white-space:nowrap}.cfst .bad{color:#B3261E;font-weight:800}
+.cfst tr.cfstsum td{font-weight:800;border-top:2px solid #1B2A57;border-bottom:0;background:#F3F5F9}
+
+/* Version 69: Automatik-Schalter, Hinweise */
+.vlseg3{grid-template-columns:repeat(3,1fr)}.cfautonote{background:#EEF4FF;border-radius:10px;padding:8px 10px}
+.cfvis.off{opacity:1}.cfvis.off>input,.cfvis.off b{opacity:.45}.cfvwhy{color:#8A5200;font-size:.76rem}
+.vlseg3{flex-wrap:wrap}
+
+/* Version 70: Streichen, Mehrfach-Freigabe */
+.cfdel{color:#B3261E}.cfonly{display:inline-flex;align-items:center;gap:8px;font-size:.88rem}
+.cfrls{display:flex;flex-direction:column;max-height:48vh;overflow-y:auto;border:1px solid #E3E8F2;border-radius:12px}
+.cfrl{display:flex;align-items:center;gap:10px;padding:9px 12px;border-top:1px solid #EEF1F6;cursor:pointer;flex-wrap:wrap}.cfrl:first-child{border-top:0}
+.cfrln{font-weight:700;flex:1;min-width:120px}.cfrlh{font-size:.84rem;color:#5C6B80;white-space:nowrap}.cfrlinfo{font-weight:700}
