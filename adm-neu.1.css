@@ -1,0 +1,9 @@
+/* Version 75: eingebettete Seiten der Konsole (Stunden, Dokumente, Handys, Hilfe, Wartung) im neuen Stil */
+@font-face{font-family:"Inter";font-style:normal;font-weight:100 900;font-display:swap;src:url("inter-latin.woff2") format("woff2")}
+:root{--purple:#3D3A87;--gold:#E8A33D;--border:#E3E7F1;--bg:#F1F3FA}
+html body{font-family:"Inter",system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif!important;background:#F1F3FA!important;color:#171A33}
+.threadCard,.phoneCard,.empDev,.helpItem,.thisDevice{border-radius:16px!important;border:1px solid #E3E7F1!important;box-shadow:0 6px 18px rgba(14,21,48,.06)!important}
+.viewBtn{border-radius:12px!important}.viewBtn.active{background:#3D3A87!important;color:#fff!important;border-color:#3D3A87!important}
+#refreshBtn,.replyRow button,.helpReplyBtn{background:#E8A33D!important;color:#1A1200!important;border:0!important;border-radius:12px!important;font-weight:700!important}
+input,select,textarea{border-radius:12px!important;font-family:inherit}
+button{font-family:inherit}
