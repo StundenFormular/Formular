@@ -1,0 +1,80 @@
+/* ===== Version 72: neues Aussehen der Konsole (Computer zuerst) ===== */
+:root{--shadow2:0 1px 2px rgba(14,21,48,.04),0 8px 24px rgba(14,21,48,.06)}
+.console{grid-template-columns:268px minmax(0,1fr)}
+/* Seitenleiste */
+.side{background:linear-gradient(180deg,#0B1331 0%,#0A1029 100%)!important;border-right:0!important;padding:22px 14px 16px;color:#AEB8DA;overflow-y:auto}
+.side .brand{padding:2px 10px 14px;gap:12px;align-items:center;color:#fff}
+.side .brand .mark{width:44px;height:44px;padding:0;background:none;border-radius:13px;box-shadow:none}.side .brand .mark svg{width:44px;height:44px;display:block}
+.side .brand .bn{font:800 22px/1 'Barlow SC';letter-spacing:.02em;color:#fff}.side .brand .bs{font-size:11.5px;color:#7F8BB5;margin-top:3px;font-weight:500}
+.side .navgroup{margin:16px 12px 6px;padding:0;border:0;font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:#5E6B9A;opacity:1;font-weight:700}
+.side .nav{padding:9px 12px;border-radius:11px;font-weight:600;font-size:14.5px;color:#AEB8DA;position:relative;gap:12px}
+.side .nav:hover{background:rgba(255,255,255,.06);color:#fff}
+.side .nav.active{background:rgba(255,255,255,.1);color:#fff}.side .nav.active::before{content:"";position:absolute;left:-14px;top:9px;bottom:9px;width:4px;border-radius:0 4px 4px 0;background:var(--accent)}
+.side .who-note{margin:10px 6px 0;background:rgba(255,255,255,.06);border:0}
+/* Kopf mit Bild */
+.main{min-width:0}
+.topbar{position:relative!important;top:auto!important;z-index:2;display:block!important;height:190px;padding:30px 40px 50px!important;border:0!important;background:#0A1029 center right/cover no-repeat;color:#fff}
+.topbar[data-ov="1"]{height:216px;padding-bottom:76px!important}
+.topbar::before{content:"";position:absolute;inset:0;background:linear-gradient(0deg,rgba(7,12,34,.62),rgba(7,12,34,0) 62%);pointer-events:none}
+.topbar>*{position:relative}
+.topbar[data-hero="nacht"]{background-image:url(kopf-nacht.webp)}.topbar[data-hero="morgen"]{background-image:url(kopf-morgen.webp)}.topbar[data-hero="bahnsteig"]{background-image:url(kopf-bahnsteig.webp)}.topbar[data-hero="kontrolle"]{background-image:url(kopf-kontrolle.webp)}
+.hcrumb{font-size:12.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--accent);font-weight:800;min-height:1em}
+.topbar h2{margin:2px 0 0;font:800 42px/1.05 'Barlow SC';letter-spacing:.01em;color:#fff}
+.hsub{margin:7px 0 0;color:#C9D2F2;font-size:15.5px;max-width:600px}
+.hctl{position:absolute!important;top:22px;right:40px;display:flex;gap:10px;align-items:center;z-index:3}
+.hctl .btn,.hctl button,.hctl .hlive{display:inline-flex;align-items:center;gap:8px;border:1px solid rgba(255,255,255,.22)!important;background:rgba(10,16,41,.5)!important;backdrop-filter:blur(8px);color:#E8ECFF!important;border-radius:12px;padding:8px 13px;font-weight:600;font-size:13.5px;box-shadow:none}
+.hctl .hlive{padding:8px 13px;color:#E8ECFF}.hctl .btn:hover,.hctl button:hover{background:rgba(255,255,255,.14)!important}
+/* Inhalt: setzt auf dem Bild auf */
+.content{padding:26px 40px 60px!important;max-width:none!important;position:relative;z-index:3}
+.content.ov{margin-top:-54px;padding-top:0!important}
+.card{border-radius:18px;border:1px solid var(--border);box-shadow:var(--shadow2)}
+.cfh{font-size:17px!important;font-weight:800;text-transform:none!important;letter-spacing:0!important;color:var(--text)}
+.btn{border-radius:12px}.btn-primary{background:linear-gradient(180deg,var(--brand2,#5B57C9),var(--brand));border-color:var(--brand);box-shadow:0 6px 16px rgba(61,58,135,.25)}
+/* Chef-Bericht: Kennzahlen, Reiter, einklappbare Bereiche */
+.cfkpi.cfkpi4{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin:0!important;padding:0!important;background:none!important;border:0!important}
+.cfkpi4>div{background:var(--surface)!important;border:1px solid var(--border)!important;border-radius:18px!important;padding:16px 18px!important;box-shadow:0 10px 30px rgba(14,21,48,.12);display:flex!important;gap:14px;align-items:center;text-align:left}
+.cfkpi4 .kic{width:46px;height:46px;border-radius:14px;display:grid;place-items:center;background:#E8EFFD;color:#2557C4;flex:none}.cfkpi4 .g .kic{background:#E2F5EC;color:#0F7A55}.cfkpi4 .a .kic{background:#FFF1D6;color:#9A5B00}.cfkpi4 .p .kic{background:#ECEAFB;color:#3D3A87}.cfkpi4 .kic svg{width:22px;height:22px}
+.cfkpi4 b{display:block;font:800 30px/1 'Barlow SC';color:var(--text)}.cfkpi4 small{display:block;color:var(--muted);font-size:13px;margin-top:3px}
+.cftabs{display:flex;gap:6px;background:#E5E8F3;padding:5px;border-radius:15px;width:max-content;max-width:100%;margin:4px 0}
+.cftab{border:0;background:transparent;border-radius:11px;padding:9px 16px;font:inherit;font-weight:700;color:#4B5578;display:flex;gap:8px;align-items:center;cursor:pointer}
+.cftab.on{background:var(--surface);color:var(--text);box-shadow:0 2px 8px rgba(14,21,48,.12)}.cftab em{font-style:normal;background:#D6DBEE;color:#3C4670;border-radius:99px;padding:0 8px;font-size:12px}.cftab.on em{background:var(--brand);color:#fff}
+details.cfd2{padding:0!important}details.cfd2>summary{list-style:none;display:flex;align-items:center;gap:12px;cursor:pointer;padding:18px 22px;font-size:17px;font-weight:800;user-select:none}
+details.cfd2>summary::-webkit-details-marker{display:none}details.cfd2>summary:hover{background:rgba(61,58,135,.04);border-radius:18px}
+.cfcnt{background:#EEF0F8;color:#3C4670;border-radius:99px;padding:2px 10px;font-weight:800;font-size:13px}
+.cfchev{margin-left:auto;width:9px;height:9px;border-right:2.5px solid #8A93B6;border-bottom:2.5px solid #8A93B6;transform:rotate(-45deg);transition:transform .2s;margin-right:6px}details[open].cfd2>summary .cfchev{transform:rotate(45deg)}
+details[open].cfd2>summary{border-bottom:1px solid var(--border);border-radius:18px 18px 0 0}.cfd2 .cfbody{padding:18px 22px 22px}.cfd2 .cfbody>.cfh,.cfd2 .cfbody>.row.between>.cfh{display:none}
+/* Mitarbeiterliste als Kacheln */
+.cfstaff{display:grid!important;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:8px;border:0!important}
+.cfstaff .cfstrow{border:1px solid var(--border)!important;border-radius:12px;background:var(--surface-2);padding:7px 12px}.cfstaff .cfstrow .btn{opacity:0;transition:opacity .15s}.cfstaff .cfstrow:hover .btn{opacity:1}
+.cfstaff p{grid-column:1/-1}
+/* Tabellen etwas ruhiger */
+.cft th{font-size:.74rem;letter-spacing:.05em}.cft td{padding-top:11px;padding-bottom:11px}
+@media (prefers-color-scheme:dark){.cftabs{background:#1d2040}.cftab{color:#a2a8cc}.cftab em{background:#2b2f58;color:#c4c9ea}.cfcnt{background:#2b2f58;color:#c4c9ea}}
+@media (max-width:1100px){.console{grid-template-columns:1fr}.topbar{height:auto;padding:22px 18px 70px!important}.hctl{position:relative!important;top:auto;right:auto;margin-top:12px;flex-wrap:wrap}.content{padding:0 14px 40px!important}.cfkpi.cfkpi4{grid-template-columns:1fr 1fr}}
+
+/* Korrekturen nach der ersten Ansicht */
+.cfkpi4 .kt{background:none!important;border:0!important;padding:0!important;box-shadow:none!important;border-radius:0!important;margin:0!important}
+.td-hero::after{display:none!important}
+.cft td.cfhints{display:table-cell!important}
+.cfphead{background:var(--surface);border:1px solid var(--border);border-radius:18px;padding:14px 18px;box-shadow:0 10px 30px rgba(14,21,48,.12);align-items:center}
+.cfphead strong,.cfphead .cfpt strong{font-size:18px}
+
+/* Version 75: einklappbare Bereiche, bei denen das Element dasselbe bleibt */
+.cf-sec>.cf-head{display:flex!important;align-items:center;gap:12px;cursor:pointer;user-select:none}
+.cf-sec>.cf-head h3,.cf-sec>.cf-head .cfh{margin:0;font-size:17px;font-weight:800}
+.cf-sec>.cf-head .cfchev{margin-left:auto}
+.cf-sec:not(.cf-closed)>.cf-head .cfchev{transform:rotate(45deg)}
+.cf-sec.cf-closed>*:not(.cf-head){display:none!important}
+.cf-sec.cf-closed>.cf-head{margin:0}
+
+/* ===== Version 76: Vergleich im Vollbild ===== */
+body.cf-fullopen{overflow:hidden}
+details.cfd2.cf-full{position:fixed!important;inset:0;z-index:300;margin:0!important;border-radius:0!important;overflow:auto;background:#F1F3FA!important;padding:0 clamp(14px,2.4vw,40px) 40px}
+details.cfd2.cf-full>summary{position:sticky;top:0;z-index:2;background:#F1F3FA}
+details.cfd2.cf-full .cfcmpbar{position:sticky;top:56px;z-index:2;background:#F1F3FA;padding:6px 0}
+.cfcmpbar{align-items:flex-start;gap:14px}.cfcmpbar .btn{flex:none}
+
+/* Grund (freiwillig) mit Vorlagen */
+.cfrbox{margin-top:10px;padding-top:10px;border-top:1px solid #E3E7F1;display:grid;gap:8px}
+.cfrchips{display:flex;flex-wrap:wrap;gap:6px}.cfrchip{border:1px solid #D5D9E8;border-radius:99px;padding:4px 11px;font-size:12.5px;background:#fff;color:#2A3150;cursor:pointer;font-family:inherit}
+.cfrchip:hover{border-color:#3D3A87}.cfrchip.on{background:#3D3A87;color:#fff;border-color:#3D3A87}
