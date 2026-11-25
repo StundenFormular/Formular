@@ -1,0 +1,43 @@
+/* 403-Seite (schlicht, wie eine Server-Fehlerseite) */
+body.d403{margin:0;padding:8px 24px;background:#fff;color:#000;font:16px/1.4 Arial,Helvetica,sans-serif}
+body.d403 h1{font-size:2em;margin:.67em 0;font-weight:700}
+body.d403 p{margin:1em 0}
+body.d403 hr{border:0;border-top:1px solid #999;margin:1em 0}
+.d403pin{margin-top:2px;width:7em;font:inherit;padding:1px 3px;opacity:.55}
+.d403go{margin-left:4px;font:inherit;opacity:.55}
+.d403msg{font-size:12px;color:#555;margin-top:4px}
+@media (prefers-color-scheme:dark){body.d403{background:#fff;color:#000}}
+
+/* Hinweis-Text unten */
+.dienst-foot{box-sizing:border-box;max-width:560px;margin:0 auto;padding:16px 20px 22px;text-align:center;font:400 11.5px/1.5 Inter,system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;color:#64748b;letter-spacing:.005em}
+.dienst-foot p{margin:0 0 5px}
+.dienst-foot nav{font-weight:600}
+.dienst-foot a{color:inherit;text-decoration:underline;text-underline-offset:3px}
+.pinBack>.dienst-foot{position:absolute;left:0;right:0;bottom:0;margin:0 auto;padding:34px 18px calc(12px + env(safe-area-inset-bottom));font-size:10.5px;line-height:1.4;background:linear-gradient(180deg,rgba(5,10,30,0),rgba(5,10,30,.86) 42%,rgba(5,10,30,.94));pointer-events:none}
+.pinBack>.dienst-foot a{pointer-events:auto}
+.dienst-foot-dark{color:rgba(226,232,246,.82);text-shadow:0 1px 6px rgba(3,8,26,.85)}
+.dienst-foot-dark a{color:rgba(240,244,255,.95)}
+@media print{.dienst-foot{display:none}}
+
+/* Abschalt-Karte in der Konsole (Wartung) */
+.dk{margin:0 0 16px;padding:18px 20px;border-radius:16px;border:1px solid #e2e5ee;background:#fff;font:400 14px/1.5 Inter,system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;color:#1c2340}
+.dk-head{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:6px}
+.dk h3{margin:0;font:800 17px/1.2 "Barlow Semi Condensed","Barlow SC",Inter,sans-serif;letter-spacing:.2px}
+.dk-chip{display:inline-block;padding:3px 10px;border-radius:999px;font-size:12px;font-weight:700;background:#e3f6ec;color:#0f7a43}
+.dk-chip.off{background:#fde4e1;color:#b42318}
+.dk p{margin:0 0 12px;color:#4a5272}
+.dk-btn{border:0;border-radius:12px;padding:11px 18px;font:700 14px/1 Inter,system-ui,sans-serif;cursor:pointer;background:#c8301f;color:#fff}
+.dk-btn:hover{background:#b02818}
+.dk-btn[disabled]{opacity:.55;cursor:default}
+.dk-btn.ghost{background:#eef0f7;color:#1c2340}
+.dk-btn.ghost:hover{background:#e2e5f1}
+.dk-msg{margin-top:10px;font-size:13px;color:#b42318}
+.dk-back{position:fixed;inset:0;z-index:50;background:rgba(8,12,30,.55);display:flex;align-items:center;justify-content:center;padding:18px}
+.dk-dlg{width:100%;max-width:440px;background:#fff;border-radius:18px;padding:22px 22px 18px;box-shadow:0 24px 60px rgba(0,0,0,.35)}
+.dk-dlg h4{margin:0 0 10px;font:800 21px/1.2 "Barlow Semi Condensed","Barlow SC",Inter,sans-serif;color:#b42318}
+.dk-dlg ul{margin:0 0 14px;padding-left:18px;color:#2b3254}
+.dk-dlg li{margin:3px 0}
+.dk-dlg label{display:block;font-size:13px;margin-bottom:6px;color:#2b3254}
+.dk-in{box-sizing:border-box;width:100%;padding:11px 12px;border:1px solid #c9cde0;border-radius:10px;font:600 15px Inter,system-ui,sans-serif;letter-spacing:.08em;text-transform:uppercase}
+.dk-row{display:flex;justify-content:flex-end;gap:8px;margin-top:14px}
+.dk-note{margin-top:12px;font-size:12px;color:#6a7190}
